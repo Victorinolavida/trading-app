@@ -1,0 +1,24 @@
+
+# Run the users service
+run:
+    go run ./...
+
+# Build the users binary
+build:
+    go build -o bin/users .
+
+# Run tests
+test: cache-clean
+    go test -v  ./...
+
+# Format Go code
+fmt:
+    gofmt -w .
+
+# Vet Go code
+vet:
+    go vet ./...
+
+[private]
+cache-clean:
+    go clean -testcache
