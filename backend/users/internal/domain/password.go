@@ -9,8 +9,10 @@ import (
 const (
 	minPasswordLength = 8
 	maxPasswordLength = 24
-	cost              = 14
+	defaultCost       = 14
 )
+
+var cost = defaultCost
 
 type Password struct {
 	hash []byte

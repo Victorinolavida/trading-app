@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -12,6 +13,15 @@ import (
 )
 
 const fixturePlain = "Sup3rSecret"
+
+func TestMain(m *testing.M) {
+	cost = bcrypt.MinCost
+	os.Exit(m.Run())
+}
+
+func TestDefaultCostIsProductionStrength(t *testing.T) {
+	assert.GreaterOrEqual(t, defaultCost, 10)
+}
 
 var (
 	fixtureOnce sync.Once
