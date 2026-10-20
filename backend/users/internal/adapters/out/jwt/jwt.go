@@ -54,7 +54,7 @@ func NewService(cfg config.TokenConfig) (*TokenService, error) {
 
 func (serv *TokenService) Issue(_ context.Context, p ports.Claims) (string, error) {
 	jti := uuid.New()
-	now := time.Now()
+	now := serv.now()
 	exp := now.Add(serv.ttl)
 
 	c := claims{

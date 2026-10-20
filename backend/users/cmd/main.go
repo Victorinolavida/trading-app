@@ -10,6 +10,7 @@ import (
 	grpcAdapter "github.com/victorinolavida/auth/internal/adapters/in/grpc"
 	"github.com/victorinolavida/auth/internal/adapters/out/jwt"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
+	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
@@ -42,7 +43,8 @@ func main() {
 	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp)
 
 	registerHandler := register.NewUserUsecase(userRepo, tokenServ)
-	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler)
+	loginHandler := login.NewUserUsecase(userRepo, tokenServ)
+	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler)
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)
 
