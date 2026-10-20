@@ -9,6 +9,7 @@ import (
 	"users/config"
 	"users/internal/adapters/secondary_adapter/jwt"
 	"users/internal/domain"
+	"users/internal/domainerrors"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -66,7 +67,7 @@ func TestRegisterUser_DbFails(t *testing.T) {
 		LastName:  "Doe",
 	}
 
-	repo.On("Save", mock.Anything, mock.AnythingOfType("domain.User")).Return(errors.New("db error"))
+	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(false, errors.New("db error"))
 
 	result, err := handler.Register(t.Context(), cmd)
 
@@ -102,6 +103,36 @@ func TestRegisterUser_InvalidEmail(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestRegisterUser_DuplicatedEmail(t *testing.T) {
+	repo := new(userRepoMock)
+
+	jwtIssuer, err := jwt.NewService(config.TokenConfig{
+		Secret:   testSecret,
+		Issuer:   "test",
+		Audience: "test-issuer",
+		TTL:      15 * time.Minute,
+	})
+
+	assert.NoError(t, err, "error creating new token sevice")
+	handler := NewUserUsecase(repo, jwtIssuer)
+	cmd := RegisterCommand{
+		Email:     "john@example.com",
+		Password:  "secret123",
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+
+	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(true, nil)
+
+	result, err := handler.Register(t.Context(), cmd)
+
+	t.Log("xd", err)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, domainerrors.ErrEmailAlreadyRegister)
+	assert.Empty(t, result.Token)
+	repo.AssertExpectations(t)
+}
+
 func TestRegisterUser_HappyPath(t *testing.T) {
 	repo := new(userRepoMock)
 
@@ -122,6 +153,7 @@ func TestRegisterUser_HappyPath(t *testing.T) {
 	}
 
 	repo.On("Save", mock.Anything, mock.AnythingOfType("domain.User")).Return(nil)
+	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(false, nil)
 
 	result, err := handler.Register(t.Context(), cmd)
 

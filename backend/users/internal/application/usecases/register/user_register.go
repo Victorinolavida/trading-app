@@ -5,6 +5,7 @@ import (
 
 	"users/internal/application/ports"
 	"users/internal/domain"
+	"users/internal/domainerrors"
 )
 
 type UserRegister struct {
@@ -43,6 +44,14 @@ func (u *UserRegister) Register(ctx context.Context, command RegisterCommand) (R
 	if err != nil {
 		return RegisterResult{}, err
 	}
+	exist, err := u.repo.ExistByEmail(ctx, user.Email())
+	if err != nil {
+		return RegisterResult{}, err
+	}
+	if exist {
+		return RegisterResult{}, domainerrors.ErrEmailAlreadyRegister
+	}
+
 	err = u.repo.Save(ctx, user)
 	if err != nil {
 		return RegisterResult{}, err
