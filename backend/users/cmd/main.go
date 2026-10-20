@@ -2,31 +2,64 @@ package main
 
 import (
 	"context"
+	"log/slog"
+	"os/signal"
+	"syscall"
+
 	"github.com/victorinolavida/auth/config"
-	"github.com/victorinolavida/auth/internal/adapters/secondary_adapter/postgres"
+	grpcAdapter "github.com/victorinolavida/auth/internal/adapters/in/grpc"
+	"github.com/victorinolavida/auth/internal/adapters/out/jwt"
+	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
+	"github.com/victorinolavida/auth/internal/application/usecases/register"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
-	grcpserver "github.com/victorinolavida/pkg/grcp_server"
+	grpcserver "github.com/victorinolavida/pkg/grcp_server"
 	"github.com/victorinolavida/pkg/logger"
-	"log/slog"
+	authpb "github.com/victorinolavida/proto/auth"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	logger.NewLogger()
+	logs := logger.NewLogger()
 
-	conf, err := conf.NewConfig[config.Config]()
+	cfg, err := conf.NewConfig[config.Config]()
 	if err != nil {
 		logger.Fatal("error loading configs", slog.Any("error", err))
 	}
 
-	pool, err := database.NewPool(context.Background(), conf.Database)
+	pool, err := database.NewPool(context.Background(), cfg.Database)
 	if err != nil {
 		logger.Fatal("error connecting to db", slog.Any("error", err))
 	}
 
 	// user repo
-	_ = postgres.NewUserRepository(pool)
+	userRepo := postgres.NewUserRepository(pool)
+	tokenServ, err := jwt.NewService(cfg.TokenConfig)
+	if err != nil {
+		logger.Fatal("error creating new token service", slog.Any("error", err))
+	}
 
-	grcpServer := grcpserver.NewGRCPServer(conf.Grcp)
-	grcpServer.Listen()
+	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp)
+
+	registerHandler := register.NewUserUsecase(userRepo, tokenServ)
+	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler)
+
+	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)
+
+	reflection.Register(grpcServer.Server())
+
+	listener := grpcServer.Listen()
+
+	go func() {
+		if err := grpcServer.Server().Serve(listener); err != nil {
+			logger.Fatal("grpc server error", slog.Any("error", err))
+		}
+	}()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+	<-ctx.Done()
+
+	grpcServer.Server().GracefulStop()
+	logs.Info("auth server shutdown successfully")
 }

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/victorinolavida/auth/internal/adapters/secondary_adapter/postgres/sqlc"
+	"github.com/victorinolavida/auth/internal/adapters/out/postgres/sqlc"
 	"github.com/victorinolavida/auth/internal/application/ports"
 	"github.com/victorinolavida/auth/internal/domain"
 	"github.com/victorinolavida/auth/internal/domainerrors"

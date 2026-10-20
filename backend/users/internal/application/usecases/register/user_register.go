@@ -1,4 +1,4 @@
-package usecases
+package register
 
 import (
 	"context"
@@ -8,13 +8,13 @@ import (
 	"github.com/victorinolavida/auth/internal/domainerrors"
 )
 
-type UserRegister struct {
+type UserRegisterHandler struct {
 	repo   ports.UserRepository
 	issuer ports.TokenIssuer
 }
 
-func NewUserUsecase(repo ports.UserRepository, issuer ports.TokenIssuer) *UserRegister {
-	return &UserRegister{repo: repo, issuer: issuer}
+func NewUserUsecase(repo ports.UserRepository, issuer ports.TokenIssuer) *UserRegisterHandler {
+	return &UserRegisterHandler{repo: repo, issuer: issuer}
 }
 
 type RegisterCommand struct {
@@ -34,7 +34,7 @@ type RegisterResult struct {
 	Token string
 }
 
-func (u *UserRegister) Register(ctx context.Context, command RegisterCommand) (RegisterResult, error) {
+func (u *UserRegisterHandler) Handle(ctx context.Context, command RegisterCommand) (RegisterResult, error) {
 	user, err := domain.NewUser(
 		command.Email,
 		command.FirstName,
