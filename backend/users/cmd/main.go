@@ -40,7 +40,7 @@ func main() {
 		logger.Fatal("error creating new token service", slog.Any("error", err))
 	}
 
-	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp)
+	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp, grpcAdapter.ErrorMappingInterceptor)
 
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)

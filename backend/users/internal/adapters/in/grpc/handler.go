@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
@@ -30,7 +29,6 @@ func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.Re
 		FirstName: req.FirstName,
 	})
 	if err != nil {
-		slog.Error("error registering user", slog.Any("error", err))
 		return nil, err
 	}
 
@@ -48,7 +46,6 @@ func (handler *AuthGRPCHandler) LoginUser(ctx context.Context, req *authpb.Login
 		Password: req.Password,
 	})
 	if err != nil {
-		slog.Error("error logging in user", slog.Any("error", err))
 		return nil, err
 	}
 

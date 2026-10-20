@@ -2,11 +2,12 @@ package grcpserver
 
 import (
 	"context"
-	"github.com/victorinolavida/pkg/config"
-	"github.com/victorinolavida/pkg/logger"
 	"log/slog"
 	"net"
 	"strconv"
+
+	"github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/logger"
 
 	"google.golang.org/grpc"
 )
@@ -28,16 +29,15 @@ type GRCPServer struct {
 
 var _ GRCPServerInterface = (*GRCPServer)(nil)
 
-func NewGRCPServer(conf config.GRPCServer) *GRCPServer {
-	interceptor := grpc.UnaryInterceptor(func(
-		ctx context.Context,
-		req any,
-		_ *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler,
-	) (any, error) {
-		return handler(ctx, req)
-	})
-	svr := grpc.NewServer(interceptor)
+func NewGRCPServer(conf config.GRPCServer, interceptors ...grpc.UnaryServerInterceptor) *GRCPServer {
+	base := []grpc.UnaryServerInterceptor{
+		func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+			// you can keep your existing base logic here
+			return handler(ctx, req)
+		},
+	}
+	all := append(base, interceptors...)
+	svr := grpc.NewServer(grpc.ChainUnaryInterceptor(all...))
 	return &GRCPServer{
 		conf: conf,
 		svr:  svr,
