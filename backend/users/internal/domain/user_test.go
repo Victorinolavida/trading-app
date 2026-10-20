@@ -55,7 +55,7 @@ func TestUserEntity(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.Reason, func(t *testing.T) {
-			_, err := NewUser(tt.Email, tt.FirstName, tt.LastName)
+			_, err := NewUser(tt.Email, tt.FirstName, tt.LastName, "somesecurepassword")
 			isValid := err == nil
 			t.Logf("error %s", err)
 

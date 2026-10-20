@@ -5,7 +5,7 @@ import (
 	"users/internal/domainerrors"
 )
 
-var regExpression = regexp.MustCompile(
+var emailRegExpression = regexp.MustCompile(
 	`^[\w-]+(?:\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,4}$`,
 )
 
@@ -18,8 +18,8 @@ type Email struct {
 	value string
 }
 
-func (e Email) Validate() error {
-	if !regExpression.MatchString(e.value) {
+func (e Email) validate() error {
+	if !emailRegExpression.MatchString(e.value) {
 		return domainerrors.ErrInvalidEmail
 	}
 	return nil
@@ -29,7 +29,7 @@ func (e Email) String() string { return e.value }
 
 func NewEmail(value string) (Email, error) {
 	email := Email{value: value}
-	if err := email.Validate(); err != nil {
+	if err := email.validate(); err != nil {
 		return Email{}, err
 	}
 	return email, nil
