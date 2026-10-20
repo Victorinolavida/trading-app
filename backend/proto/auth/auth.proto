@@ -1,0 +1,29 @@
+syntax = "proto3";
+package auth;
+
+option go_package = "github.com/victorinolavida/proto/auth";
+
+message RegisterRequest {
+  string email = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string password = 4;
+}
+
+
+message AuthUserResponse {
+  string id         = 1;
+  string first_name = 2;
+  string last_name  = 3;
+  string token      = 5;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+service AuthService {
+  rpc RegisterUser(RegisterRequest) returns (AuthUserResponse){}
+  rpc LoginUser(LoginRequest) returns (AuthUserResponse){}
+}
