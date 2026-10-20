@@ -1,11 +1,11 @@
 package login
 
-type LoginCommand struct {
+type Command struct {
 	Email    string
 	Password string
 }
 
-type LoginResult struct {
+type Result struct {
 	User struct {
 		ID        string
 		Email     string
@@ -14,3 +14,4 @@ type LoginResult struct {
 	}
 	Token string
 }
+

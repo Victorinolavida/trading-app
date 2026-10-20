@@ -27,9 +27,9 @@ func TestRegisterUser_DbFails(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "error creating new token sevice")
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	cmd := RegisterCommand{
+	cmd := Command{
 		Email:     "john@example.com",
 		Password:  "secret123",
 		FirstName: "John",
@@ -38,7 +38,7 @@ func TestRegisterUser_DbFails(t *testing.T) {
 
 	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(false, errors.New("db error"))
 
-	result, err := handler.Handle(t.Context(), cmd)
+	result, err := handler.Execute(t.Context(), cmd)
 
 	assert.Error(t, err)
 	assert.Empty(t, result.Token)
@@ -56,16 +56,16 @@ func TestRegisterUser_InvalidEmail(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "error creating new token sevice")
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	cmd := RegisterCommand{
+	cmd := Command{
 		Email:     "john@.com",
 		Password:  "secret123",
 		FirstName: "John",
 		LastName:  "Doe",
 	}
 
-	result, err := handler.Handle(t.Context(), cmd)
+	result, err := handler.Execute(t.Context(), cmd)
 
 	assert.Error(t, err)
 	assert.Empty(t, result.Token)
@@ -83,8 +83,8 @@ func TestRegisterUser_DuplicatedEmail(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "error creating new token sevice")
-	handler := NewUserUsecase(repo, jwtIssuer)
-	cmd := RegisterCommand{
+	handler := New(repo, jwtIssuer)
+	cmd := Command{
 		Email:     "john@example.com",
 		Password:  "secret123",
 		FirstName: "John",
@@ -93,9 +93,8 @@ func TestRegisterUser_DuplicatedEmail(t *testing.T) {
 
 	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(true, nil)
 
-	result, err := handler.Handle(t.Context(), cmd)
+	result, err := handler.Execute(t.Context(), cmd)
 
-	t.Log("xd", err)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, domainerrors.ErrEmailAlreadyRegister)
 	assert.Empty(t, result.Token)
@@ -113,8 +112,8 @@ func TestRegisterUser_HappyPath(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "error creating new token sevice")
-	handler := NewUserUsecase(repo, jwtIssuer)
-	cmd := RegisterCommand{
+	handler := New(repo, jwtIssuer)
+	cmd := Command{
 		Email:     "john@example.com",
 		Password:  "secret123",
 		FirstName: "John",
@@ -124,7 +123,7 @@ func TestRegisterUser_HappyPath(t *testing.T) {
 	repo.On("Save", mock.Anything, mock.AnythingOfType("domain.User")).Return(nil)
 	repo.On("ExistByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(false, nil)
 
-	result, err := handler.Handle(t.Context(), cmd)
+	result, err := handler.Execute(t.Context(), cmd)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result.Token)

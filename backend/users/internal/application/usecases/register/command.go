@@ -1,13 +1,13 @@
 package register
 
-type RegisterCommand struct {
+type Command struct {
 	Email     string
 	FirstName string
 	LastName  string
 	Password  string
 }
 
-type RegisterResult struct {
+type Result struct {
 	User struct {
 		ID        string
 		Email     string
@@ -16,3 +16,4 @@ type RegisterResult struct {
 	}
 	Token string
 }
+

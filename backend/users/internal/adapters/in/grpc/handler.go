@@ -11,26 +11,26 @@ import (
 
 type AuthGRPCHandler struct {
 	authpb.UnimplementedAuthServiceServer
-	registerHandler *register.UserRegisterHandler
-	loginHandler    *login.UserLoginHandler
+	register *register.Usecase
+	login    *login.Usecase
 }
 
 func NewAuthGRPCHandler(
-	registerHandler *register.UserRegisterHandler,
-	loginHandler *login.UserLoginHandler,
+	registerUC *register.Usecase,
+	loginUC *login.Usecase,
 ) *AuthGRPCHandler {
-	return &AuthGRPCHandler{registerHandler: registerHandler, loginHandler: loginHandler}
+	return &AuthGRPCHandler{register: registerUC, login: loginUC}
 }
 
 func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthUserResponse, error) {
-	result, err := handler.registerHandler.Handle(ctx, register.RegisterCommand{
+	result, err := handler.register.Execute(ctx, register.Command{
 		Email:     req.Email,
 		Password:  req.Password,
 		LastName:  req.LastName,
 		FirstName: req.FirstName,
 	})
 	if err != nil {
-		slog.Error("error registing user", slog.Any("error", err))
+		slog.Error("error registering user", slog.Any("error", err))
 		return nil, err
 	}
 
@@ -43,12 +43,12 @@ func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.Re
 }
 
 func (handler *AuthGRPCHandler) LoginUser(ctx context.Context, req *authpb.LoginRequest) (*authpb.AuthUserResponse, error) {
-	result, err := handler.loginHandler.Handle(ctx, login.LoginCommand{
+	result, err := handler.login.Execute(ctx, login.Command{
 		Email:    req.Email,
 		Password: req.Password,
 	})
 	if err != nil {
-		slog.Error("error registing user", slog.Any("error", err))
+		slog.Error("error logging in user", slog.Any("error", err))
 		return nil, err
 	}
 

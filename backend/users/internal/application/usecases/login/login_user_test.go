@@ -27,9 +27,9 @@ func TestLoginUser_BadEmail(t *testing.T) {
 	})
 
 	assert.NoError(t, err, "error creating new token sevice")
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	result, err := handler.Handle(context.Background(), LoginCommand{
+	result, err := handler.Execute(context.Background(), Command{
 		Password: "password123",
 		Email:    "email@.com",
 	})
@@ -50,9 +50,9 @@ func TestLoginUser_EmailDoesNotExist(t *testing.T) {
 
 	assert.NoError(t, err, "error creating new token sevice")
 	repo.On("GetByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(domain.User{}, domainerrors.ErrUserNotFound)
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	result, err := handler.Handle(context.Background(), LoginCommand{
+	result, err := handler.Execute(context.Background(), Command{
 		Password: "password123",
 		Email:    "test@gmail.com",
 	})
@@ -90,9 +90,9 @@ func TestLoginUser_PasswordNotMatch(t *testing.T) {
 	assert.NoError(t, err, "invalid reconstructur a user")
 
 	repo.On("GetByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(mockUser, nil)
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	result, err := handler.Handle(context.Background(), LoginCommand{
+	result, err := handler.Execute(context.Background(), Command{
 		Password: plainPass + "123", // diferent to password from above
 		Email:    "test@gmail.com",
 	})
@@ -131,9 +131,9 @@ func TestLoginUser_HappyPath(t *testing.T) {
 	assert.NoError(t, err, "failed to reconstruct a user")
 
 	repo.On("GetByEmail", mock.Anything, mock.AnythingOfType("domain.Email")).Return(mockUser, nil)
-	handler := NewUserUsecase(repo, jwtIssuer)
+	handler := New(repo, jwtIssuer)
 
-	result, err := handler.Handle(context.Background(), LoginCommand{
+	result, err := handler.Execute(context.Background(), Command{
 		Password: plainPass,
 		Email:    "test@gmail.com",
 	})

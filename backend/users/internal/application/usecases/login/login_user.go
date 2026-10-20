@@ -9,31 +9,31 @@ import (
 	"github.com/victorinolavida/auth/internal/domainerrors"
 )
 
-type UserLoginHandler struct {
+type Usecase struct {
 	repo   ports.UserRepository
 	issuer ports.TokenIssuer
 }
 
-func NewUserUsecase(repo ports.UserRepository, issuer ports.TokenIssuer) *UserLoginHandler {
-	return &UserLoginHandler{repo: repo, issuer: issuer}
+func New(repo ports.UserRepository, issuer ports.TokenIssuer) *Usecase {
+	return &Usecase{repo: repo, issuer: issuer}
 }
 
-func (u *UserLoginHandler) Handle(ctx context.Context, command LoginCommand) (LoginResult, error) {
+func (u *Usecase) Execute(ctx context.Context, command Command) (Result, error) {
 	email, err := domain.NewEmail(command.Email)
 	if err != nil {
-		return LoginResult{}, err
+		return Result{}, err
 	}
 	user, err := u.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, domainerrors.ErrUserNotFound) {
-			return LoginResult{}, domainerrors.ErrInvalidCredentials
+			return Result{}, domainerrors.ErrInvalidCredentials
 		}
-		return LoginResult{}, err
+		return Result{}, err
 	}
 
 	passwordMatch := domain.VerifyPassword(command.Password, string(user.Hash()))
 	if !passwordMatch {
-		return LoginResult{}, domainerrors.ErrInvalidCredentials
+		return Result{}, domainerrors.ErrInvalidCredentials
 	}
 
 	token, err := u.issuer.Issue(ctx, ports.Claims{
@@ -42,9 +42,9 @@ func (u *UserLoginHandler) Handle(ctx context.Context, command LoginCommand) (Lo
 		FirstName: user.FirstName().String(),
 	})
 	if err != nil {
-		return LoginResult{}, err
+		return Result{}, err
 	}
-	return LoginResult{
+	return Result{
 		User: struct {
 			ID        string
 			Email     string

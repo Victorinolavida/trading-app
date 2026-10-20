@@ -42,8 +42,8 @@ func main() {
 
 	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp)
 
-	registerHandler := register.NewUserUsecase(userRepo, tokenServ)
-	loginHandler := login.NewUserUsecase(userRepo, tokenServ)
+	registerHandler := register.New(userRepo, tokenServ)
+	loginHandler := login.New(userRepo, tokenServ)
 	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler)
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)

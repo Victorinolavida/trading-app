@@ -8,16 +8,16 @@ import (
 	"github.com/victorinolavida/auth/internal/domainerrors"
 )
 
-type UserRegisterHandler struct {
+type Usecase struct {
 	repo   ports.UserRepository
 	issuer ports.TokenIssuer
 }
 
-func NewUserUsecase(repo ports.UserRepository, issuer ports.TokenIssuer) *UserRegisterHandler {
-	return &UserRegisterHandler{repo: repo, issuer: issuer}
+func New(repo ports.UserRepository, issuer ports.TokenIssuer) *Usecase {
+	return &Usecase{repo: repo, issuer: issuer}
 }
 
-func (u *UserRegisterHandler) Handle(ctx context.Context, command RegisterCommand) (RegisterResult, error) {
+func (u *Usecase) Execute(ctx context.Context, command Command) (Result, error) {
 	user, err := domain.NewUser(
 		command.Email,
 		command.FirstName,
@@ -25,19 +25,19 @@ func (u *UserRegisterHandler) Handle(ctx context.Context, command RegisterComman
 		command.Password,
 	)
 	if err != nil {
-		return RegisterResult{}, err
+		return Result{}, err
 	}
 	exist, err := u.repo.ExistByEmail(ctx, user.Email())
 	if err != nil {
-		return RegisterResult{}, err
+		return Result{}, err
 	}
 	if exist {
-		return RegisterResult{}, domainerrors.ErrEmailAlreadyRegister
+		return Result{}, domainerrors.ErrEmailAlreadyRegister
 	}
 
 	err = u.repo.Save(ctx, user)
 	if err != nil {
-		return RegisterResult{}, err
+		return Result{}, err
 	}
 	token, err := u.issuer.Issue(ctx, ports.Claims{
 		UserID:    user.ID().String(),
@@ -45,9 +45,9 @@ func (u *UserRegisterHandler) Handle(ctx context.Context, command RegisterComman
 		LastName:  user.LastName().String(),
 	})
 	if err != nil {
-		return RegisterResult{}, err
+		return Result{}, err
 	}
-	return RegisterResult{
+	return Result{
 		User: struct {
 			ID        string
 			Email     string
