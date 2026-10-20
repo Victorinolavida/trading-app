@@ -17,23 +17,6 @@ func NewUserUsecase(repo ports.UserRepository, issuer ports.TokenIssuer) *UserRe
 	return &UserRegisterHandler{repo: repo, issuer: issuer}
 }
 
-type RegisterCommand struct {
-	Email     string
-	FirstName string
-	LastName  string
-	Password  string
-}
-
-type RegisterResult struct {
-	User struct {
-		ID        string
-		Email     string
-		FirstName string
-		LastName  string
-	}
-	Token string
-}
-
 func (u *UserRegisterHandler) Handle(ctx context.Context, command RegisterCommand) (RegisterResult, error) {
 	user, err := domain.NewUser(
 		command.Email,

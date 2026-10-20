@@ -10,5 +10,6 @@ var (
 	ErrPasswordTooLong      = errors.New("password too long")
 	ErrUserNotFound         = errors.New("user not found")
 	ErrUnauthenticated      = errors.New("unauthenticated")
+	ErrInvalidCredentials   = errors.New("invalid credentials")
 	ErrEmailAlreadyRegister = errors.New("email already register")
 )

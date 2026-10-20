@@ -1,54 +1,23 @@
 package register
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/victorinolavida/auth/config"
 	"github.com/victorinolavida/auth/internal/adapters/out/jwt"
-	"github.com/victorinolavida/auth/internal/domain"
+	"github.com/victorinolavida/auth/internal/application/usecases/mocks"
 	"github.com/victorinolavida/auth/internal/domainerrors"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 const testSecret = "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ"
 
-type userRepoMock struct{ mock.Mock }
-
-// var _ ports.UserRepository = (*userRepoMock)(nil)
-
-func (r *userRepoMock) Save(ctx context.Context, u domain.User) error {
-	args := r.Called(ctx, u)
-	return args.Error(0)
-}
-
-func (r *userRepoMock) GetByID(ctx context.Context, id uuid.UUID) (domain.User, error) {
-	args := r.Called(ctx, id)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-func (r *userRepoMock) GetByEmail(ctx context.Context, email domain.Email) (domain.User, error) {
-	args := r.Called(ctx, email)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-func (r *userRepoMock) ExistByEmail(ctx context.Context, email domain.Email) (bool, error) {
-	args := r.Called(ctx, email)
-	return args.Get(0).(bool), args.Error(1)
-}
-
-func (r *userRepoMock) Update(ctx context.Context, user domain.User) error {
-	args := r.Called(ctx, user)
-	return args.Error(0)
-}
-
 func TestRegisterUser_DbFails(t *testing.T) {
-	repo := new(userRepoMock)
+	repo := new(mocks.UserRepoMock)
 
 	jwtIssuer, err := jwt.NewService(config.TokenConfig{
 		Secret:   testSecret,
@@ -77,7 +46,7 @@ func TestRegisterUser_DbFails(t *testing.T) {
 }
 
 func TestRegisterUser_InvalidEmail(t *testing.T) {
-	repo := new(userRepoMock)
+	repo := new(mocks.UserRepoMock)
 
 	jwtIssuer, err := jwt.NewService(config.TokenConfig{
 		Secret:   testSecret,
@@ -104,7 +73,7 @@ func TestRegisterUser_InvalidEmail(t *testing.T) {
 }
 
 func TestRegisterUser_DuplicatedEmail(t *testing.T) {
-	repo := new(userRepoMock)
+	repo := new(mocks.UserRepoMock)
 
 	jwtIssuer, err := jwt.NewService(config.TokenConfig{
 		Secret:   testSecret,
@@ -134,7 +103,7 @@ func TestRegisterUser_DuplicatedEmail(t *testing.T) {
 }
 
 func TestRegisterUser_HappyPath(t *testing.T) {
-	repo := new(userRepoMock)
+	repo := new(mocks.UserRepoMock)
 
 	jwtIssuer, err := jwt.NewService(config.TokenConfig{
 		Secret:   testSecret,

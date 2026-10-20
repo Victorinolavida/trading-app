@@ -14,10 +14,9 @@ Monorepo with a Go backend (`backend/`) and a React frontend (`frontend/`).
 | [sqlc](https://sqlc.dev) | Generates type-safe Go DB code from `query.sql` + `schema.sql` (`sqlc generate` in the service's postgres dir) | `brew install sqlc` |
 | [dbmate](https://databasebeard.com/dbmate) | DB migrations (`just backend migrate users`, `down`, `status`, ...) | `brew install dbmate` |
 | [PostgreSQL 17](https://www.postgresql.org) | Database, via Docker Compose (`just infra-up`) | containerized |
-| [Ory Kratos](https://www.ory.sh/kratos) | Identity/auth service, proxied by the gateway (`just infra-up`) | containerized |
-| [Docker](https://www.docker.com) | Runs Postgres + Kratos | `brew install docker` |
+| [Docker](https://www.docker.com) | Runs Postgres | `brew install docker` |
 
-Notable Go libraries: [chi](https://github.com/go-chi/chi) (gateway router), [ory/client-go](https://github.com/ory/client-go) (Kratos API client), [pgx](https://github.com/jackc/pgx) (Postgres driver), [jwt/v5](https://github.com/golang-jwt/jwt), [koanf](https://github.com/knadh/koanf) (config), [testify](https://github.com/stretchr/testify) (tests).
+Notable Go libraries: [chi](https://github.com/go-chi/chi) (gateway router), [pgx](https://github.com/jackc/pgx) (Postgres driver), [grpc](https://google.golang.org/grpc) + [protobuf](https://github.com/protocolbuffers/protobuf) (users service), [jwt/v5](https://github.com/golang-jwt/jwt), [koanf](https://github.com/knadh/koanf) (config), [testify](https://github.com/stretchr/testify) (tests).
 
 ### Frontend
 

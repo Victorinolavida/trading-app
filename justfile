@@ -6,17 +6,13 @@ mod frontend "frontend"
 default:
     @just --list
 
-# Start postgres + kratos
+# Start postgres
 infra-up:
-    docker compose up -d postgres kratos
+    docker compose up -d postgres
 
 # Stop infra
 infra-down:
     docker compose down
-
-# Tail kratos logs
-infra-logs:
-    docker compose logs -f kratos
 
 # Install frontend dependencies
 install:
