@@ -9,3 +9,8 @@ type Database struct {
 	MaxConns int    `koanf:"max_conns"`
 	MinConns int    `koanf:"min_conns"`
 }
+type GRPCServer struct {
+	Protocol string `koanf:"protocol"`
+	Host     string `koanf:"host"`
+	Port     int    `koanf:"port"`
+}

@@ -32,6 +32,6 @@ func isProd(env string) bool {
 }
 
 func Fatal(msg string, args ...any) {
-	slog.Error(msg, args)
+	slog.Error(msg, args...)
 	panic(1)
 }

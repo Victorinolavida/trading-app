@@ -1,13 +1,14 @@
 package config
 
 import (
-	"pkg/config"
+	"github.com/victorinolavida/pkg/config"
 	"time"
 )
 
 type Config struct {
-	Database    config.Database `koanf:"database"`
-	TokenConfig TokenConfig     `koanf:"token"`
+	Database    config.Database   `koanf:"database"`
+	TokenConfig TokenConfig       `koanf:"token"`
+	Grcp        config.GRPCServer `koanf:"grcp"`
 }
 
 type TokenConfig struct {

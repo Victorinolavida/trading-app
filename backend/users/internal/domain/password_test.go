@@ -1,11 +1,11 @@
 package domain
 
 import (
+	"github.com/victorinolavida/auth/internal/domainerrors"
 	"os"
 	"strings"
 	"sync"
 	"testing"
-	"users/internal/domainerrors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

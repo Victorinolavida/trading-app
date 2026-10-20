@@ -3,9 +3,9 @@ package usecases
 import (
 	"context"
 
-	"users/internal/application/ports"
-	"users/internal/domain"
-	"users/internal/domainerrors"
+	"github.com/victorinolavida/auth/internal/application/ports"
+	"github.com/victorinolavida/auth/internal/domain"
+	"github.com/victorinolavida/auth/internal/domainerrors"
 )
 
 type UserRegister struct {

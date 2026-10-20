@@ -1,8 +1,8 @@
 package domain
 
 import (
+	"github.com/victorinolavida/auth/internal/domainerrors"
 	"regexp"
-	"users/internal/domainerrors"
 )
 
 var emailRegExpression = regexp.MustCompile(

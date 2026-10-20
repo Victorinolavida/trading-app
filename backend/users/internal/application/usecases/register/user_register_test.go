@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"users/config"
-	"users/internal/adapters/secondary_adapter/jwt"
-	"users/internal/domain"
-	"users/internal/domainerrors"
+	"github.com/victorinolavida/auth/config"
+	"github.com/victorinolavida/auth/internal/adapters/secondary_adapter/jwt"
+	"github.com/victorinolavida/auth/internal/domain"
+	"github.com/victorinolavida/auth/internal/domainerrors"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

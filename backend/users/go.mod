@@ -1,4 +1,4 @@
-module users
+module github.com/victorinolavida/auth
 
 go 1.26.5
 

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"users/config"
-	"users/internal/application/ports"
-	"users/internal/domainerrors"
+	"github.com/victorinolavida/auth/config"
+	"github.com/victorinolavida/auth/internal/application/ports"
+	"github.com/victorinolavida/auth/internal/domainerrors"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

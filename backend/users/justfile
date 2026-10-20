@@ -1,17 +1,17 @@
 set shell := ["zsh", "-cu"]
 
 db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading?sslmode=disable")
-migrations := "internal/adapters/primary_adapter/postgres/migrations"
+migrations := "internal/adapters/secondary_adapter/postgres/migrations"
 pg_container := "trading-postgres"
-schema_file := "internal/adapters/primary_adapter/postgres/schema.sql"
+schema_file := "internal/adapters/secondary_adapter/postgres/schema.sql"
 
 # Run the users service
 run:
-    go run ./...
+    go run ./cmd
 
 # Build the users binary
 build:
-    go build -o bin/users .
+    go build -o bin/users ./cmd
 
 # Run tests
 test: cache-clean

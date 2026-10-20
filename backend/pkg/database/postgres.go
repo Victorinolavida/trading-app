@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"pkg/config"
+	"github.com/victorinolavida/pkg/config"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"

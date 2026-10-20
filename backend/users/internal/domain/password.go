@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"users/internal/domainerrors"
+	"github.com/victorinolavida/auth/internal/domainerrors"
 
 	"golang.org/x/crypto/bcrypt"
 )
