@@ -7,9 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/victorinolavida/auth/config"
-	"github.com/victorinolavida/auth/internal/application/ports"
-	"github.com/victorinolavida/auth/internal/domainerrors"
+	"github.com/victorinolavida/pkg/config"
 )
 
 const testSecret = "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ"
@@ -86,7 +84,7 @@ func TestNewService(t *testing.T) {
 
 func TestIssueAndVerify_HappyPath(t *testing.T) {
 	serv := newTestService(t)
-	want := ports.Claims{
+	want := Claims{
 		UserID:    "user-123",
 		FirstName: "John",
 		LastName:  "Doe",
@@ -106,10 +104,10 @@ func TestIssue_RegisteredClaims(t *testing.T) {
 	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
 	serv.now = func() time.Time { return now }
 
-	raw, err := serv.Issue(context.Background(), ports.Claims{UserID: "user-123"})
+	raw, err := serv.Issue(context.Background(), Claims{UserID: "user-123"})
 	assert.NoError(t, err)
 
-	parsed := &claims{}
+	parsed := &tokenClaims{}
 	_, err = jwt.ParseWithClaims(raw, parsed, func(*jwt.Token) (any, error) {
 		return serv.secret, nil
 	}, jwt.WithTimeFunc(serv.now))
@@ -130,13 +128,13 @@ func TestVerify_Expired(t *testing.T) {
 	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
 	serv.now = func() time.Time { return now }
 
-	raw, err := serv.Issue(context.Background(), ports.Claims{UserID: "user-123"})
+	raw, err := serv.Issue(context.Background(), Claims{UserID: "user-123"})
 	assert.NoError(t, err)
 
 	serv.now = func() time.Time { return now.Add(15*time.Minute + 6*time.Second) }
 
 	_, err = serv.Verify(context.Background(), raw)
-	assert.ErrorIs(t, err, domainerrors.ErrUnauthenticated)
+	assert.ErrorIs(t, err, ErrUnauthenticated)
 }
 
 func TestVerify_ExpiredWithinLeeway(t *testing.T) {
@@ -144,7 +142,7 @@ func TestVerify_ExpiredWithinLeeway(t *testing.T) {
 	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
 	serv.now = func() time.Time { return now }
 
-	raw, err := serv.Issue(context.Background(), ports.Claims{UserID: "user-123"})
+	raw, err := serv.Issue(context.Background(), Claims{UserID: "user-123"})
 	assert.NoError(t, err)
 
 	serv.now = func() time.Time { return now.Add(15*time.Minute + 3*time.Second) }
@@ -155,7 +153,7 @@ func TestVerify_ExpiredWithinLeeway(t *testing.T) {
 
 func TestVerify_RejectsInvalidTokens(t *testing.T) {
 	serv := newTestService(t)
-	valid := claims{
+	valid := tokenClaims{
 		UserID: "user-123",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   "user-123",
@@ -206,7 +204,7 @@ func TestVerify_RejectsInvalidTokens(t *testing.T) {
 		TTL:      time.Minute,
 	})
 	assert.NoError(t, err)
-	wrongSecretToken, err := otherServ.Issue(context.Background(), ports.Claims{UserID: "user-123"})
+	wrongSecretToken, err := otherServ.Issue(context.Background(), Claims{UserID: "user-123"})
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -227,7 +225,7 @@ func TestVerify_RejectsInvalidTokens(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := serv.Verify(context.Background(), tt.token)
-			assert.ErrorIs(t, err, domainerrors.ErrUnauthenticated)
+			assert.ErrorIs(t, err, ErrUnauthenticated)
 		})
 	}
 }

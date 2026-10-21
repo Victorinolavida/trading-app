@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Database struct {
 	User     string `koanf:"user"`
 	Password string `koanf:"password"`
@@ -19,4 +21,11 @@ type GRPCServer struct {
 type GRPCClient struct {
 	Host string `koanf:"host"`
 	Port int    `koanf:"port"`
+}
+
+type TokenConfig struct {
+	Secret   string        `koanf:"secret"`
+	Issuer   string        `koanf:"issuer"`
+	Audience string        `koanf:"audience"`
+	TTL      time.Duration `koanf:"ttl"`
 }

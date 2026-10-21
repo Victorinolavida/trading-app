@@ -31,7 +31,8 @@ func isProd(env string) bool {
 	return strings.ToLower(env) == "production"
 }
 
+// Fatal logs the message and terminates the process with exit code 1.
 func Fatal(msg string, args ...any) {
 	slog.Error(msg, args...)
-	panic(1)
+	os.Exit(1)
 }
