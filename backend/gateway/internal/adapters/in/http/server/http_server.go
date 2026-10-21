@@ -11,6 +11,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/victorinolavida/gateway/config"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 )
 
 var defaultPort = 8080
@@ -20,13 +22,9 @@ type ServerInterface interface {
 	Shutdown(context.Context) error
 	Mux() *chi.Mux
 	Mount(pattern string, handle http.Handler)
+	MountModule(prefix string, m module.Module)
 	Handle(pattern string, handler http.HandlerFunc)
 	Method(method, pattern string, handler http.HandlerFunc)
-}
-
-type Module interface {
-	BasePath() string
-	Routes() http.Handler
 }
 
 var _ ServerInterface = (*httpServer)(nil)
@@ -36,7 +34,7 @@ type httpServer struct {
 	router *chi.Mux
 }
 
-func NewHttpServer(conf config.Config) *httpServer {
+func NewHttpServer(conf config.Config) ServerInterface {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -44,11 +42,11 @@ func NewHttpServer(conf config.Config) *httpServer {
 	r.Use(middleware.Recoverer)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		RenderNotFound(w)
+		response.RenderNotFound(w)
 	})
 
 	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
-		RenderMethodNotAllowed(w)
+		response.RenderMethodNotAllowed(w)
 	})
 
 	allowOrigins := []string{"*"}
@@ -78,7 +76,7 @@ func NewHttpServer(conf config.Config) *httpServer {
 	}
 
 	httpSvc.Method(http.MethodGet, "/health", func(w http.ResponseWriter, r *http.Request) {
-		WriteJsonResponse(w, Envelop("message", "ok"), http.StatusOK)
+		response.WriteJsonResponse(w, response.Envelop("message", "ok"), http.StatusOK)
 	})
 
 	return httpSvc
@@ -102,6 +100,12 @@ func (h *httpServer) Handle(pattern string, handler http.HandlerFunc) {
 // Mount mounts a sub-router (or another http.Handler) at specific path
 func (h *httpServer) Mount(pattern string, handler http.Handler) {
 	h.router.Mount(pattern, handler)
+}
+
+// MountModule mounts a feature module under its base path, prefixed with the
+// given api prefix, e.g. "/api/v0" + "/auth".
+func (h *httpServer) MountModule(prefix string, m module.Module) {
+	h.router.Mount(prefix+m.BasePath(), m.Routes())
 }
 
 func (h *httpServer) Start() error {

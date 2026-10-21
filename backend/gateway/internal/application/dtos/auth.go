@@ -1,20 +1,23 @@
 package dtos
 
+// LoginRequest is the application input of the login use case.
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email    string
+	Password string
 }
 
+// RegisterRequest is the application input of the register use case.
 type RegisterRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
-	Password  string `json:"password" validate:"required"`
+	Email     string
+	FirstName string
+	LastName  string
+	Password  string
 }
 
+// AuthUserResponse is the application output of the auth use cases.
 type AuthUserResponse struct {
-	UserID    string `json:"user_id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Token     string `json:"token"`
+	UserID    string
+	FirstName string
+	LastName  string
+	Token     string
 }

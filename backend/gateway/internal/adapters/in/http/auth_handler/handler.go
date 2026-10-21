@@ -1,29 +1,33 @@
 package authhandler
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	httpserver "github.com/victorinolavida/gateway/internal/adapters/in/http/server"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
-	"github.com/victorinolavida/pkg/logger"
 )
+
+// ErrMissingValidator is returned when the handler is built without a validator.
+var ErrMissingValidator = errors.New("auth handler: validator is required")
 
 type AuthHandler struct {
 	service  ports.AuthService
 	validate *validator.Validate
 }
 
-var _ httpserver.Module = (*AuthHandler)(nil)
+var _ module.Module = (*AuthHandler)(nil)
 
-func NewAuthHandler(service ports.AuthService, validate *validator.Validate) *AuthHandler {
+func NewAuthHandler(service ports.AuthService, validate *validator.Validate) (*AuthHandler, error) {
 	if validate == nil {
-		logger.Fatal("validator dependency is required")
+		return nil, ErrMissingValidator
 	}
-	return &AuthHandler{service, validate}
+	return &AuthHandler{service, validate}, nil
 }
 
 func (h *AuthHandler) BasePath() string {
@@ -31,51 +35,59 @@ func (h *AuthHandler) BasePath() string {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	loginData, err := httpserver.ParseBodyFromRequest[dtos.LoginRequest](w, r)
+	loginReq, err := response.ParseBodyFromRequest[LoginRequest](w, r)
 	if err != nil {
 		slog.Error("error parsing body", slog.Any("error", err))
-		httpserver.RenderBadRequest(w, "can not parse the body request")
+		response.RenderBadRequest(w, "can not parse the body request")
 		return
 	}
 
-	if err := h.validate.Struct(loginData); err != nil {
-		httpserver.RenderBadRequest(w, err.Error())
+	if err := h.validate.Struct(loginReq); err != nil {
+		response.RenderValidationError(w, err)
 		return
 	}
 
 	// send message via grpc
-	result, err := h.service.Login(r.Context(), loginData)
+	result, err := h.service.Login(r.Context(), dtos.LoginRequest{
+		Email:    loginReq.Email,
+		Password: loginReq.Password,
+	})
 	if err != nil {
-		httpserver.RenderServerError(w, err)
+		response.RenderGRPCError(w, err)
 		return
 	}
 
-	if err := httpserver.WriteJsonResponse(w, newAuthUserResponse(result), http.StatusOK); err != nil {
+	if err := response.WriteJsonResponse(w, newAuthUserResponse(result), http.StatusOK); err != nil {
 		slog.Error("error writing login response", slog.Any("error", err))
 	}
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	registerData, err := httpserver.ParseBodyFromRequest[dtos.RegisterRequest](w, r)
+	registerReq, err := response.ParseBodyFromRequest[RegisterRequest](w, r)
 	if err != nil {
 		slog.Error("error parsing body", slog.Any("error", err))
-		httpserver.RenderBadRequest(w, "can not parse the body request")
+		response.RenderBadRequest(w, "can not parse the body request")
 		return
 	}
 
-	if err := h.validate.Struct(registerData); err != nil {
-		httpserver.RenderBadRequest(w, err.Error())
+	if err := h.validate.Struct(registerReq); err != nil {
+		response.RenderValidationError(w, err)
 		return
 	}
 
 	// send message via grpc
-	result, err := h.service.Register(r.Context(), registerData)
+	result, err := h.service.Register(r.Context(), dtos.RegisterRequest{
+		Email:     registerReq.Email,
+		FirstName: registerReq.FirstName,
+		LastName:  registerReq.LastName,
+		Password:  registerReq.Password,
+	})
 	if err != nil {
-		httpserver.RenderServerError(w, err)
+		response.RenderGRPCError(w, err)
 		return
 	}
 
-	if err := httpserver.WriteJsonResponse(w, newAuthUserResponse(result), http.StatusCreated); err != nil {
+	if err := response.WriteJsonResponse(w, newAuthUserResponse(result), http.StatusCreated); err != nil {
 		slog.Error("error writing register response", slog.Any("error", err))
 	}
 }

@@ -8,12 +8,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	cfg "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/logger"
 
 	"github.com/victorinolavida/gateway/config"
 	authhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/auth_handler"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	httpserver "github.com/victorinolavida/gateway/internal/adapters/in/http/server"
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
 )
@@ -38,12 +39,17 @@ func main() {
 		logger.Fatal("error in auth service", slog.Any("error", err))
 	}
 
-	modules := []httpserver.Module{
-		authhandler.NewAuthHandler(authService, validator.New()),
+	authHandler, err := authhandler.NewAuthHandler(authService, response.NewValidator())
+	if err != nil {
+		logger.Fatal("error creating auth handler", slog.Any("error", err))
 	}
 
-	for _, module := range modules {
-		httpServer.Mount(apiPrefix+module.BasePath(), module.Routes())
+	modules := []module.Module{
+		authHandler,
+	}
+
+	for _, mod := range modules {
+		httpServer.MountModule(apiPrefix, mod)
 	}
 
 	go func() {

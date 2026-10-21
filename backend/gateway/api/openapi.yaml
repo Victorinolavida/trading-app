@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Trading App Gateway API
+  description: |
+    HTTP API of the gateway. The gateway is a thin BFF: it validates the
+    requests and forwards them to the internal services through gRPC.
+  version: 0.1.0
+servers:
+  - url: http://localhost:3001
+    description: Local development
+
+tags:
+  - name: health
+    description: Liveness endpoint
+  - name: auth
+    description: Authentication and registration
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: getHealth
+      responses:
+        "200":
+          description: The service is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                message: ok
+
+  /api/v0/auth/login:
+    post:
+      tags: [auth]
+      summary: Log in with email and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: jane@example.com
+              password: s3cr3t-pass
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: The body could not be parsed or failed validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: '"email" must be a valid email'
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: invalid credentials
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: jane@example.com
+              first_name: Jane
+              last_name: Doe
+              password: s3cr3t-pass
+      responses:
+        "201":
+          description: The created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: The body could not be parsed or failed validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: '"email" is required, "password" is required'
+        "409":
+          description: The email is already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: email already register
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ok
+      required: [message]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        password:
+          type: string
+          format: password
+          minLength: 1
+          example: s3cr3t-pass
+      required: [email, password]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+        first_name:
+          type: string
+          minLength: 1
+          example: Jane
+        last_name:
+          type: string
+          minLength: 1
+          example: Doe
+        password:
+          type: string
+          format: password
+          minLength: 1
+          example: s3cr3t-pass
+      required: [email, first_name, last_name, password]
+
+    AuthUser:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        first_name:
+          type: string
+          example: Jane
+        last_name:
+          type: string
+          example: Doe
+        token:
+          type: string
+          description: "JWT access token, sent as `Authorization: Bearer <token>`"
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature
+      required: [user_id, first_name, last_name, token]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: invalid credentials
+      required: [error]
