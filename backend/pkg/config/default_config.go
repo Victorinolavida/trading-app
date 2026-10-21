@@ -10,7 +10,8 @@ type Database struct {
 	MinConns int    `koanf:"min_conns"`
 }
 type GRPCServer struct {
-	Protocol string `koanf:"protocol"`
-	Host     string `koanf:"host"`
-	Port     int    `koanf:"port"`
+	Protocol    string `koanf:"protocol"`
+	Host        string `koanf:"host"`
+	Port        int    `koanf:"port"`
+	ServiceName string `koanf:"service"`
 }

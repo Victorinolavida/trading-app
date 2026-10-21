@@ -2,10 +2,13 @@ package grpc
 
 import (
 	"context"
+	"strings"
 
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
 	authpb "github.com/victorinolavida/proto/auth"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type AuthGRPCHandler struct {
@@ -22,12 +25,17 @@ func NewAuthGRPCHandler(
 }
 
 func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthUserResponse, error) {
-	result, err := handler.register.Execute(ctx, register.Command{
-		Email:     req.Email,
-		Password:  req.Password,
-		LastName:  req.LastName,
-		FirstName: req.FirstName,
-	})
+	command := register.Command{
+		Email:     strings.TrimSpace(req.Email),
+		Password:  strings.TrimSpace(req.Password),
+		LastName:  strings.TrimSpace(req.LastName),
+		FirstName: strings.TrimSpace(req.FirstName),
+	}
+	if command.Password == "" || command.Email == "" || command.LastName == "" || command.FirstName == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing required fields")
+	}
+
+	result, err := handler.register.Execute(ctx, command)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +49,15 @@ func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.Re
 }
 
 func (handler *AuthGRPCHandler) LoginUser(ctx context.Context, req *authpb.LoginRequest) (*authpb.AuthUserResponse, error) {
-	result, err := handler.login.Execute(ctx, login.Command{
-		Email:    req.Email,
-		Password: req.Password,
-	})
+	command := login.Command{
+		Email:    strings.TrimSpace(req.Email),
+		Password: strings.TrimSpace(req.Password),
+	}
+
+	if command.Password == "" || command.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing required fields")
+	}
+	result, err := handler.login.Execute(ctx, command)
 	if err != nil {
 		return nil, err
 	}
