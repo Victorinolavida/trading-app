@@ -1,0 +1,19 @@
+# Run the gateway service
+run:
+    go run ./...
+
+# Build the gateway binary
+build:
+    go build -o bin/gateway .
+
+# Run tests
+test:
+    go test ./...
+
+# Format Go code
+fmt:
+    gofmt -w .
+
+# Vet Go code
+vet:
+    go vet ./...
