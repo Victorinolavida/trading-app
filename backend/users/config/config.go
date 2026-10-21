@@ -8,7 +8,7 @@ import (
 type Config struct {
 	Database    config.Database   `koanf:"database"`
 	TokenConfig TokenConfig       `koanf:"token"`
-	Grcp        config.GRPCServer `koanf:"grcp"`
+	GRPC        config.GRPCServer `koanf:"grpc"`
 }
 
 type TokenConfig struct {

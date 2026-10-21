@@ -14,7 +14,7 @@ import (
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
-	grpcserver "github.com/victorinolavida/pkg/grcp_server"
+	grpcserver "github.com/victorinolavida/pkg/grpc_server"
 	"github.com/victorinolavida/pkg/logger"
 	authpb "github.com/victorinolavida/proto/auth"
 	"google.golang.org/grpc/reflection"
@@ -40,7 +40,7 @@ func main() {
 		logger.Fatal("error creating new token service", slog.Any("error", err))
 	}
 
-	grpcServer := grpcserver.NewGRCPServer(cfg.Grcp, grpcAdapter.ErrorMappingInterceptor)
+	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC, grpcAdapter.ErrorMappingInterceptor)
 
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)

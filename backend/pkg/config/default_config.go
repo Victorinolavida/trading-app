@@ -15,3 +15,8 @@ type GRPCServer struct {
 	Port        int    `koanf:"port"`
 	ServiceName string `koanf:"service"`
 }
+
+type GRPCClient struct {
+	Host string `koanf:"host"`
+	Port int    `koanf:"port"`
+}
