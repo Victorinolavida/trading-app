@@ -1,0 +1,19 @@
+database:
+  user: postgres
+  password: postgres
+  Host: localhost
+  Port: 5432
+  Name: trading
+  MinConns: 2
+  MaxConns: 2
+
+token:
+  secret: 9f2c4a7e1b8d03f56a2e91c7d4b80f3e6a15c9d27b4e08f1a3d65c92e7b01f48
+  issuer: trading-app
+  audience: trading-app-service
+  ttl: 10h
+
+grpc:
+  protocol: tcp
+  host: localhost
+  port: 3030
