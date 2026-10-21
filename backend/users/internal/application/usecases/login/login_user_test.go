@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/victorinolavida/auth/config"
-	"github.com/victorinolavida/auth/internal/adapters/out/jwt"
 	"github.com/victorinolavida/auth/internal/application/usecases/mocks"
 	"github.com/victorinolavida/auth/internal/domain"
 	"github.com/victorinolavida/auth/internal/domainerrors"
+	"github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/jwt"
 )
 
 const testSecret = "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ"

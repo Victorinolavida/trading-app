@@ -1,12 +1,13 @@
 package ports
 
-import "context"
+import (
+	"context"
 
-type Claims struct {
-	UserID    string
-	FirstName string
-	LastName  string
-}
+	"github.com/victorinolavida/pkg/jwt"
+)
+
+// Claims is the identity carried by the token.
+type Claims = jwt.Claims
 
 type TokenVerifier interface {
 	Verify(ctx context.Context, raw string) (Claims, error)

@@ -1,6 +1,10 @@
 package domainerrors
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/victorinolavida/pkg/jwt"
+)
 
 var (
 	ErrInvalidEmail         = errors.New("invalid email")
@@ -9,7 +13,7 @@ var (
 	ErrPasswordTooShort     = errors.New("password too short")
 	ErrPasswordTooLong      = errors.New("password too long")
 	ErrUserNotFound         = errors.New("user not found")
-	ErrUnauthenticated      = errors.New("unauthenticated")
+	ErrUnauthenticated      = jwt.ErrUnauthenticated
 	ErrInvalidCredentials   = errors.New("invalid credentials")
 	ErrEmailAlreadyRegister = errors.New("email already register")
 )

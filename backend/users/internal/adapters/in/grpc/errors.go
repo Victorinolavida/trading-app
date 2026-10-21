@@ -24,6 +24,9 @@ func mapError(err error) error {
 		// keep generic to avoid user enumeration
 		return status.Error(codes.Unauthenticated, "invalid credentials")
 
+	case errors.Is(err, domainerrors.ErrUnauthenticated):
+		return status.Error(codes.Unauthenticated, "unauthenticated")
+
 	case errors.Is(err, domainerrors.ErrUserNotFound):
 		return status.Error(codes.NotFound, "user not found")
 

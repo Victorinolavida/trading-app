@@ -16,4 +16,3 @@ type Result struct {
 	}
 	Token string
 }
-

@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/victorinolavida/auth/config"
-	"github.com/victorinolavida/auth/internal/adapters/out/jwt"
 	"github.com/victorinolavida/auth/internal/application/usecases/mocks"
 	"github.com/victorinolavida/auth/internal/domainerrors"
+	"github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/jwt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
