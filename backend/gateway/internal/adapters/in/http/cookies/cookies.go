@@ -22,6 +22,7 @@ func Set(w http.ResponseWriter, conf *config.CookieConfig, token string) error {
 	}
 
 	maxAge := int(conf.TTL.Seconds())
+	expires := time.Now().Add(conf.TTL)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     conf.Name,
@@ -32,6 +33,7 @@ func Set(w http.ResponseWriter, conf *config.CookieConfig, token string) error {
 		HttpOnly: true,
 		SameSite: sameSite(conf.SameSite),
 		MaxAge:   maxAge,
+		Expires:  expires,
 	})
 
 	// Not HttpOnly on purpose: the frontend has to read it to send it back in
@@ -45,6 +47,7 @@ func Set(w http.ResponseWriter, conf *config.CookieConfig, token string) error {
 		HttpOnly: false,
 		SameSite: sameSite(conf.SameSite),
 		MaxAge:   maxAge,
+		Expires:  expires,
 	})
 
 	return nil
