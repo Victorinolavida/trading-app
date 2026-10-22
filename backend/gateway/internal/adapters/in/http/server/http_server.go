@@ -38,6 +38,15 @@ func NewHttpServer(conf config.Config) ServerInterface {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
+	r.Use(response.RequestIDResponseMiddleware)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+				w.Header().Set(middleware.RequestIDHeader, reqID)
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
 	r.Use(middleware.ClientIPFromHeader("X-Real-IP"))
 	r.Use(middleware.Recoverer)
 

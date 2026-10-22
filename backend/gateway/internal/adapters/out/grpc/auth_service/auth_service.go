@@ -3,11 +3,13 @@ package authservice
 import (
 	"context"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
 	"github.com/victorinolavida/pkg/config"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	authpb "github.com/victorinolavida/proto/auth"
+	"google.golang.org/grpc/metadata"
 )
 
 type AuthService struct {
@@ -16,6 +18,14 @@ type AuthService struct {
 }
 
 var _ ports.AuthService = (*AuthService)(nil)
+
+func withRequestID(ctx context.Context) context.Context {
+	reqID := middleware.GetReqID(ctx)
+	if reqID == "" {
+		return ctx
+	}
+	return metadata.AppendToOutgoingContext(ctx, "x-request-id", reqID)
+}
 
 func NewAuthService(conf config.GRPCClient) (*AuthService, error) {
 	grpcClient, err := grpcclient.NewGRPCClient(conf)
@@ -35,7 +45,7 @@ func (serv *AuthService) Close() error {
 }
 
 func (serv *AuthService) Login(ctx context.Context, request dtos.LoginRequest) (dtos.AuthUserResponse, error) {
-	result, err := serv.client.LoginUser(ctx, &authpb.LoginRequest{
+	result, err := serv.client.LoginUser(withRequestID(ctx), &authpb.LoginRequest{
 		Email:    request.Email,
 		Password: request.Password,
 	})
@@ -51,7 +61,7 @@ func (serv *AuthService) Login(ctx context.Context, request dtos.LoginRequest) (
 }
 
 func (serv *AuthService) Register(ctx context.Context, command dtos.RegisterRequest) (dtos.AuthUserResponse, error) {
-	result, err := serv.client.RegisterUser(ctx, &authpb.RegisterRequest{
+	result, err := serv.client.RegisterUser(withRequestID(ctx), &authpb.RegisterRequest{
 		Email:     command.Email,
 		FirstName: command.FirstName,
 		LastName:  command.LastName,
@@ -65,5 +75,20 @@ func (serv *AuthService) Register(ctx context.Context, command dtos.RegisterRequ
 		FirstName: result.FirstName,
 		LastName:  result.LastName,
 		Token:     result.Token,
+	}, nil
+}
+
+func (serv *AuthService) Whoami(ctx context.Context, request dtos.WhoamiUserRequest) (dtos.WhoamiUserResponse, error) {
+	result, err := serv.client.Whoami(withRequestID(ctx), &authpb.WhoamiRequest{
+		Token: request.Token,
+	})
+	if err != nil {
+		return dtos.WhoamiUserResponse{}, err
+	}
+	return dtos.WhoamiUserResponse{
+		UserID:    result.Id,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
+		Email:     result.Email,
 	}, nil
 }

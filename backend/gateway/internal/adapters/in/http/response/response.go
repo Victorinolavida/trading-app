@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -45,7 +47,13 @@ func RenderError(w http.ResponseWriter, status int, message any) {
 }
 
 func RenderServerError(w http.ResponseWriter, err error) {
-	slog.Error("sending error response", slog.Any("error", err))
+	args := []any{slog.Any("error", err)}
+	if r := RequestFromContext(w); r != nil {
+		if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+			args = append(args, slog.String("request_id", reqID))
+		}
+	}
+	slog.Error("sending error response", args...)
 	message := "something went wrong"
 	RenderError(w, http.StatusInternalServerError, message)
 }
@@ -70,7 +78,7 @@ func RenderBadRequest(w http.ResponseWriter, msg ...string) {
 
 func RenderMethodNotAllowed(w http.ResponseWriter) {
 	message := "method not allowed"
-	RenderError(w, http.StatusBadRequest, message)
+	RenderError(w, http.StatusMethodNotAllowed, message)
 }
 
 func RenderFatalError(w http.ResponseWriter, err error) {
@@ -118,7 +126,11 @@ func ParseBodyFromRequest[T any](w http.ResponseWriter, r *http.Request) (T, err
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&newStruct); err != nil {
-		slog.Error("error decodeing", slog.Any("error", err))
+		args := []any{slog.Any("error", err)}
+		if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+			args = append(args, slog.String("request_id", reqID))
+		}
+		slog.Error("error decoding", args...)
 		return *newStruct, errors.New("invalid data")
 	}
 	return *newStruct, nil

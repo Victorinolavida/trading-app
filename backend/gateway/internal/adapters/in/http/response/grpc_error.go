@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -58,11 +59,17 @@ func MapGRPCError(err error) (int, string) {
 }
 
 // RenderGRPCError maps a gRPC error and writes it as an HTTP error response.
-func RenderGRPCError(w http.ResponseWriter, err error) {
+func RenderGRPCError(w http.ResponseWriter, r *http.Request, err error) {
 	statusCode, message := MapGRPCError(err)
 
 	if statusCode >= http.StatusInternalServerError {
-		slog.Error("upstream service error", slog.Any("error", err))
+		args := []any{slog.Any("error", err)}
+		if r != nil {
+			if reqID := middleware.GetReqID(r.Context()); reqID != "" {
+				args = append(args, slog.String("request_id", reqID))
+			}
+		}
+		slog.Error("upstream service error", args...)
 	}
 
 	RenderError(w, statusCode, message)

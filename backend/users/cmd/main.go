@@ -8,9 +8,11 @@ import (
 
 	"github.com/victorinolavida/auth/config"
 	grpcAdapter "github.com/victorinolavida/auth/internal/adapters/in/grpc"
+	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
+	"github.com/victorinolavida/auth/internal/application/usecases/whoami"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
 	grpcserver "github.com/victorinolavida/pkg/grpc_server"
@@ -40,11 +42,12 @@ func main() {
 		logger.Fatal("error creating new token service", slog.Any("error", err))
 	}
 
-	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC, grpcAdapter.ErrorMappingInterceptor)
+	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC, requestid.UnaryServerInterceptor, grpcAdapter.ErrorMappingInterceptor)
 
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)
-	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler)
+	whoamiHandler := whoami.New(userRepo, tokenServ)
+	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler)
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)
 

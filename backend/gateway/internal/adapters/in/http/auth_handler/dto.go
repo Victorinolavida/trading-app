@@ -20,3 +20,19 @@ func newAuthUserResponse(result dtos.AuthUserResponse) AuthUserResponse {
 		Token:     result.Token,
 	}
 }
+
+type WhoamiUserResponse struct {
+	UserID    string `json:"user_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+}
+
+func newWhoamiResponse(result dtos.WhoamiUserResponse) WhoamiUserResponse {
+	return WhoamiUserResponse{
+		UserID:    result.UserID,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
+		Email:     result.Email,
+	}
+}

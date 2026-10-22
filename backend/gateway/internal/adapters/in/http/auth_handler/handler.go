@@ -61,7 +61,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Password: loginReq.Password,
 	})
 	if err != nil {
-		response.RenderGRPCError(w, err)
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Password:  registerReq.Password,
 	})
 	if err != nil {
-		response.RenderGRPCError(w, err)
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 
@@ -113,7 +113,7 @@ func (h *AuthHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 		Token: token,
 	})
 	if err != nil {
-		response.RenderGRPCError(w, err)
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 
