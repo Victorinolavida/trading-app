@@ -78,7 +78,7 @@ func (serv *AuthService) Register(ctx context.Context, command dtos.RegisterRequ
 
 func (serv *AuthService) Whoami(ctx context.Context, request dtos.WhoamiUserRequest) (dtos.WhoamiUserResponse, error) {
 	result, err := serv.client.Whoami(ctx, &authpb.WhoamiRequest{
-		Token: request.Token,
+		UserId: request.UserID,
 	})
 	if err != nil {
 		return dtos.WhoamiUserResponse{}, err

@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-playground/validator/v10"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-playground/validator/v10"
 	"github.com/victorinolavida/gateway/config"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
@@ -114,16 +114,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Whoami(w http.ResponseWriter, r *http.Request) {
-	token, _ := response.GetTokenFromRequest(r)
-
-	if token == "" {
+	claims, err := middleware.GetClaims(r.Context())
+	if err != nil {
 		response.RenderUnauthorized(w)
 		return
 	}
-
+	if claims.UserID == "" {
+		response.RenderUnauthorized(w)
+		return
+	}
 	// send message via grpc
 	result, err := h.service.Whoami(withRequestMeta(r.Context(), r), dtos.WhoamiUserRequest{
-		Token: token,
+		UserID: claims.UserID,
 	})
 	if err != nil {
 		response.RenderGRPCError(w, r, err)

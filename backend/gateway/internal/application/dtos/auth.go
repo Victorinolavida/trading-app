@@ -23,7 +23,7 @@ type AuthUserResponse struct {
 }
 
 type WhoamiUserRequest struct {
-	Token string
+	UserID string
 }
 
 type WhoamiUserResponse struct {
