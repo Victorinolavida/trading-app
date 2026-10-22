@@ -18,11 +18,9 @@ import (
 // ErrUnauthenticated is returned when a token is missing, malformed or expired.
 var ErrUnauthenticated = errors.New("unauthenticated")
 
-// Claims is the identity carried by a token.
+// Claims is the identity carried by the token.
 type Claims struct {
-	UserID    string
-	FirstName string
-	LastName  string
+	UserID string
 }
 
 type TokenService struct {
@@ -34,9 +32,6 @@ type TokenService struct {
 }
 
 type tokenClaims struct {
-	UserID    string `json:"user_id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
 	jwt.RegisteredClaims
 }
 
@@ -64,9 +59,6 @@ func (serv *TokenService) Issue(_ context.Context, p Claims) (string, error) {
 	exp := now.Add(serv.ttl)
 
 	c := tokenClaims{
-		UserID:    p.UserID,
-		LastName:  p.LastName,
-		FirstName: p.FirstName,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        jti.String(),
 			Subject:   p.UserID,
@@ -89,7 +81,7 @@ func (serv *TokenService) Verify(_ context.Context, raw string) (Claims, error) 
 	c := &tokenClaims{}
 	_, err := jwt.ParseWithClaims(raw, c,
 		func(*jwt.Token) (any, error) { return serv.secret, nil },
-		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}), // pin the algorithm
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithIssuer(serv.issuer),
 		jwt.WithAudience(serv.audience),
 		jwt.WithExpirationRequired(),
@@ -100,5 +92,5 @@ func (serv *TokenService) Verify(_ context.Context, raw string) (Claims, error) 
 		return Claims{}, ErrUnauthenticated
 	}
 
-	return Claims{UserID: c.Subject, FirstName: c.FirstName, LastName: c.LastName}, nil
+	return Claims{UserID: c.Subject}, nil
 }

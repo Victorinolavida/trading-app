@@ -84,11 +84,7 @@ func TestNewService(t *testing.T) {
 
 func TestIssueAndVerify_HappyPath(t *testing.T) {
 	serv := newTestService(t)
-	want := Claims{
-		UserID:    "user-123",
-		FirstName: "John",
-		LastName:  "Doe",
-	}
+	want := Claims{UserID: "user-123"}
 
 	raw, err := serv.Issue(context.Background(), want)
 	assert.NoError(t, err)
@@ -116,7 +112,6 @@ func TestIssue_RegisteredClaims(t *testing.T) {
 	assert.Equal(t, "test-issuer", parsed.Issuer)
 	assert.Equal(t, jwt.ClaimStrings{"test-audience"}, parsed.Audience)
 	assert.Equal(t, "user-123", parsed.Subject)
-	assert.Equal(t, "user-123", parsed.UserID)
 	assert.NotEmpty(t, parsed.ID)
 	assert.Equal(t, now.Unix(), parsed.IssuedAt.Unix())
 	assert.Equal(t, now.Unix(), parsed.NotBefore.Unix())
@@ -154,7 +149,6 @@ func TestVerify_ExpiredWithinLeeway(t *testing.T) {
 func TestVerify_RejectsInvalidTokens(t *testing.T) {
 	serv := newTestService(t)
 	valid := tokenClaims{
-		UserID: "user-123",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   "user-123",
 			Issuer:    serv.issuer,

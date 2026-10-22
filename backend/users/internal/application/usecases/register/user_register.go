@@ -40,9 +40,7 @@ func (u *Usecase) Execute(ctx context.Context, command Command) (Result, error) 
 		return Result{}, err
 	}
 	token, err := u.issuer.Issue(ctx, ports.Claims{
-		UserID:    user.ID().String(),
-		FirstName: user.FirstName().String(),
-		LastName:  user.LastName().String(),
+		UserID: user.ID().String(),
 	})
 	if err != nil {
 		return Result{}, err
