@@ -3,9 +3,11 @@ module github.com/victorinolavida/securities
 go 1.26.5
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/knadh/koanf/parsers/yaml v1.1.1
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/v2 v2.4.0
+	github.com/shopspring/decimal v1.6.0
 	github.com/victorinolavida/pkg v0.0.0
 )
 
