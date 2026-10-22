@@ -18,6 +18,10 @@ Monorepo with a Go backend (`backend/`) and a React frontend (`frontend/`).
 
 Notable Go libraries: [chi](https://github.com/go-chi/chi) (gateway router), [pgx](https://github.com/jackc/pgx) (Postgres driver), [grpc](https://google.golang.org/grpc) + [protobuf](https://github.com/protocolbuffers/protobuf) (users service), [jwt/v5](https://github.com/golang-jwt/jwt), [koanf](https://github.com/knadh/koanf) (config), [testify](https://github.com/stretchr/testify) (tests).
 
+Gateway: request-id propagation (HTTP headers + gRPC metadata), auth middleware, `/api/v0/auth/whoami`, validation + gRPC error mapping, OpenAPI in `backend/gateway/api/openapi.yaml`. JWT lives in `pkg/jwt` (HS256, issuer/audience/expiry checks), tokens now carry only `user_id`. Services pass client IP/user-agent/request-id via gRPC metadata.
+
+Pending: add Prometheus metrics to gateway and users services.
+
 ### Frontend
 
 | Tool | Purpose | Install |

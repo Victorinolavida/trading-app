@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/victorinolavida/auth/internal/adapters/in/grpc/metadata"
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +27,15 @@ func ErrorMappingInterceptor(ctx context.Context, req any, info *grpc.UnaryServe
 		}
 		if reqID := requestid.FromContext(ctx); reqID != "" {
 			base = append(base, slog.String("request_id", reqID))
+		}
+		if ip := metadata.ClientIPFromContext(ctx); ip != "" {
+			base = append(base, slog.String("client_ip", ip))
+		}
+		if ua := metadata.UserAgentFromContext(ctx); ua != "" {
+			base = append(base, slog.String("user_agent", ua))
+		}
+		if userID := metadata.UserIDFromContext(ctx); userID != "" {
+			base = append(base, slog.String("user_id", userID))
 		}
 
 		switch code {

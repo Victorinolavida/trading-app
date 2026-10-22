@@ -38,6 +38,14 @@ func RenderJson(w http.ResponseWriter, data any, status int) {
 
 func RenderError(w http.ResponseWriter, status int, message any) {
 	env := Envelop("error", message)
+	if rw, ok := w.(*RequestWriter); ok {
+		if rid := middleware.GetReqID(rw.req.Context()); rid != "" {
+			env = map[string]any{
+				"error":      message,
+				"request_id": rid,
+			}
+		}
+	}
 	err := WriteJsonResponse(w, env, status)
 	if err != nil {
 		slog.Error("error writing json response", slog.Any("error", err))

@@ -1,20 +1,33 @@
 package authhandler
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/victorinolavida/gateway/config"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
+	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	"github.com/victorinolavida/pkg/jwt"
 )
+
+func withRequestMeta(ctx context.Context, r *http.Request) context.Context {
+	ctx = grpcclient.WithClientIP(ctx, chimw.GetClientIP(r.Context()))
+	ctx = grpcclient.WithUserAgent(ctx, r.UserAgent())
+	cl, err := middleware.GetClaims(ctx)
+	if err == nil {
+		ctx = grpcclient.WithUserID(ctx, cl.UserID)
+	}
+	return ctx
+}
 
 // ErrMissingValidator is returned when the handler is built without a validator.
 var ErrMissingValidator = errors.New("auth handler: validator is required")
@@ -56,7 +69,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send message via grpc
-	result, err := h.service.Login(r.Context(), dtos.LoginRequest{
+	result, err := h.service.Login(withRequestMeta(r.Context(), r), dtos.LoginRequest{
 		Email:    loginReq.Email,
 		Password: loginReq.Password,
 	})
@@ -84,7 +97,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send message via grpc
-	result, err := h.service.Register(r.Context(), dtos.RegisterRequest{
+	result, err := h.service.Register(withRequestMeta(r.Context(), r), dtos.RegisterRequest{
 		Email:     registerReq.Email,
 		FirstName: registerReq.FirstName,
 		LastName:  registerReq.LastName,
@@ -109,7 +122,7 @@ func (h *AuthHandler) Whoami(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send message via grpc
-	result, err := h.service.Whoami(r.Context(), dtos.WhoamiUserRequest{
+	result, err := h.service.Whoami(withRequestMeta(r.Context(), r), dtos.WhoamiUserRequest{
 		Token: token,
 	})
 	if err != nil {

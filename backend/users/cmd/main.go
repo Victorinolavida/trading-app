@@ -8,6 +8,7 @@ import (
 
 	"github.com/victorinolavida/auth/config"
 	grpcAdapter "github.com/victorinolavida/auth/internal/adapters/in/grpc"
+	"github.com/victorinolavida/auth/internal/adapters/in/grpc/metadata"
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
@@ -42,7 +43,7 @@ func main() {
 		logger.Fatal("error creating new token service", slog.Any("error", err))
 	}
 
-	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC, requestid.UnaryServerInterceptor, grpcAdapter.ErrorMappingInterceptor)
+	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC, requestid.UnaryServerInterceptor, metadata.UnaryServerInterceptor, grpcAdapter.ErrorMappingInterceptor)
 
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)
