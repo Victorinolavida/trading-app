@@ -11,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/victorinolavida/gateway/config"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
+	pkgconfig "github.com/victorinolavida/pkg/config"
 )
 
 type stubAuthService struct {
@@ -21,6 +23,8 @@ type stubAuthService struct {
 	loginErr       error
 	registerResult dtos.AuthUserResponse
 	registerErr    error
+	whoamiResult   dtos.WhoamiUserResponse
+	whoamiErr      error
 }
 
 func (s *stubAuthService) Login(context.Context, dtos.LoginRequest) (dtos.AuthUserResponse, error) {
@@ -31,15 +35,30 @@ func (s *stubAuthService) Register(context.Context, dtos.RegisterRequest) (dtos.
 	return s.registerResult, s.registerErr
 }
 
+func (s *stubAuthService) Whoami(context.Context, dtos.WhoamiUserRequest) (dtos.WhoamiUserResponse, error) {
+	return s.whoamiResult, s.whoamiErr
+}
+
+func validTestConfig() *config.Config {
+	return &config.Config{
+		Token: pkgconfig.TokenConfig{
+			Secret:   "test-secret-0123456789-abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJ",
+			Issuer:   "test-issuer",
+			Audience: "test-audience",
+			TTL:      15 * 60 * 1e9,
+		},
+	}
+}
+
 func TestNewAuthHandler_MissingValidator(t *testing.T) {
-	handler, err := NewAuthHandler(&stubAuthService{}, nil)
+	handler, err := NewAuthHandler(validTestConfig(), &stubAuthService{}, nil)
 
 	assert.ErrorIs(t, err, ErrMissingValidator)
 	assert.Nil(t, handler)
 }
 
 func TestNewAuthHandler(t *testing.T) {
-	handler, err := NewAuthHandler(&stubAuthService{}, response.NewValidator())
+	handler, err := NewAuthHandler(validTestConfig(), &stubAuthService{}, response.NewValidator())
 
 	require.NoError(t, err)
 	assert.NotNil(t, handler)
@@ -54,7 +73,7 @@ func TestAuthHandler_Login(t *testing.T) {
 			Token:     "a-token",
 		},
 	}
-	handler, err := NewAuthHandler(service, response.NewValidator())
+	handler, err := NewAuthHandler(validTestConfig(), service, response.NewValidator())
 	require.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -75,7 +94,7 @@ func TestAuthHandler_Login(t *testing.T) {
 }
 
 func TestAuthHandler_LoginValidationError(t *testing.T) {
-	handler, err := NewAuthHandler(&stubAuthService{}, response.NewValidator())
+	handler, err := NewAuthHandler(validTestConfig(), &stubAuthService{}, response.NewValidator())
 	require.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -90,7 +109,7 @@ func TestAuthHandler_LoginValidationError(t *testing.T) {
 
 func TestAuthHandler_LoginUpstreamError(t *testing.T) {
 	service := &stubAuthService{loginErr: errors.New("boom")}
-	handler, err := NewAuthHandler(service, response.NewValidator())
+	handler, err := NewAuthHandler(validTestConfig(), service, response.NewValidator())
 	require.NoError(t, err)
 
 	rr := httptest.NewRecorder()
@@ -103,7 +122,7 @@ func TestAuthHandler_LoginUpstreamError(t *testing.T) {
 }
 
 func TestAuthHandler_Routes(t *testing.T) {
-	handler, err := NewAuthHandler(&stubAuthService{}, response.NewValidator())
+	handler, err := NewAuthHandler(validTestConfig(), &stubAuthService{}, response.NewValidator())
 	require.NoError(t, err)
 
 	assert.Equal(t, "/auth", handler.BasePath())

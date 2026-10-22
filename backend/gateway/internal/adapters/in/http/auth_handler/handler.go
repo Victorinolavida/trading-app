@@ -7,27 +7,35 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/victorinolavida/gateway/config"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
+	"github.com/victorinolavida/pkg/jwt"
 )
 
 // ErrMissingValidator is returned when the handler is built without a validator.
 var ErrMissingValidator = errors.New("auth handler: validator is required")
 
 type AuthHandler struct {
-	service  ports.AuthService
-	validate *validator.Validate
+	service    ports.AuthService
+	validate   *validator.Validate
+	jwtService *jwt.TokenService
 }
 
 var _ module.Module = (*AuthHandler)(nil)
 
-func NewAuthHandler(service ports.AuthService, validate *validator.Validate) (*AuthHandler, error) {
+func NewAuthHandler(conf *config.Config, service ports.AuthService, validate *validator.Validate) (*AuthHandler, error) {
 	if validate == nil {
 		return nil, ErrMissingValidator
 	}
-	return &AuthHandler{service, validate}, nil
+	jwtService, err := jwt.NewService(conf.Token)
+	if err != nil {
+		return nil, err
+	}
+	return &AuthHandler{service, validate, jwtService}, nil
 }
 
 func (h *AuthHandler) BasePath() string {
@@ -92,9 +100,34 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *AuthHandler) Whoami(w http.ResponseWriter, r *http.Request) {
+	token, _ := response.GetTokenFromRequest(r)
+
+	if token == "" {
+		response.RenderUnauthorized(w)
+		return
+	}
+
+	// send message via grpc
+	result, err := h.service.Whoami(r.Context(), dtos.WhoamiUserRequest{
+		Token: token,
+	})
+	if err != nil {
+		response.RenderGRPCError(w, err)
+		return
+	}
+
+	if err := response.WriteJsonResponse(w, newWhoamiResponse(result), http.StatusOK); err != nil {
+		slog.Error("error writing whoami response", slog.Any("error", err))
+	}
+}
+
 func (h *AuthHandler) Routes() http.Handler {
 	r := chi.NewMux()
 	r.Post("/login", h.Login)
 	r.Post("/register", h.Register)
+
+	protected := r.With(middleware.AuthMiddleware(h.jwtService))
+	protected.Get("/whoami", h.Whoami)
 	return r
 }

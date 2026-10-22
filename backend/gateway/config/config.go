@@ -13,9 +13,10 @@ type Server struct {
 }
 
 type Config struct {
-	Env         string            `koanf:"env"`
-	Server      Server            `koanf:"server"`
-	AuthService config.GRPCClient `koanf:"auth_service"`
+	Env         string             `koanf:"env"`
+	Server      Server             `koanf:"server"`
+	AuthService config.GRPCClient  `koanf:"auth_service"`
+	Token       config.TokenConfig `koanf:"token"`
 }
 
 func (c Config) IsProduction() bool {
