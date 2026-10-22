@@ -1,20 +1,45 @@
+# Task runner for the Go backend workspace.
+#
+# Each service lives in its own module (see go.work) and has its own justfile.
+# The recipes below fan out to those modules, accepting either a single service
+# name or `all` where documented.
+
 set shell := ["zsh", "-cu"]
+
+# =============================================================================
+# Modules
+# =============================================================================
 
 mod gateway "gateway"
 mod users "users"
 
-# All backend services
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Every backend service. Used by the `all` target of the dispatch helpers.
 services := "gateway users"
 
-# Services that own DB migrations (used by the `all` argument)
+# Services that own database migrations. Used by the `all` target of DB recipes.
 db_services := "users"
 
+# =============================================================================
+# Default
+# =============================================================================
+
+# List the recipes available at the backend level.
 default:
     @just --list
 
-# Create local config files from the examples: `just setup`
+# =============================================================================
+# Local setup
+# =============================================================================
+
+# Create local config files from the checked-in examples, if missing.
 setup:
     #!/usr/bin/env zsh
+    # Existing config files are left untouched. Run this once after cloning,
+    # then edit `<service>/config/config.yaml` as needed.
     set -eu
     for s in {{services}}; do
         if [[ -f "$s/config/config.yaml" ]]; then
@@ -25,19 +50,27 @@ setup:
         fi
     done
 
-# Run a service: `just run users` or `just run all`
+# =============================================================================
+# Service lifecycle
+# =============================================================================
+
+# Run a service: `just run users` or `just run all`.
 run service:
     just _each run {{service}}
 
-# Build a service: `just build users` or `just build all`
+# Build a service binary: `just build users` or `just build all`.
 build service:
     just _each build {{service}}
 
-# Run tests: `just test users` or `just test all`
+# Run a service's tests: `just test users` or `just test all`.
 test service:
     just _each test {{service}}
 
-# Format Go code: `just fmt` (all) or `just fmt users`
+# =============================================================================
+# Code quality
+# =============================================================================
+
+# Format Go code: `just fmt` (all) or `just fmt users`.
 fmt service="all":
     #!/usr/bin/env zsh
     set -eu
@@ -48,7 +81,7 @@ fmt service="all":
         just "{{service}}" fmt
     fi
 
-# Vet Go code: `just vet` (all) or `just vet users`
+# Vet Go code: `just vet` (all) or `just vet users`.
 vet service="all":
     #!/usr/bin/env zsh
     set -eu
@@ -59,7 +92,7 @@ vet service="all":
         just "{{service}}" vet
     fi
 
-# Tidy module dependencies: `just tidy` (all) or `just tidy users`
+# Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
 tidy service="all":
     #!/usr/bin/env zsh
     set -eu
@@ -71,35 +104,52 @@ tidy service="all":
         just "{{service}}" tidy
     fi
 
-# Apply pending DB migrations: `just migrate users` or `just migrate all`
+# =============================================================================
+# Database migrations
+# =============================================================================
+
+# Apply pending DB migrations: `just migrate users` or `just migrate all`.
 migrate service:
     just _db migrate {{service}}
 
-# Roll back the last migration batch: `just down users` or `just down all`
+# Roll back the last migration batch: `just down users` or `just down all`.
 down service:
     just _db down {{service}}
 
-# Drop the database and reapply migrations: `just clean users` or `just clean all`
+# Drop the database and reapply migrations: `just clean users` or `just clean all`.
 clean service:
     just _db clean {{service}}
 
-# Show migration status: `just status users` or `just status all`
+# Show migration status: `just status users` or `just status all`.
 status service:
     just _db status {{service}}
 
-# Regenerate sqlc schema.sql: `just schema users` or `just schema all`
+# Regenerate sqlc schema.sql: `just schema users` or `just schema all`.
 schema service:
     just _db schema {{service}}
 
-# Generate Go code from proto files
+# =============================================================================
+# Code generation
+# =============================================================================
+
+# Generate Go code from the protobuf definitions in backend/proto.
 gen-proto:
     @buf generate
     @echo "proto code generated in gen/"
 
-# Scaffold a new service: `just new payments [module]`
+# =============================================================================
+# Service scaffolding
+# =============================================================================
+
+# Scaffold a new service: `just new payments [module]`.
 new name module="":
     zsh scripts/new-service.sh "{{name}}" "{{module}}"
 
+# =============================================================================
+# Private helpers
+# =============================================================================
+
+# Dispatch a command to one service, or every service when `service` is `all`.
 [private]
 _each cmd service:
     #!/usr/bin/env zsh
@@ -115,6 +165,7 @@ _each cmd service:
         exit 2
     fi
 
+# Dispatch a DB command to one service, or every DB service when `service` is `all`.
 [private]
 _db cmd service:
     #!/usr/bin/env zsh

@@ -1,29 +1,47 @@
+# Task runner for the gateway service.
+#
+# The gateway is the HTTP entrypoint of the backend. It is its own Go module and
+# runs from ./cmd; build output goes to ./bin.
+
 set shell := ["zsh", "-cu"]
 
-# Run the gateway service
+# =============================================================================
+# Service lifecycle
+# =============================================================================
+
+# Run the gateway service.
 run:
     go run ./cmd
 
-# Build the gateway binary
+# Build the gateway binary into ./bin/gateway.
 build:
     go build -o bin/gateway ./cmd
 
-# Run tests
+# Run the test suite, starting from a clean test cache.
 test: cache-clean
-    go test ./...
+    go test -v ./...
 
-# Format Go code
+# =============================================================================
+# Code quality
+# =============================================================================
+
+# Format Go code with gofmt.
 fmt:
     gofmt -w .
 
-# Vet Go code
+# Vet Go code with the standard vet tool.
 vet:
     go vet ./...
 
-# Tidy module dependencies (workspace disabled so go.mod/go.sum stay self-sufficient)
+# Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
 tidy:
     GOWORK=off go mod tidy
 
+# =============================================================================
+# Private helpers
+# =============================================================================
+
+# Clear the Go test cache so `just test` always runs the full suite.
 [private]
 cache-clean:
     go clean -testcache

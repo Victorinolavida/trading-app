@@ -1,30 +1,52 @@
+# Task runner for the frontend application.
+#
+# The frontend is a Vite + React + TypeScript app managed with pnpm. Note that
+# .npmrc sets `ignore-scripts=true`, so dependency lifecycle scripts are blocked.
+
 set shell := ["zsh", "-cu"]
 
-# Run the app (installs deps if missing, serves on port 8000)
+# =============================================================================
+# Development
+# =============================================================================
+
+# Run the app on http://localhost:8000, installing dependencies if missing.
 run:
     #!/usr/bin/env zsh
+    # Installing here keeps the first run self-contained.
     set -eu
     if [[ ! -d node_modules ]]; then
         pnpm install
     fi
     pnpm dev
 
-# Install dependencies (lifecycle scripts are blocked by .npmrc)
+# =============================================================================
+# Dependencies
+# =============================================================================
+
+# Install dependencies (lifecycle scripts are blocked by .npmrc).
 install:
     pnpm install
 
-# Type-check + production build
+# =============================================================================
+# Build
+# =============================================================================
+
+# Type-check and build the production bundle.
 build:
     pnpm build
 
-# Serve the production build locally
+# Serve the production build locally.
 preview:
     pnpm preview
 
-# Remove build output and caches
+# =============================================================================
+# Cleanup
+# =============================================================================
+
+# Remove build output and caches, keeping installed dependencies.
 clean:
     rm -rf dist node_modules/.vite tsconfig.tsbuildinfo
 
-# Remove everything (including dependencies)
+# Remove everything, including installed dependencies.
 purge:
     rm -rf dist node_modules tsconfig.tsbuildinfo

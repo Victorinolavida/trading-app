@@ -1,34 +1,63 @@
+# Root task runner for the trading-app monorepo.
+#
+# Run `just` (or `just --list`) to see the available recipes. Backend and
+# frontend recipes are exposed as modules, so `just backend <recipe>` and
+# `just frontend <recipe>` work from the repository root.
+
 set shell := ["zsh", "-cu"]
+
+# =============================================================================
+# Modules
+# =============================================================================
 
 mod backend "backend"
 mod frontend "frontend"
 
+# =============================================================================
+# Default
+# =============================================================================
+
+# List the recipes available at the repository root.
 default:
     @just --list
 
-# Start postgres
+# =============================================================================
+# Infrastructure
+# =============================================================================
+
+# Start the local Postgres container defined in docker-compose.yaml.
 infra-up:
     docker compose up -d postgres
 
-# Stop infra
+# Stop and remove the local infrastructure containers.
 infra-down:
     docker compose down
 
-# Install frontend dependencies
+# =============================================================================
+# Frontend
+# =============================================================================
+
+# Install frontend dependencies.
 install:
     just frontend install
 
-# Run the frontend dev server (port 8000)
+# Run the frontend development server on http://localhost:8000.
 web:
     just frontend run
 
-# Build the frontend
+# Build the frontend production bundle.
 web-build:
     just frontend build
 
-# Run the whole stack: infra + gateway + frontend
+# =============================================================================
+# Development workflow
+# =============================================================================
+
+# Start the full local stack: infrastructure, gateway, and frontend.
 dev:
     #!/usr/bin/env zsh
+    # Child processes are torn down together on exit. Requires just, docker
+    # compose, and local config files created by `just backend setup`.
     set -eu
     just infra-up
     killtree() {
