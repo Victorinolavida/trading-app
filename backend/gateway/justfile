@@ -1,13 +1,15 @@
+set shell := ["zsh", "-cu"]
+
 # Run the gateway service
 run:
-    go run ./...
+    go run ./cmd
 
 # Build the gateway binary
 build:
-    go build -o bin/gateway .
+    go build -o bin/gateway ./cmd
 
 # Run tests
-test:
+test: cache-clean
     go test ./...
 
 # Format Go code
@@ -21,3 +23,7 @@ vet:
 # Tidy module dependencies (workspace disabled so go.mod/go.sum stay self-sufficient)
 tidy:
     GOWORK=off go mod tidy
+
+[private]
+cache-clean:
+    go clean -testcache

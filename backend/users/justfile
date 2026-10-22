@@ -15,7 +15,7 @@ build:
 
 # Run tests
 test: cache-clean
-    go test -v  ./...
+    go test ./...
 
 # Format Go code
 fmt:
@@ -63,4 +63,3 @@ status: db-create
 [private]
 db-create:
     dbmate --url "{{db_url}}" create 2>/dev/null || true
-

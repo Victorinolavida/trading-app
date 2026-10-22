@@ -96,6 +96,10 @@ gen-proto:
     @buf generate
     @echo "proto code generated in gen/"
 
+# Scaffold a new service: `just new payments [module]`
+new name module="":
+    zsh scripts/new-service.sh "{{name}}" "{{module}}"
+
 [private]
 _each cmd service:
     #!/usr/bin/env zsh
