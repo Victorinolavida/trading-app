@@ -54,36 +54,126 @@ bin/
 EOF
 
 cat > "$name/justfile" <<EOF
+# Task runner for the $name service.
+#
+# The $name service is its own Go module exposing a gRPC API and owning the
+# database schema. Migrations are managed with dbmate; generated DB code with
+# sqlc.
+
 set shell := ["zsh", "-cu"]
 
-# Run the $name service
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Database connection used by dbmate. Override with DATABASE_URL if needed.
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading?sslmode=disable")
+
+# Directory containing dbmate migration files.
+migrations := "internal/adapters/out/postgres/migrations"
+
+# Docker Compose service name for the local Postgres container. Used by pg_dump.
+pg_container := "trading-postgres"
+
+# Schema file consumed by sqlc, regenerated from the migrated database.
+schema_file := "internal/adapters/out/postgres/schema.sql"
+
+# =============================================================================
+# Service lifecycle
+# =============================================================================
+
+# Run the $name service.
 run:
     go run ./cmd
 
-# Build the $name binary
+# Build the $name binary into ./bin/$name.
 build:
     go build -o bin/$name ./cmd
 
-# Run tests
+# Run the test suite, starting from a clean test cache.
 test: cache-clean
     go test ./...
 
-# Format Go code
+# =============================================================================
+# Code quality
+# =============================================================================
+
+# Format Go code with gofmt.
 fmt:
     gofmt -w .
 
-# Vet Go code
+# Vet Go code with the standard vet tool.
 vet:
     go vet ./...
 
-# Tidy module dependencies (workspace disabled so go.mod/go.sum stay self-sufficient)
+# Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
 tidy:
     GOWORK=off go mod tidy
 
+# =============================================================================
+# Database migrations
+# =============================================================================
+
+# Apply all pending DB migrations.
+migrate: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+
+# Regenerate sqlc schema.sql from the migrated database.
+schema: migrate
+    docker exec {{pg_container}} pg_dump --schema-only --no-owner --no-privileges \\
+        --exclude-table=schema_migrations "{{db_url}}" | grep -v '^\\\\' > "{{schema_file}}"
+
+# Roll back the last migration batch.
+down: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" down
+
+# Drop the database and reapply all migrations.
+clean: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" drop
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+
+# Create a new migration file.
+new name:
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" new {{name}}
+
+# Show pending/applied migrations.
+status: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
+
+# =============================================================================
+# Private helpers
+# =============================================================================
+
+# Clear the Go test cache so \`just test\` always runs the full suite.
 [private]
 cache-clean:
     go clean -testcache
+
+# Create the database if it does not exist yet.
+[private]
+db-create:
+    dbmate --url "{{db_url}}" create 2>/dev/null || true
 EOF
+
+mkdir -p "$name/internal/adapters/out/postgres/migrations"
+
+cat > "$name/internal/adapters/out/postgres/sqlc.yaml" <<'EOF'
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "sqlc"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+EOF
+
+touch "$name/internal/adapters/out/postgres/query.sql" "$name/internal/adapters/out/postgres/schema.sql"
 
 cat > "$name/config/config.go" <<'EOF'
 package config
@@ -286,6 +376,13 @@ mv "$tmp" justfile
 tmp=$(mktemp)
 awk -v svc="$name" '
     /^services := "/ { sub(/"$/, " " svc "\"") }
+    { print }
+' justfile > "$tmp"
+mv "$tmp" justfile
+
+tmp=$(mktemp)
+awk -v svc="$name" '
+    /^db_services := "/ { sub(/"$/, " " svc "\"") }
     { print }
 ' justfile > "$tmp"
 mv "$tmp" justfile
