@@ -32,6 +32,17 @@ func main() {
 		logger.Fatal("error loading config", slog.Any("error", err))
 	}
 
+	if err := conf.Validate(); err != nil {
+		logger.Fatal("invalid config", slog.Any("error", err))
+	}
+
+	if conf.Cookie.TTL > conf.Token.TTL {
+		slog.Warn("cookie ttl outlives token ttl, the cookie will outlive the token it carries",
+			slog.Duration("cookie_ttl", conf.Cookie.TTL),
+			slog.Duration("token_ttl", conf.Token.TTL),
+		)
+	}
+
 	httpServer := httpserver.NewHttpServer(*conf)
 
 	authService, err := authservice.NewAuthService(conf.AuthService)

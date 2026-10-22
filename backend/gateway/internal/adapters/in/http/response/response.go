@@ -11,10 +11,20 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+type TokenSource string
+
 const (
 	authorizationHeader = "Authorization"
 	maxLimitBodyRequest = 1 << 20
+
+	SourceBearer  TokenSource = "bearer"
+	SourceCookie  TokenSource = "cookie"
+	SourceInvalid TokenSource = "invalid"
 )
+
+// ErrNoCredential is returned when the request carries neither an
+// Authorization header nor a session cookie.
+var ErrNoCredential = errors.New("no credentials in request")
 
 func WriteJsonResponse(w http.ResponseWriter, data any, status int) error {
 	d, err := json.MarshalIndent(data, "", "\t")
@@ -106,14 +116,19 @@ func Envelop(key string, data any) map[string]any {
 	return map[string]any{key: data}
 }
 
-func GetTokenFromRequest(r *http.Request) (string, error) {
+func GetTokenFromRequest(r *http.Request, cookieName string) (string, TokenSource, error) {
 	bearerToken := r.Header.Get(authorizationHeader)
-
-	if bearerToken == "" {
-		return "", errors.New("unauthorized")
+	if bearerToken != "" {
+		if len(bearerToken) > 7 && strings.EqualFold(bearerToken[:7], "bearer ") {
+			return bearerToken[7:], SourceBearer, nil
+		}
+		return "", SourceInvalid, ErrNoCredential
 	}
-
-	return getCleanToken(bearerToken)
+	cookie, err := r.Cookie(cookieName)
+	if err != nil {
+		return "", SourceInvalid, ErrNoCredential
+	}
+	return cookie.Value, SourceCookie, nil
 }
 
 func getCleanToken(authHeader string) (string, error) {
@@ -122,7 +137,6 @@ func getCleanToken(authHeader string) (string, error) {
 	}
 	return "", errors.New("invalid token")
 }
-
 func ParseBodyFromRequest[T any](w http.ResponseWriter, r *http.Request) (T, error) {
 	// 1. Limit size to avoid abuse
 	r.Body = http.MaxBytesReader(w, r.Body, maxLimitBodyRequest) // 1 MiB

@@ -12,6 +12,19 @@ db_services := "users"
 default:
     @just --list
 
+# Create local config files from the examples: `just setup`
+setup:
+    #!/usr/bin/env zsh
+    set -eu
+    for s in {{services}}; do
+        if [[ -f "$s/config/config.yaml" ]]; then
+            echo "$s/config/config.yaml already exists"
+        else
+            cp "$s/config/config.example.yaml" "$s/config/config.yaml"
+            echo "created $s/config/config.yaml from example"
+        fi
+    done
+
 # Run a service: `just run users` or `just run all`
 run service:
     just _each run {{service}}

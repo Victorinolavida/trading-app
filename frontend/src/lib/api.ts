@@ -1,4 +1,4 @@
-import { clearToken, getToken, setToken } from "./token";
+import { getCsrfToken, needsCsrfHeader } from "./csrf";
 
 const API_BASE = "/api/v0";
 
@@ -6,7 +6,6 @@ export interface AuthUser {
   user_id: string;
   first_name: string;
   last_name: string;
-  token: string;
 }
 
 export interface User {
@@ -38,25 +37,31 @@ async function parseError(res: Response): Promise<string> {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (needsCsrfHeader(init.method ?? "GET")) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) headers.set("X-CSRF-Token", csrfToken);
+  }
 
-  if (res.status === 401) clearToken();
+  // The session lives in an httpOnly cookie, so the browser has to send it.
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+    credentials: "include",
+  });
 
   if (!res.ok) throw new ApiError(res.status, await parseError(res));
+
+  if (res.status === 204) return undefined as T;
 
   return (await res.json()) as T;
 }
 
 export async function login(email: string, password: string): Promise<AuthUser> {
-  const user = await request<AuthUser>("/auth/login", {
+  return request<AuthUser>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-  setToken(user.token);
-  return user;
 }
 
 export async function register(
@@ -65,7 +70,7 @@ export async function register(
   lastName: string,
   password: string,
 ): Promise<AuthUser> {
-  const user = await request<AuthUser>("/auth/register", {
+  return request<AuthUser>("/auth/register", {
     method: "POST",
     body: JSON.stringify({
       email,
@@ -74,11 +79,12 @@ export async function register(
       password,
     }),
   });
-  setToken(user.token);
-  return user;
 }
 
 export function whoami(): Promise<User> {
   return request<User>("/auth/whoami");
 }
 
+export function logout(): Promise<void> {
+  return request<void>("/auth/logout", { method: "POST" });
+}

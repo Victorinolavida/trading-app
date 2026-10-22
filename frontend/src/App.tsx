@@ -33,7 +33,7 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <HomePage user={user} onLogout={logout} />
+      <HomePage user={user} onLogout={() => logout.mutate()} />
     </div>
   );
 }

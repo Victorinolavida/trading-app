@@ -58,18 +58,21 @@ func NewHttpServer(conf config.Config) ServerInterface {
 		response.RenderMethodNotAllowed(w)
 	})
 
-	allowOrigins := []string{"*"}
-	if conf.IsProduction() {
-		allowOrigins = conf.Server.AllowOrigins
+	// The browser session is cookie based, so the cors handler has to allow
+	// credentials. Browsers reject "*" together with credentials, therefore the
+	// allowed origins have to be listed explicitly.
+	allowOrigins := conf.Server.AllowOrigins
+	if len(allowOrigins) == 0 {
+		allowOrigins = []string{"*"}
 	}
 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   allowOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of the major browsers
 	}))
 
 	srv := &http.Server{

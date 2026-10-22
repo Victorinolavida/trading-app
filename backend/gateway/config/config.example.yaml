@@ -1,0 +1,34 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (SERVER_PORT, TOKEN_SECRET, ...).
+
+env: development
+
+server:
+  host: localhost
+  port: 3001
+  allow_origins:
+    - http://localhost:8000
+
+# users (auth) service over gRPC
+auth_service:
+  host: localhost
+  port: 3030
+
+# must match the users service token.secret
+token:
+  secret: change-me-to-a-long-random-secret
+  issuer: trading-app
+  audience: trading-app-service
+  ttl: 10h
+
+# browser session cookie (fallback for the Authorization header)
+cookie:
+  name: auth_token
+  csrfname: csrf_token
+  path: /
+  domain: ""
+  secure: false # set to true in production (https only)
+  samesite: Lax
+  ttl: 10h
+  secret: change-me-to-a-long-random-csrf-secret # hmac key for the csrf token, >= 32 bytes, must differ from token.secret

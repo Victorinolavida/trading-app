@@ -1,1 +1,5 @@
+# Local service config (secrets) - copy config.example.yaml to config.yaml
 config.yaml
+
+# Frontend env (local) - copy .env.example to .env
+.env

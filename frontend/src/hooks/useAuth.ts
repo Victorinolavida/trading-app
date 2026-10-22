@@ -1,16 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError, login, register, whoami, type AuthUser, type User } from "../lib/api";
-import { clearToken, getToken } from "../lib/token";
+import { ApiError, login, logout, register, whoami, type AuthUser, type User } from "../lib/api";
 
 export const userKey = ["user"];
 
 export function useSession() {
-  const token = getToken();
-
   return useQuery<User | null>({
     queryKey: userKey,
     queryFn: async () => {
-      if (!getToken()) return null;
       try {
         return await whoami();
       } catch (error) {
@@ -18,7 +14,6 @@ export function useSession() {
         throw error;
       }
     },
-    enabled: Boolean(token),
     staleTime: 30_000,
     retry: (failureCount, error) =>
       !(error instanceof ApiError && error.status === 401) && failureCount < 2,
@@ -68,10 +63,11 @@ export function useRegister() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
-  return () => {
-    clearToken();
-    queryClient.setQueryData(userKey, null);
-    queryClient.clear();
-  };
+  return useMutation({
+    mutationFn: () => logout(),
+    onSettled: () => {
+      queryClient.clear();
+      queryClient.setQueryData(userKey, null);
+    },
+  });
 }
-

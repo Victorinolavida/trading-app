@@ -29,3 +29,14 @@ type TokenConfig struct {
 	Audience string        `koanf:"audience"`
 	TTL      time.Duration `koanf:"ttl"`
 }
+
+type CookieConfig struct {
+	Name     string        `koanf:"name"`
+	CSRFName string        `koanf:"csrfname"`
+	Path     string        `koanf:"path"`
+	Domain   string        `koanf:"domain"`
+	Secure   bool          `koanf:"secure"`
+	SameSite string        `koanf:"samesite"`
+	TTL      time.Duration `koanf:"ttl"`
+	Secret   string        `koanf:"secret"`
+}

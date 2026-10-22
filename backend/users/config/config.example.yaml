@@ -1,0 +1,25 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (DATABASE_HOST, TOKEN_SECRET, ...).
+
+database:
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+  name: trading
+  min_conns: 2
+  max_conns: 2
+
+# must match the gateway token.secret
+token:
+  secret: change-me-to-a-long-random-secret
+  issuer: trading-app
+  audience: trading-app-service
+  ttl: 10h
+
+grpc:
+  protocol: tcp
+  host: localhost
+  port: 3030
+  service: auth
