@@ -25,6 +25,10 @@ fmt:
 vet:
     go vet ./...
 
+# Tidy module dependencies (workspace disabled so go.mod/go.sum stay self-sufficient)
+tidy:
+    GOWORK=off go mod tidy
+
 [private]
 cache-clean:
     go clean -testcache

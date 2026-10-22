@@ -46,6 +46,18 @@ vet service="all":
         just "{{service}}" vet
     fi
 
+# Tidy module dependencies: `just tidy` (all) or `just tidy users`
+tidy service="all":
+    #!/usr/bin/env zsh
+    set -eu
+    if [[ "{{service}}" == "all" ]]; then
+        just _each tidy all
+        (cd pkg && GOWORK=off go mod tidy)
+        (cd gen && GOWORK=off go mod tidy)
+    else
+        just "{{service}}" tidy
+    fi
+
 # Apply pending DB migrations: `just migrate users` or `just migrate all`
 migrate service:
     just _db migrate {{service}}
