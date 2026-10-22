@@ -47,7 +47,7 @@ func main() {
 
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)
-	whoamiHandler := whoami.New(userRepo, tokenServ)
+	whoamiHandler := whoami.New(userRepo)
 	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler)
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)

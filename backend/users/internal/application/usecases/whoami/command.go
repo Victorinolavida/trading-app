@@ -1,7 +1,7 @@
 package whoami
 
 type Command struct {
-	Token string
+	UserID string
 }
 
 type Result struct {

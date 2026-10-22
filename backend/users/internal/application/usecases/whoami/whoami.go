@@ -10,21 +10,15 @@ import (
 )
 
 type Usecase struct {
-	repo     ports.UserRepository
-	verifier ports.TokenVerifier
+	repo ports.UserRepository
 }
 
-func New(repo ports.UserRepository, verifier ports.TokenVerifier) *Usecase {
-	return &Usecase{repo: repo, verifier: verifier}
+func New(repo ports.UserRepository) *Usecase {
+	return &Usecase{repo: repo}
 }
 
 func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
-	claims, err := u.verifier.Verify(ctx, cmd.Token)
-	if err != nil {
-		return Result{}, domainerrors.ErrUnauthenticated
-	}
-
-	userUUID, err := uuid.Parse(claims.UserID)
+	userUUID, err := uuid.Parse(cmd.UserID)
 	if err != nil {
 		return Result{}, domainerrors.ErrUnauthenticated
 	}

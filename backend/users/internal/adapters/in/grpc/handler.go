@@ -75,9 +75,9 @@ func (handler *AuthGRPCHandler) LoginUser(ctx context.Context, req *authpb.Login
 
 func (handler *AuthGRPCHandler) Whoami(ctx context.Context, req *authpb.WhoamiRequest) (*authpb.WhoamiResponse, error) {
 	command := whoami.Command{
-		Token: strings.TrimSpace(req.Token),
+		UserID: strings.TrimSpace(req.UserId),
 	}
-	if command.Token == "" {
+	if command.UserID == "" {
 		return nil, status.Error(codes.InvalidArgument, "missing required fields")
 	}
 
