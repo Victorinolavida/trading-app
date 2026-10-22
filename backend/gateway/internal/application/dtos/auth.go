@@ -21,3 +21,15 @@ type AuthUserResponse struct {
 	LastName  string
 	Token     string
 }
+
+type WhoamiUserRequest struct {
+	Token string
+}
+
+type WhoamiUserResponse struct {
+	UserID    string
+	FirstName string
+	LastName  string
+	Token     string
+	Email     string
+}

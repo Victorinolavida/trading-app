@@ -6,6 +6,7 @@ import (
 
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
+	"github.com/victorinolavida/auth/internal/application/usecases/whoami"
 	authpb "github.com/victorinolavida/proto/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,13 +16,15 @@ type AuthGRPCHandler struct {
 	authpb.UnimplementedAuthServiceServer
 	register *register.Usecase
 	login    *login.Usecase
+	whoami   *whoami.Usecase
 }
 
 func NewAuthGRPCHandler(
 	registerUC *register.Usecase,
 	loginUC *login.Usecase,
+	whoamiUC *whoami.Usecase,
 ) *AuthGRPCHandler {
-	return &AuthGRPCHandler{register: registerUC, login: loginUC}
+	return &AuthGRPCHandler{register: registerUC, login: loginUC, whoami: whoamiUC}
 }
 
 func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthUserResponse, error) {
@@ -67,5 +70,26 @@ func (handler *AuthGRPCHandler) LoginUser(ctx context.Context, req *authpb.Login
 		FirstName: result.User.FirstName,
 		LastName:  result.User.LastName,
 		Token:     result.Token,
+	}, nil
+}
+
+func (handler *AuthGRPCHandler) Whoami(ctx context.Context, req *authpb.WhoamiRequest) (*authpb.WhoamiResponse, error) {
+	command := whoami.Command{
+		Token: strings.TrimSpace(req.Token),
+	}
+	if command.Token == "" {
+		return nil, status.Error(codes.InvalidArgument, "missing required fields")
+	}
+
+	result, err := handler.whoami.Execute(ctx, command)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authpb.WhoamiResponse{
+		Id:        result.UserID,
+		Email:     result.Email,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
 	}, nil
 }

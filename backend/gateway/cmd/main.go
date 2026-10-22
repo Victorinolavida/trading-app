@@ -39,7 +39,7 @@ func main() {
 		logger.Fatal("error in auth service", slog.Any("error", err))
 	}
 
-	authHandler, err := authhandler.NewAuthHandler(authService, response.NewValidator())
+	authHandler, err := authhandler.NewAuthHandler(conf, authService, response.NewValidator())
 	if err != nil {
 		logger.Fatal("error creating auth handler", slog.Any("error", err))
 	}

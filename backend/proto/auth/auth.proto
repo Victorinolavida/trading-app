@@ -23,7 +23,19 @@ message LoginRequest {
   string password = 2;
 }
 
+message WhoamiRequest {
+  string token = 1;
+}
+
+message WhoamiResponse {
+  string id         = 1;
+  string first_name = 2;
+  string last_name  = 3;
+  string email = 4;
+}
+
 service AuthService {
   rpc RegisterUser(RegisterRequest) returns (AuthUserResponse){}
   rpc LoginUser(LoginRequest) returns (AuthUserResponse){}
+  rpc Whoami(WhoamiRequest) returns (WhoamiResponse){}
 }

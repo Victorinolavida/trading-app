@@ -1,0 +1,30 @@
+set shell := ["zsh", "-cu"]
+
+# Run the app (installs deps if missing, serves on port 8000)
+run:
+    #!/usr/bin/env zsh
+    set -eu
+    if [[ ! -d node_modules ]]; then
+        pnpm install
+    fi
+    pnpm dev
+
+# Install dependencies (lifecycle scripts are blocked by .npmrc)
+install:
+    pnpm install
+
+# Type-check + production build
+build:
+    pnpm build
+
+# Serve the production build locally
+preview:
+    pnpm preview
+
+# Remove build output and caches
+clean:
+    rm -rf dist node_modules/.vite tsconfig.tsbuildinfo
+
+# Remove everything (including dependencies)
+purge:
+    rm -rf dist node_modules tsconfig.tsbuildinfo
