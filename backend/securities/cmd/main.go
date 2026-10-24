@@ -2,47 +2,54 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log/slog"
-	"net"
-	"net/http"
 	"os/signal"
-	"strconv"
 	"syscall"
-	"time"
-
-	cfg "github.com/victorinolavida/pkg/config"
-	"github.com/victorinolavida/pkg/logger"
 
 	"github.com/victorinolavida/securities/config"
+	grpcAdapter "github.com/victorinolavida/securities/internal/adapters/in/grcp"
+	"github.com/victorinolavida/securities/internal/adapters/out/postgres"
+	getenablesecurities "github.com/victorinolavida/securities/internal/application/usecases/get_enable_securities"
+	getsecurities "github.com/victorinolavida/securities/internal/application/usecases/get_securities"
+	getsecuritybyparams "github.com/victorinolavida/securities/internal/application/usecases/get_security_by_params"
+	conf "github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/database"
+	grpcserver "github.com/victorinolavida/pkg/grpc_server"
+	"github.com/victorinolavida/pkg/logger"
+	securitypb "github.com/victorinolavida/proto/security"
+	"google.golang.org/grpc/reflection"
 )
 
-const shutdownTimeout = 15 * time.Second
-
 func main() {
-	log := logger.NewLogger()
+	logs := logger.NewLogger()
 
-	conf, err := cfg.NewConfig[config.Config]()
+	cfg, err := conf.NewConfig[config.Config]()
 	if err != nil {
-		logger.Fatal("error loading config", slog.Any("error", err))
+		logger.Fatal("error loading configs", slog.Any("error", err))
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
-
-	server := &http.Server{
-		Addr:              net.JoinHostPort(conf.Server.Host, strconv.Itoa(conf.Server.Port)),
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
+	pool, err := database.NewPool(context.Background(), cfg.Database)
+	if err != nil {
+		logger.Fatal("error connecting to db", slog.Any("error", err))
 	}
+
+	repo := postgres.NewSecurityRepo(pool)
+
+	getEnable := getenablesecurities.New(repo)
+	getByParams := getsecurities.New(repo)
+	getByParam := getsecuritybyparams.New(repo)
+
+	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)
+	handler := grpcAdapter.NewSecurityGRPCHandler(getEnable, getByParams, getByParam)
+	securitypb.RegisterAuthServiceServer(grpcServer.Server(), handler)
+
+	reflection.Register(grpcServer.Server())
+
+	listener := grpcServer.Listen()
 
 	go func() {
-		log.Info("http server listening", slog.String("addr", server.Addr))
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Fatal("http server error", slog.Any("error", err))
+		if err := grpcServer.Server().Serve(listener); err != nil {
+			logger.Fatal("grpc server error", slog.Any("error", err))
 		}
 	}()
 
@@ -50,11 +57,7 @@ func main() {
 	defer stop()
 	<-ctx.Done()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Fatal("error shutting down http server", slog.Any("error", err))
-	}
-
-	log.Info("server shutdown successfully")
+	grpcServer.Server().GracefulStop()
+	logs.Info("securities server shutdown successfully")
 }
+

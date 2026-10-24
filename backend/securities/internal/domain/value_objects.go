@@ -1,8 +1,10 @@
 package domain
 
 import (
+	"errors"
 	"slices"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/victorinolavida/securities/internal/domainerrors"
 )
 
@@ -18,6 +20,8 @@ const (
 	MXN Currency = "MXN"
 	UDI Currency = "UDI"
 )
+
+var ErrInvalidNumericNumber = errors.New("invalid numeric value")
 
 func (s SecurityType) String() string { return string(s) }
 
@@ -50,4 +54,15 @@ func NewCurrency(val string) (Currency, error) {
 		return Currency(""), err
 	}
 	return currency, nil
+}
+
+func NumericToFloat(n pgtype.Numeric) (float64, error) {
+	val, err := n.Float64Value()
+	if err != nil {
+		return float64(0), err
+	}
+	if !val.Valid {
+		return float64(0), ErrInvalidNumericNumber
+	}
+	return val.Float64, nil
 }

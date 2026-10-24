@@ -1,15 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { HomePage } from "./pages/HomePage";
-import { useLogout, useSession } from "./hooks/useAuth";
+import { SecurityDetailPage } from "./pages/SecurityDetailPage";
+import { useSession } from "./hooks/useAuth";
 
 type AuthView = "login" | "register";
+
+function getSecurityIdFromHash(hash: string): string | null {
+  if (!hash) return null;
+  // support #/securities/:id or #securities/:id
+  const m = hash.match(/securities[/:](.+)$/);
+  if (m && m[1]) {
+    // strip trailing slashes
+    return decodeURIComponent(m[1].replace(/\/+$/, ""));
+  }
+  return null;
+}
 
 export default function App() {
   const [view, setView] = useState<AuthView>("login");
   const { data: user, isLoading, isError } = useSession();
-  const logout = useLogout();
+  const [hash, setHash] = useState(window.location.hash);
+
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const securityId = getSecurityIdFromHash(hash);
 
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center p-4">Loading session...</div>;
@@ -31,9 +51,17 @@ export default function App() {
     );
   }
 
+  if (securityId) {
+    return (
+      <div className="min-h-screen overflow-x-hidden">
+        <SecurityDetailPage securityId={securityId} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <HomePage user={user} onLogout={() => logout.mutate()} />
+    <div className="min-h-screen overflow-x-hidden">
+      <HomePage user={user} onLogout={() => {}} />
     </div>
   );
 }

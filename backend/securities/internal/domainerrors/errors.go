@@ -8,6 +8,8 @@ var (
 	ErrNominalValueLessThanZero = errors.New("nominal value less than 0")
 	ErrFxLessThanZero           = errors.New("fx is less than 0")
 	ErrEmptySerie               = errors.New("a serie value is required")
+	ErrEmptyName                = errors.New("name is required")
 	ErrInvalidSecurityType      = errors.New("invalid security type")
 	ErrInvalidCurrency          = errors.New("invalid currency")
+	ErrSecurityNotFound         = errors.New("security not found")
 )

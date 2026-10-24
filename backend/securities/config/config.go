@@ -1,11 +1,9 @@
 package config
 
-type Server struct {
-	Host string `koanf:"host"`
-	Port int    `koanf:"port"`
-}
+import "github.com/victorinolavida/pkg/config"
 
 type Config struct {
-	Env    string `koanf:"env"`
-	Server Server `koanf:"server"`
+	Env      string            `koanf:"env"`
+	GRPC     config.GRPCServer `koanf:"grpc"`
+	Database config.Database   `koanf:"database"`
 }

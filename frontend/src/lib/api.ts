@@ -88,3 +88,67 @@ export function whoami(): Promise<User> {
 export function logout(): Promise<void> {
   return request<void>("/auth/logout", { method: "POST" });
 }
+
+export interface Security {
+  id: string;
+  isin: string;
+  name: string;
+  security_type: string;
+  serie: string;
+  issue_date: string;
+  maturity_date: string;
+  nominal_value: number;
+  currency: string;
+  fx: number;
+  enable: boolean;
+}
+
+export interface SecuritiesResponse {
+  securities: Security[];
+}
+
+export function getSecuritiesActive(): Promise<SecuritiesResponse> {
+  return request<SecuritiesResponse>("/securities/active");
+}
+
+export function getSecuritiesByParams(params: {
+  id?: string;
+  isin?: string;
+  serie?: string;
+  security_type?: string;
+  name?: string;
+  q?: string;
+  query?: string;
+} = {}): Promise<SecuritiesResponse> {
+  const query = new URLSearchParams();
+  if (params.id) query.set("id", params.id);
+  if (params.isin) query.set("isin", params.isin);
+  if (params.serie) query.set("serie", params.serie);
+  if (params.security_type) query.set("security_type", params.security_type);
+  if (params.name) query.set("name", params.name);
+  const q = params.q ?? params.query;
+  if (q) query.set("q", q);
+  const qs = query.toString();
+  return request<SecuritiesResponse>(`/securities${qs ? `?${qs}` : ""}`);
+}
+
+export function getSecurityByParams(params: {
+  id?: string;
+  isin?: string;
+  serie?: string;
+  security_type?: string;
+  name?: string;
+  q?: string;
+  query?: string;
+} = {}): Promise<Security> {
+  const query = new URLSearchParams();
+  if (params.id) query.set("id", params.id);
+  if (params.isin) query.set("isin", params.isin);
+  if (params.serie) query.set("serie", params.serie);
+  if (params.security_type) query.set("security_type", params.security_type);
+  if (params.name) query.set("name", params.name);
+  const q = params.q ?? params.query;
+  if (q) query.set("q", q);
+  const qs = query.toString();
+  return request<Security>(`/securities/search${qs ? `?${qs}` : ""}`);
+}

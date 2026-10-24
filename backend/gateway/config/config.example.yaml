@@ -15,6 +15,12 @@ auth_service:
   host: localhost
   port: 3030
 
+# securities service over gRPC
+securities_service:
+  host: localhost
+  port: 3031
+
+
 # must match the users service token.secret
 token:
   secret: change-me-to-a-long-random-secret
