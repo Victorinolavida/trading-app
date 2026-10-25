@@ -1,0 +1,77 @@
+syntax = "proto3";
+package order;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/victorinolavida/proto/order";
+
+message Order {
+  string id = 1;
+  string order_group_id = 2;
+  string trader_id = 3;
+  string security_id = 4;
+  string direction = 5;
+  string order_type = 6;
+  string price = 7;
+  string yield = 8;
+  string quantity = 9;
+  string nominal_value = 10;
+  string fx = 11;
+  string status = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+message CreateOrderRequest {
+  string trader_id = 1;
+  string security_id = 2;
+  string direction = 3;
+  string order_type = 4;
+  string price = 5;
+  string yield = 6;
+  string quantity = 7;
+}
+
+message CreateOrderResponse {
+  string order_group_id = 1;
+  string order_id = 2;
+  string status = 3;
+}
+
+message CancelOrderRequest {
+  string order_group_id = 1;
+  string trader_id = 2;
+}
+
+message CancelOrderResponse {
+  string order_group_id = 1;
+  string status = 2;
+}
+
+message GetOrderGroupRequest {
+  string order_group_id = 1;
+}
+
+message GetOrderGroupResponse {
+  string id = 1;
+  string public_id = 2;
+  string trader_id = 3;
+  string security_id = 4;
+  string direction = 5;
+  string order_type = 6;
+  string allocation_pc = 7;
+  string allocation_status = 8;
+  string order_group_status = 9;
+  string weighted_price = 10;
+  string weighted_yield = 11;
+  string weighted_fx = 12;
+  repeated Order orders = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {}
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {}
+  rpc GetOrderGroup(GetOrderGroupRequest) returns (GetOrderGroupResponse) {}
+}

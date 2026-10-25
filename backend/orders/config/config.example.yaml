@@ -1,0 +1,25 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (SERVER_HOST, SERVER_PORT, ...).
+
+env: development
+
+grpc:
+  host: localhost
+  port: 3033
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  name: trading
+  sslmode: disable
+
+services:
+  users:
+    host: localhost
+    port: 3030
+  securities:
+    host: localhost
+    port: 3031
