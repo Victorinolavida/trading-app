@@ -152,3 +152,78 @@ export function getSecurityByParams(params: {
   const qs = query.toString();
   return request<Security>(`/securities/search${qs ? `?${qs}` : ""}`);
 }
+
+export interface CreateOrderRequest {
+  trader_id?: string;
+  security_id: string;
+  direction: "bid" | "ask";
+  order_type: "limit" | "market";
+  price?: string;
+  yield?: string;
+  quantity: string;
+}
+
+export interface CreateOrderResponse {
+  order_group_id: string;
+  order_id: string;
+  status: string;
+}
+
+export interface CancelOrderRequest {
+  order_group_id: string;
+  trader_id?: string;
+}
+
+export interface CancelOrderResponse {
+  order_group_id: string;
+  status: string;
+}
+
+export interface Order {
+  id: string;
+  order_group_id: string;
+  trader_id: string;
+  security_id: string;
+  direction: string;
+  order_type: string;
+  price: string;
+  yield: string;
+  quantity: string;
+  nominal_value: string;
+  fx: string;
+  status: string;
+}
+
+export interface OrderGroupDetail {
+  id: string;
+  public_id: string;
+  trader_id: string;
+  security_id: string;
+  direction: string;
+  order_type: string;
+  allocation_pc: string;
+  allocation_status: string;
+  order_group_status: string;
+  weighted_price: string;
+  weighted_yield: string;
+  weighted_fx: string;
+  orders: Order[];
+}
+
+export function createOrder(req: CreateOrderRequest): Promise<CreateOrderResponse> {
+  return request<CreateOrderResponse>("/orders", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function cancelOrder(req: CancelOrderRequest): Promise<CancelOrderResponse> {
+  return request<CancelOrderResponse>("/orders/cancel", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function getOrderGroup(orderGroupId: string): Promise<OrderGroupDetail> {
+  return request<OrderGroupDetail>(`/orders/${orderGroupId}`);
+}

@@ -38,3 +38,8 @@ cookie:
   samesite: Lax
   ttl: 10h
   secret: change-me-to-a-long-random-csrf-secret # hmac key for the csrf token, >= 32 bytes, must differ from token.secret
+
+# orders service over gRPC
+orders_service:
+  host: localhost
+  port: 3033

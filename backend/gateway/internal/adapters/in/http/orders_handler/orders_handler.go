@@ -13,6 +13,7 @@ import (
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
+	"github.com/victorinolavida/pkg/jwt"
 )
 
 var ErrMissingValidator = errors.New("orders handler: validator is required")
@@ -21,16 +22,22 @@ type OrdersHandler struct {
 	conf          *config.Config
 	ordersService ports.OrdersService
 	validate      *validator.Validate
+	jwtService    *jwt.TokenService
 }
 
 func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate) (*OrdersHandler, error) {
 	if validate == nil {
 		return nil, ErrMissingValidator
 	}
+	jwtService, err := jwt.NewService(conf.Token)
+	if err != nil {
+		return nil, err
+	}
 	return &OrdersHandler{
 		conf:          conf,
 		ordersService: ordersService,
 		validate:      validate,
+		jwtService:    jwtService,
 	}, nil
 }
 
@@ -38,9 +45,10 @@ var _ module.Module = (*OrdersHandler)(nil)
 
 func (h *OrdersHandler) Routes() http.Handler {
 	r := chi.NewMux()
-	r.Post("/", h.CreateOrder)
-	r.Post("/cancel", h.CancelOrder)
-	r.Get("/{orderGroupId}", h.GetOrderGroup)
+	protected := r.With(authmiddleware.AuthMiddleware(h.jwtService, &h.conf.Cookie))
+	protected.Post("/", h.CreateOrder)
+	protected.Post("/cancel", h.CancelOrder)
+	protected.Get("/{orderGroupId}", h.GetOrderGroup)
 	return r
 }
 

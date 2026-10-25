@@ -17,7 +17,9 @@ import (
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	httpserver "github.com/victorinolavida/gateway/internal/adapters/in/http/server"
 	securityhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/security_handler"
+	ordershandler "github.com/victorinolavida/gateway/internal/adapters/in/http/orders_handler"
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
+	ordersservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/orders_service"
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
 )
 
@@ -57,6 +59,11 @@ func main() {
 		logger.Fatal("error in securities service", slog.Any("error", err))
 	}
 
+	ordService, err := ordersservice.NewOrdersService(conf.OrdersService)
+	if err != nil {
+		logger.Fatal("error in orders service", slog.Any("error", err))
+	}
+
 	authHandler, err := authhandler.NewAuthHandler(conf, authService, response.NewValidator())
 	if err != nil {
 		logger.Fatal("error creating auth handler", slog.Any("error", err))
@@ -67,9 +74,15 @@ func main() {
 		logger.Fatal("error creating security handler", slog.Any("error", err))
 	}
 
+	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator())
+	if err != nil {
+		logger.Fatal("error creating orders handler", slog.Any("error", err))
+	}
+
 	modules := []module.Module{
 		authHandler,
 		secHandler,
+		ordHandler,
 	}
 
 	for _, mod := range modules {
@@ -99,6 +112,10 @@ func main() {
 	if err := secService.Close(); err != nil {
 		slog.Error("error closing securities service connection", slog.Any("error", err))
 	}
+	if err := ordService.Close(); err != nil {
+		slog.Error("error closing orders service connection", slog.Any("error", err))
+	}
 
 	log.Info("gateway server shutdown successfully")
 }
+

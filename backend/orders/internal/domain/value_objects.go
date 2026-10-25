@@ -42,7 +42,7 @@ const (
 )
 
 const (
-	AllocationStatusPending   AllocationStatus = "pending"
+	AllocationStatusNone      AllocationStatus = "none"
 	AllocationStatusPartial   AllocationStatus = "partial"
 	AllocationStatusAllocated AllocationStatus = "allocated"
 )
@@ -56,6 +56,7 @@ func (d Direction) validate() error {
 	}
 	return nil
 }
+
 func NewDirection(val string) (Direction, error) {
 	d := Direction(val)
 	if err := d.validate(); err != nil {
@@ -71,6 +72,7 @@ func (o OrderType) validate() error {
 	}
 	return nil
 }
+
 func NewOrderType(val string) (OrderType, error) {
 	o := OrderType(val)
 	if err := o.validate(); err != nil {
@@ -86,6 +88,7 @@ func (o OrderStatus) validate() error {
 	}
 	return nil
 }
+
 func NewOrderStatus(val string) (OrderStatus, error) {
 	o := OrderStatus(val)
 	if err := o.validate(); err != nil {
@@ -101,6 +104,7 @@ func (o OrderGroupStatus) validate() error {
 	}
 	return nil
 }
+
 func NewOrderGroupStatus(val string) (OrderGroupStatus, error) {
 	o := OrderGroupStatus(val)
 	if err := o.validate(); err != nil {
@@ -111,11 +115,12 @@ func NewOrderGroupStatus(val string) (OrderGroupStatus, error) {
 
 func (a AllocationStatus) String() string { return string(a) }
 func (a AllocationStatus) validate() error {
-	if !slices.Contains([]AllocationStatus{AllocationStatusPending, AllocationStatusPartial, AllocationStatusAllocated}, a) {
+	if !slices.Contains([]AllocationStatus{AllocationStatusNone, AllocationStatusPartial, AllocationStatusAllocated}, a) {
 		return domainerrors.ErrInvalidOrderGroupStatus
 	}
 	return nil
 }
+
 func NewAllocationStatus(val string) (AllocationStatus, error) {
 	a := AllocationStatus(val)
 	if err := a.validate(); err != nil {

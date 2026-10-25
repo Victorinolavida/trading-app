@@ -13,16 +13,17 @@ set shell := ["zsh", "-cu"]
 mod gateway "gateway"
 mod users "users"
 mod securities "securities"
+mod orders "orders"
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
 # Every backend service. Used by the `all` target of the dispatch helpers.
-services := "gateway users securities"
+services := "gateway users securities orders"
 
 # Services that own database migrations. Used by the `all` target of DB recipes.
-db_services := "users securities"
+db_services := "users securities orders"
 
 # =============================================================================
 # Default

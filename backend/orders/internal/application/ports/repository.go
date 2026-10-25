@@ -21,3 +21,7 @@ type OrderGroupRepository interface {
 	Update(ctx context.Context, orderGroup *domain.OrderGroup) error
 	GetWithOrders(ctx context.Context, id uuid.UUID) (*domain.OrderGroup, error)
 }
+
+type MatchingEngine interface {
+	ExecuteIncomingOrder(ctx context.Context, order *domain.OrderGroup) ([]*domain.Order, error)
+}

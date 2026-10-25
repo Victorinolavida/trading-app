@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSecurityByParams, getSecuritiesByParams, type Security } from "../lib/api";
+import { getSecurityByParams, getSecuritiesByParams, createOrder, type Security } from "../lib/api";
 import { Sidebar } from "../components/Sidebar";
 
 type Order = {
@@ -21,6 +21,14 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
     { id: "3", side: "ask", price: 98.5, quantity: 150 },
     { id: "4", side: "ask", price: 98.52, quantity: 300 },
   ]);
+
+  const [side, setSide] = useState<"bid" | "ask">("bid");
+  const [orderType, setOrderType] = useState<"limit" | "market">("limit");
+  const [price, setPrice] = useState("");
+  const [yieldVal, setYieldVal] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createMsg, setCreateMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -59,6 +67,29 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
 
   const bids = orders.filter((o) => o.side === "bid").sort((a, b) => b.price - a.price);
   const asks = orders.filter((o) => o.side === "ask").sort((a, b) => a.price - b.price);
+
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!security) return;
+    setCreating(true);
+    setCreateMsg(null);
+    try {
+      const res = await createOrder({
+        security_id: security.id,
+        direction: side,
+        order_type: orderType,
+        price: price || "0",
+        yield: yieldVal || "0",
+        quantity,
+      });
+      setCreateMsg(`Order created: group ${res.order_group_id}, order ${res.order_id}, status ${res.status}`);
+      setQuantity("");
+    } catch (err: any) {
+      setCreateMsg(err?.message || "Failed to create order");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen overflow-x-hidden">
@@ -126,6 +157,42 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
                 </div>
               </div>
 
+              <div className="mb-4 rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                <h2 className="mb-3 text-lg font-semibold">Create Order</h2>
+                <form onSubmit={handleCreateOrder} className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-400">Side</label>
+                    <select value={side} onChange={(e) => setSide(e.target.value as "bid" | "ask")} className="w-full rounded bg-zinc-800 p-2 text-sm">
+                      <option value="bid">Bid</option>
+                      <option value="ask">Ask</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-400">Type</label>
+                    <select value={orderType} onChange={(e) => setOrderType(e.target.value as "limit" | "market")} className="w-full rounded bg-zinc-800 p-2 text-sm">
+                      <option value="limit">Limit</option>
+                      <option value="market">Market</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-400">Price</label>
+                    <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="w-full rounded bg-zinc-800 p-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-400">Yield</label>
+                    <input value={yieldVal} onChange={(e) => setYieldVal(e.target.value)} placeholder="0" className="w-full rounded bg-zinc-800 p-2 text-sm" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="mb-1 block text-xs text-gray-400">Quantity</label>
+                    <input value={quantity} onChange={(e) => setQuantity(e.target.value)} required placeholder="e.g. 100" className="w-full rounded bg-zinc-800 p-2 text-sm" />
+                  </div>
+                  <button type="submit" disabled={creating} className="col-span-2 rounded bg-blue-600 px-4 py-2 text-sm hover:bg-blue-500 disabled:opacity-50">
+                    {creating ? "Creating..." : "Create Order"}
+                  </button>
+                </form>
+                {createMsg && <p className="mt-2 text-sm text-gray-300">{createMsg}</p>}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
                   <h2 className="mb-3 text-lg font-semibold">Bids (Bid)</h2>
@@ -166,3 +233,5 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
     </div>
   );
 }
+
+// Add order creation UI

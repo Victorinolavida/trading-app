@@ -25,10 +25,11 @@ type Server struct {
 type Config struct {
 	Env              string              `koanf:"env"`
 	Server           Server              `koanf:"server"`
-	AuthService      config.GRPCClient   `koanf:"auth_service"`
+	AuthService       config.GRPCClient  `koanf:"auth_service"`
 	SecuritiesService config.GRPCClient  `koanf:"securities_service"`
-	Token            config.TokenConfig  `koanf:"token"`
-	Cookie           config.CookieConfig `koanf:"cookie"`
+	OrdersService     config.GRPCClient  `koanf:"orders_service"`
+	Token             config.TokenConfig  `koanf:"token"`
+	Cookie            config.CookieConfig `koanf:"cookie"`
 }
 
 func (c Config) IsProduction() bool {
@@ -94,3 +95,4 @@ func validateSameSite(value string) error {
 		return fmt.Errorf("cookie: samesite must be one of lax, strict, none, got %q", value)
 	}
 }
+

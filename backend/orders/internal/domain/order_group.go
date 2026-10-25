@@ -9,40 +9,40 @@ import (
 )
 
 type OrderGroup struct {
-	id                uuid.UUID
-	publicID          uuid.UUID
-	traderID          uuid.UUID
-	securityID        uuid.UUID
-	direction         Direction
-	orderType         OrderType
-	allocationPC      decimal.Decimal
-	allocationStatus  AllocationStatus
-	orderGroupStatus  OrderGroupStatus
-	weightedPrice     decimal.Decimal
-	weightedYield     decimal.Decimal
-	weightedFX        decimal.Decimal
-	createdAt         time.Time
-	updatedAt         time.Time
-	orders            []*Order
+	id               uuid.UUID
+	publicID         uuid.UUID
+	traderID         uuid.UUID
+	securityID       uuid.UUID
+	direction        Direction
+	orderType        OrderType
+	allocationPC     decimal.Decimal
+	allocationStatus AllocationStatus
+	orderGroupStatus OrderGroupStatus
+	weightedPrice    decimal.Decimal
+	weightedYield    decimal.Decimal
+	weightedFX       decimal.Decimal
+	createdAt        time.Time
+	updatedAt        time.Time
+	orders           []*Order
 }
 
-func (og *OrderGroup) ID() uuid.UUID                        { return og.id }
-func (og *OrderGroup) PublicID() uuid.UUID                  { return og.publicID }
-func (og *OrderGroup) TraderID() uuid.UUID                  { return og.traderID }
-func (og *OrderGroup) SecurityID() uuid.UUID                { return og.securityID }
-func (og *OrderGroup) Direction() Direction                 { return og.direction }
-func (og *OrderGroup) OrderType() OrderType                 { return og.orderType }
-func (og *OrderGroup) AllocationPC() decimal.Decimal        { return og.allocationPC }
-func (og *OrderGroup) AllocationStatus() AllocationStatus   { return og.allocationStatus }
-func (og *OrderGroup) OrderGroupStatus() OrderGroupStatus   { return og.orderGroupStatus }
-func (og *OrderGroup) WeightedPrice() decimal.Decimal       { return og.weightedPrice }
-func (og *OrderGroup) WeightedYield() decimal.Decimal       { return og.weightedYield }
-func (og *OrderGroup) WeightedFX() decimal.Decimal          { return og.weightedFX }
-func (og *OrderGroup) CreatedAt() time.Time                 { return og.createdAt }
-func (og *OrderGroup) UpdatedAt() time.Time                 { return og.updatedAt }
-func (og *OrderGroup) Orders() []*Order                     { return og.orders }
-func (og *OrderGroup) SetOrders(orders []*Order)            { og.orders = orders }
-func (og *OrderGroup) touch()                               { og.updatedAt = time.Now() }
+func (og *OrderGroup) ID() uuid.UUID                      { return og.id }
+func (og *OrderGroup) PublicID() uuid.UUID                { return og.publicID }
+func (og *OrderGroup) TraderID() uuid.UUID                { return og.traderID }
+func (og *OrderGroup) SecurityID() uuid.UUID              { return og.securityID }
+func (og *OrderGroup) Direction() Direction               { return og.direction }
+func (og *OrderGroup) OrderType() OrderType               { return og.orderType }
+func (og *OrderGroup) AllocationPC() decimal.Decimal      { return og.allocationPC }
+func (og *OrderGroup) AllocationStatus() AllocationStatus { return og.allocationStatus }
+func (og *OrderGroup) OrderGroupStatus() OrderGroupStatus { return og.orderGroupStatus }
+func (og *OrderGroup) WeightedPrice() decimal.Decimal     { return og.weightedPrice }
+func (og *OrderGroup) WeightedYield() decimal.Decimal     { return og.weightedYield }
+func (og *OrderGroup) WeightedFX() decimal.Decimal        { return og.weightedFX }
+func (og *OrderGroup) CreatedAt() time.Time               { return og.createdAt }
+func (og *OrderGroup) UpdatedAt() time.Time               { return og.updatedAt }
+func (og *OrderGroup) Orders() []*Order                   { return og.orders }
+func (og *OrderGroup) SetOrders(orders []*Order)          { og.orders = orders }
+func (og *OrderGroup) touch()                             { og.updatedAt = time.Now() }
 
 func NewOrderGroup(
 	traderID, securityID uuid.UUID,
@@ -79,7 +79,7 @@ func NewOrderGroup(
 		direction:        direction,
 		orderType:        orderType,
 		allocationPC:     decimal.Zero,
-		allocationStatus: AllocationStatusPending,
+		allocationStatus: AllocationStatusNone,
 		orderGroupStatus: OrderGroupStatusActive,
 		weightedPrice:    weightedPrice,
 		weightedYield:    weightedYield,
