@@ -10,36 +10,20 @@ import (
 )
 
 type Order struct {
-	ID           uuid.UUID
-	PublicID     uuid.UUID
-	OrderGroupID uuid.UUID
-	TraderID     uuid.UUID
-	SecurityID   uuid.UUID
-	Direction    string
-	OrderType    string
-	Price        pgtype.Numeric
-	Yield        pgtype.Numeric
-	Quantity     pgtype.Numeric
-	NominalValue pgtype.Numeric
-	Fx           pgtype.Numeric
-	Status       string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type OrderGroup struct {
-	ID               uuid.UUID
-	PublicID         uuid.UUID
-	TraderID         uuid.UUID
-	SecurityID       uuid.UUID
-	Direction        string
-	OrderType        string
-	AllocationPc     pgtype.Numeric
-	AllocationStatus string
-	OrderGroupStatus string
-	WeightedPrice    pgtype.Numeric
-	WeightedYield    pgtype.Numeric
-	WeightedFx       pgtype.Numeric
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	ID            uuid.UUID
+	PublicID      uuid.UUID
+	TraderID      uuid.UUID
+	SecurityID    uuid.UUID
+	Direction     string
+	OrderType     string
+	Price         pgtype.Numeric
+	Yield         pgtype.Numeric
+	AllocationPtc pgtype.Numeric
+	AllocationQty int32
+	Quantity      int32
+	NominalValue  pgtype.Numeric
+	Fx            pgtype.Numeric
+	Status        string
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
 }

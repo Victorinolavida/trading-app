@@ -14,7 +14,6 @@ import (
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
-	"github.com/victorinolavida/orders/internal/application/usecases/get_order_group"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
 	grpcserver "github.com/victorinolavida/pkg/grpc_server"
@@ -24,7 +23,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
-
 
 func main() {
 	logs := logger.NewLogger()
@@ -40,8 +38,6 @@ func main() {
 	}
 
 	orderRepo := postgres.NewOrderRepository(pool)
-	orderGroupRepo := postgres.NewOrderGroupRepository(pool)
-
 	usersConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Users.Host, cfg.Services.Users.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Fatal("error connecting to users service", slog.Any("error", err))
@@ -54,12 +50,11 @@ func main() {
 	userSvc := users.New(usersConn)
 	securitySvc := securities.New(securitiesConn)
 
-	createUC := create_order.New(orderRepo, orderGroupRepo, securitySvc, userSvc)
-	cancelUC := cancel_order.New(orderRepo, orderGroupRepo)
-	getUC := get_order_group.New(orderGroupRepo)
+	createUC := create_order.New(orderRepo, securitySvc, userSvc)
+	cancelUC := cancel_order.New(orderRepo)
 
 	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)
-	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC, getUC)
+	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC)
 	orderpb.RegisterOrderServiceServer(grpcServer.Server(), handler)
 
 	reflection.Register(grpcServer.Server())
@@ -79,4 +74,3 @@ func main() {
 	grpcServer.Server().GracefulStop()
 	logs.Info("orders server shutdown successfully")
 }
-

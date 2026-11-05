@@ -35,13 +35,6 @@ const (
 )
 
 const (
-	OrderGroupStatusActive    OrderGroupStatus = "active"
-	OrderGroupStatusAllocated OrderGroupStatus = "allocated"
-	OrderGroupStatusCancelled OrderGroupStatus = "cancelled"
-	OrderGroupStatusExpired   OrderGroupStatus = "expired"
-)
-
-const (
 	AllocationStatusNone      AllocationStatus = "none"
 	AllocationStatusPartial   AllocationStatus = "partial"
 	AllocationStatusAllocated AllocationStatus = "allocated"
@@ -93,22 +86,6 @@ func NewOrderStatus(val string) (OrderStatus, error) {
 	o := OrderStatus(val)
 	if err := o.validate(); err != nil {
 		return OrderStatus(""), err
-	}
-	return o, nil
-}
-
-func (o OrderGroupStatus) String() string { return string(o) }
-func (o OrderGroupStatus) validate() error {
-	if !slices.Contains([]OrderGroupStatus{OrderGroupStatusActive, OrderGroupStatusAllocated, OrderGroupStatusCancelled, OrderGroupStatusExpired}, o) {
-		return domainerrors.ErrInvalidOrderGroupStatus
-	}
-	return nil
-}
-
-func NewOrderGroupStatus(val string) (OrderGroupStatus, error) {
-	o := OrderGroupStatus(val)
-	if err := o.validate(); err != nil {
-		return OrderGroupStatus(""), err
 	}
 	return o, nil
 }

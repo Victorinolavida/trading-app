@@ -9,48 +9,47 @@ import (
 )
 
 type Order struct {
-	id           uuid.UUID
-	publicID     uuid.UUID
-	orderGroupID uuid.UUID
-	traderID     uuid.UUID
-	securityID   uuid.UUID
-	direction    Direction
-	orderType    OrderType
-	price        decimal.Decimal
-	yield        decimal.Decimal
-	quantity     decimal.Decimal
-	nominalValue decimal.Decimal
-	fx           decimal.Decimal
-	status       OrderStatus
-	createdAt    time.Time
-	updatedAt    time.Time
+	id            uuid.UUID
+	publicID      uuid.UUID
+	traderID      uuid.UUID
+	securityID    uuid.UUID
+	direction     Direction
+	orderType     OrderType
+	price         decimal.NullDecimal
+	yield         decimal.NullDecimal
+	allocationPtc decimal.Decimal
+	allocationQty uint
+	quantity      uint
+	nominalValue  decimal.Decimal
+	fx            decimal.Decimal
+	status        OrderStatus
+	createdAt     time.Time
+	updatedAt     time.Time
 }
 
-func (o *Order) ID() uuid.UUID                { return o.id }
-func (o *Order) PublicID() uuid.UUID          { return o.publicID }
-func (o *Order) OrderGroupID() uuid.UUID      { return o.orderGroupID }
-func (o *Order) TraderID() uuid.UUID          { return o.traderID }
-func (o *Order) SecurityID() uuid.UUID        { return o.securityID }
-func (o *Order) Direction() Direction         { return o.direction }
-func (o *Order) OrderType() OrderType         { return o.orderType }
-func (o *Order) Price() decimal.Decimal       { return o.price }
-func (o *Order) Yield() decimal.Decimal       { return o.yield }
-func (o *Order) Quantity() decimal.Decimal    { return o.quantity }
-func (o *Order) NominalValue() decimal.Decimal { return o.nominalValue }
-func (o *Order) Fx() decimal.Decimal          { return o.fx }
-func (o *Order) Status() OrderStatus          { return o.status }
-func (o *Order) CreatedAt() time.Time         { return o.createdAt }
-func (o *Order) UpdatedAt() time.Time         { return o.updatedAt }
-func (o *Order) touch()                      { o.updatedAt = time.Now() }
+func (o *Order) ID() uuid.UUID                  { return o.id }
+func (o *Order) PublicID() uuid.UUID            { return o.publicID }
+func (o *Order) TraderID() uuid.UUID            { return o.traderID }
+func (o *Order) SecurityID() uuid.UUID          { return o.securityID }
+func (o *Order) Direction() Direction           { return o.direction }
+func (o *Order) OrderType() OrderType           { return o.orderType }
+func (o *Order) Price() decimal.NullDecimal     { return o.price }
+func (o *Order) Yield() decimal.NullDecimal     { return o.yield }
+func (o *Order) Quantity() uint                 { return o.quantity }
+func (o *Order) NominalValue() decimal.Decimal  { return o.nominalValue }
+func (o *Order) AllocationPtc() decimal.Decimal { return o.allocationPtc }
+func (o *Order) AllocationQty() uint            { return o.allocationQty }
+func (o *Order) Fx() decimal.Decimal            { return o.fx }
+func (o *Order) Status() OrderStatus            { return o.status }
+func (o *Order) CreatedAt() time.Time           { return o.createdAt }
+func (o *Order) UpdatedAt() time.Time           { return o.updatedAt }
+func (o *Order) touch()                         { o.updatedAt = time.Now() }
 
 func NewOrder(
-	orderGroupID, traderID, securityID uuid.UUID,
-	directionStr, orderTypeStr string,
-	price, yield, quantity, nominalValue, fx decimal.Decimal,
+	traderID, securityID uuid.UUID,
+	directionStr, orderTypeStr string, quantity uint,
+	price, yield, nominalValue, fx decimal.Decimal,
 ) (*Order, error) {
-	if orderGroupID == uuid.Nil {
-		return nil, domainerrors.ErrInvalidOrderGroupStatus
-	}
 	if traderID == uuid.Nil {
 		return nil, domainerrors.ErrInvalidTraderID
 	}
@@ -65,7 +64,7 @@ func NewOrder(
 	if err != nil {
 		return nil, err
 	}
-	if quantity.LessThanOrEqual(decimal.Zero) {
+	if quantity == 0 {
 		return nil, domainerrors.ErrInvalidQuantity
 	}
 	if nominalValue.LessThanOrEqual(decimal.Zero) {
@@ -81,6 +80,20 @@ func NewOrder(
 		return nil, domainerrors.ErrInvalidYield
 	}
 
+	var nullablePrice, nullableYield decimal.NullDecimal
+
+	if orderType == OrderTypeMarket {
+		if price.IsPositive() {
+			return nil, domainerrors.ErrPriceInMarketOrder
+		}
+		if yield.IsPositive() {
+			return nil, domainerrors.ErrYieldInMarketOrder
+		}
+	} else {
+		nullablePrice = decimal.NewNullDecimal(price)
+		nullableYield = decimal.NewNullDecimal(yield)
+	}
+
 	now := time.Now()
 	id, err := uuid.NewV7()
 	if err != nil {
@@ -91,13 +104,12 @@ func NewOrder(
 	return &Order{
 		id:           id,
 		publicID:     publicID,
-		orderGroupID: orderGroupID,
 		traderID:     traderID,
 		securityID:   securityID,
 		direction:    direction,
 		orderType:    orderType,
-		price:        price,
-		yield:        yield,
+		price:        nullablePrice,
+		yield:        nullableYield,
 		quantity:     quantity,
 		nominalValue: nominalValue,
 		fx:           fx,
@@ -127,9 +139,9 @@ func (o *Order) Expire() {
 }
 
 func ReconstructOrder(
-	id, publicID, orderGroupID, traderID, securityID uuid.UUID,
-	direction, orderType, status string,
-	price, yield, quantity, nominalValue, fx float64,
+	id, publicID, traderID, securityID uuid.UUID,
+	direction, orderType, status string, quantity, allocationQty uint,
+	price, yiel decimal.NullDecimal, nominalValue, allocationPtc, fx float64,
 	createdAt, updatedAt time.Time,
 ) (*Order, error) {
 	dir, err := NewDirection(direction)
@@ -146,20 +158,21 @@ func ReconstructOrder(
 	}
 
 	return &Order{
-		id:           id,
-		publicID:     publicID,
-		orderGroupID: orderGroupID,
-		traderID:     traderID,
-		securityID:   securityID,
-		direction:    dir,
-		orderType:    ot,
-		price:        decimal.NewFromFloat(price),
-		yield:        decimal.NewFromFloat(yield),
-		quantity:     decimal.NewFromFloat(quantity),
-		nominalValue: decimal.NewFromFloat(nominalValue),
-		fx:           decimal.NewFromFloat(fx),
-		status:       st,
-		createdAt:    createdAt,
-		updatedAt:    updatedAt,
+		id:            id,
+		publicID:      publicID,
+		traderID:      traderID,
+		securityID:    securityID,
+		allocationQty: allocationQty,
+		allocationPtc: decimal.NewFromFloat(allocationPtc),
+		direction:     dir,
+		orderType:     ot,
+		price:         price,
+		yield:         yiel,
+		quantity:      quantity,
+		nominalValue:  decimal.NewFromFloat(nominalValue),
+		fx:            decimal.NewFromFloat(fx),
+		status:        st,
+		createdAt:     createdAt,
+		updatedAt:     updatedAt,
 	}, nil
 }

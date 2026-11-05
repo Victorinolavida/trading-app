@@ -7,8 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres/sqlc"
 	"github.com/victorinolavida/orders/internal/application/ports"
 	"github.com/victorinolavida/orders/internal/domain"
@@ -25,20 +26,35 @@ func NewOrderRepository(pool *pgxpool.Pool) *OrderRepository {
 	return &OrderRepository{queries: sqlc.New(pool)}
 }
 
+func decimalToNumeric(d decimal.Decimal) pgtype.Numeric {
+	return pgtype.Numeric{
+		Int:   d.Coefficient(),
+		Exp:   d.Exponent(),
+		Valid: true,
+	}
+}
+
+func decimalNulltoNumeric(d decimal.NullDecimal) pgtype.Numeric {
+	if !d.Valid {
+		return pgtype.Numeric{Valid: false}
+	}
+
+	return decimalToNumeric(d.Decimal)
+}
+
 func (repo *OrderRepository) Save(ctx context.Context, order *domain.Order) error {
 	return repo.queries.SaveOrder(ctx, sqlc.SaveOrderParams{
 		ID:           order.ID(),
 		PublicID:     order.PublicID(),
-		OrderGroupID: order.OrderGroupID(),
 		TraderID:     order.TraderID(),
 		SecurityID:   order.SecurityID(),
 		Direction:    order.Direction().String(),
 		OrderType:    order.OrderType().String(),
-		Price:        numericFromDecimal(order.Price()),
-		Yield:        numericFromDecimal(order.Yield()),
-		Quantity:     numericFromDecimal(order.Quantity()),
-		NominalValue: numericFromDecimal(order.NominalValue()),
-		Fx:           numericFromDecimal(order.Fx()),
+		Price:        decimalNulltoNumeric(order.Price()),
+		Yield:        decimalNulltoNumeric(order.Yield()),
+		Quantity:     int32(order.Quantity()),
+		NominalValue: decimalToNumeric(order.NominalValue()),
+		Fx:           decimalToNumeric(order.Fx()),
 		Status:       order.Status().String(),
 		CreatedAt:    pgtype.Timestamptz{Time: order.CreatedAt(), Valid: true},
 		UpdatedAt:    pgtype.Timestamptz{Time: order.UpdatedAt(), Valid: true},
@@ -75,27 +91,35 @@ func (repo *OrderRepository) Update(ctx context.Context, order *domain.Order) er
 	})
 }
 
+func numericToNullDecimal(num pgtype.Numeric) decimal.NullDecimal {
+	if !num.Valid {
+		return decimal.NullDecimal{}
+	}
+	return decimal.NewNullDecimal(decimal.NewFromBigInt(num.Int, num.Exp))
+}
+
 func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
-	p, _ := decimalFromNumeric(o.Price)
-	y, _ := decimalFromNumeric(o.Yield)
-	q, _ := decimalFromNumeric(o.Quantity)
-	nv, _ := decimalFromNumeric(o.NominalValue)
-	fx, _ := decimalFromNumeric(o.Fx)
+	price := numericToNullDecimal(o.Price)
+	yield := numericToNullDecimal(o.Yield)
+	nomValue := numericToNullDecimal(o.NominalValue)
+	fx := numericToNullDecimal(o.Fx)
+	allocationPtc := numericToNullDecimal(o.AllocationPtc)
 
 	return domain.ReconstructOrder(
 		o.ID,
 		o.PublicID,
-		o.OrderGroupID,
 		o.TraderID,
 		o.SecurityID,
 		o.Direction,
 		o.OrderType,
 		o.Status,
-		p.InexactFloat64(),
-		y.InexactFloat64(),
-		q.InexactFloat64(),
-		nv.InexactFloat64(),
-		fx.InexactFloat64(),
+		uint(o.Quantity),
+		uint(o.AllocationQty),
+		price,
+		yield,
+		nomValue.Decimal.InexactFloat64(),
+		allocationPtc.Decimal.InexactFloat64(),
+		fx.Decimal.InexactFloat64(),
 		o.CreatedAt.Time,
 		o.UpdatedAt.Time,
 	)

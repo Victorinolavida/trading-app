@@ -6,13 +6,13 @@ import (
 )
 
 type Command struct {
-	TraderID     uuid.UUID
-	SecurityID   uuid.UUID
-	Direction    string
-	OrderType    string
-	Price        decimal.Decimal
-	Yield        decimal.Decimal
-	Quantity     decimal.Decimal
+	TraderID   uuid.UUID
+	SecurityID uuid.UUID
+	Direction  string
+	OrderType  string
+	Price      decimal.Decimal
+	Yield      decimal.Decimal
+	Quantity   uint
 }
 
 type Result struct {

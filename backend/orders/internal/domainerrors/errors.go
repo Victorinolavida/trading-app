@@ -9,6 +9,8 @@ var (
 	ErrInvalidYield              = errors.New("invalid yield")
 	ErrInvalidQuantity           = errors.New("quantity must be greater than 0")
 	ErrInvalidNominalValue       = errors.New("nominal value must be greater than 0")
+	ErrPriceInMarketOrder        = errors.New("market order can not have price")
+	ErrYieldInMarketOrder        = errors.New("market order can not have yield")
 	ErrInvalidFX                 = errors.New("fx must be greater than 0")
 	ErrInvalidDirection          = errors.New("invalid direction")
 	ErrInvalidOrderType          = errors.New("invalid order type")
