@@ -10,8 +10,8 @@ set shell := ["zsh", "-cu"]
 # Configuration
 # =============================================================================
 
-# Database connection used by dbmate. Override with DATABASE_URL if needed.
-db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading?sslmode=disable")
+# Database owned by the orders service. Override with DATABASE_URL if needed.
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading_orders?sslmode=disable")
 
 # Directory containing dbmate migration files.
 migrations := "internal/adapters/out/postgres/migrations"

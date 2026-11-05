@@ -10,8 +10,8 @@ set shell := ["zsh", "-cu"]
 # Configuration
 # =============================================================================
 
-# Database connection used by dbmate. Override with DATABASE_URL if needed.
-db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading?sslmode=disable")
+# Database owned by the securities service. Override with DATABASE_URL if needed.
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading_securities?sslmode=disable")
 
 # Directory containing dbmate migration files.
 migrations := "internal/adapters/out/postgres/migrations"
@@ -89,7 +89,7 @@ status: db-create
 
 # Seed reference securities (e.g. Mexico M-Bono 7.75% 2034). Idempotent.
 seed: migrate
-    docker exec -i {{pg_container}} psql -U postgres -d trading -v ON_ERROR_STOP=1 < "{{seeds}}/001_mexico_mbono_341123.sql"
+    for f in {{seeds}}/*.sql; do docker exec -i {{pg_container}} psql -U postgres -d trading_securities -v ON_ERROR_STOP=1 < "$f"; done
 
 # =============================================================================
 # Private helpers

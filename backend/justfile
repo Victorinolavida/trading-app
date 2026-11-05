@@ -110,6 +110,7 @@ tidy service="all":
 # Database migrations
 # =============================================================================
 
+# Each service owns its own database (e.g. trading_users); see the service justfiles.
 # Apply pending DB migrations: `just migrate users` or `just migrate all`.
 migrate service:
     just _db migrate {{service}}
