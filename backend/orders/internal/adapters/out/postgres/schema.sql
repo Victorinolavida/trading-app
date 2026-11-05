@@ -33,18 +33,24 @@ CREATE TABLE public.orders (
     security_id uuid NOT NULL,
     direction text NOT NULL,
     order_type text NOT NULL,
-    price numeric,
-    yield numeric,
-    allocation_ptc numeric,
-    allocation_qty integer NOT NULL,
-    quantity integer NOT NULL,
-    nominal_value numeric NOT NULL,
-    fx numeric NOT NULL,
+    price bigint,
+    yield bigint,
+    quantity bigint NOT NULL,
+    allocation_qty bigint DEFAULT 0 NOT NULL,
+    allocation_status text DEFAULT 'none'::text NOT NULL,
+    nominal_value bigint NOT NULL,
+    fx bigint NOT NULL,
     status text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT orders_alloc_consistency_check CHECK ((((allocation_status = 'none'::text) AND (allocation_qty = 0)) OR ((allocation_status = 'partial'::text) AND (allocation_qty > 0) AND (allocation_qty < quantity)) OR ((allocation_status = 'allocated'::text) AND (allocation_qty = quantity)))),
+    CONSTRAINT orders_alloc_qty_check CHECK (((allocation_qty >= 0) AND (allocation_qty <= quantity))),
+    CONSTRAINT orders_alloc_status_check CHECK ((allocation_status = ANY (ARRAY['none'::text, 'partial'::text, 'allocated'::text]))),
     CONSTRAINT orders_direction_check CHECK ((direction = ANY (ARRAY['bid'::text, 'ask'::text]))),
+    CONSTRAINT orders_limit_price_check CHECK (((order_type <> 'limit'::text) OR (price IS NOT NULL))),
     CONSTRAINT orders_order_type_check CHECK ((order_type = ANY (ARRAY['limit'::text, 'market'::text]))),
+    CONSTRAINT orders_price_check CHECK (((price IS NULL) OR (price > 0))),
+    CONSTRAINT orders_quantity_check CHECK ((quantity > 0)),
     CONSTRAINT orders_status_check CHECK ((status = ANY (ARRAY['active'::text, 'fully_allocated'::text, 'cancelled'::text, 'expired'::text, 'killed'::text])))
 );
 
@@ -66,24 +72,10 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: orders_security_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: orders_active_book_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX orders_security_id_idx ON public.orders USING btree (security_id);
-
-
---
--- Name: orders_status_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX orders_status_idx ON public.orders USING btree (status);
-
-
---
--- Name: orders_trader_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX orders_trader_id_idx ON public.orders USING btree (trader_id);
+CREATE INDEX orders_active_book_idx ON public.orders USING btree (security_id, direction, price) WHERE (status = 'active'::text);
 
 
 --
