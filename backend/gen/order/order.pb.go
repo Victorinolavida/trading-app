@@ -32,7 +32,7 @@ type Order struct {
 	OrderType     string                 `protobuf:"bytes,6,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
 	Price         string                 `protobuf:"bytes,7,opt,name=price,proto3" json:"price,omitempty"`
 	Yield         string                 `protobuf:"bytes,8,opt,name=yield,proto3" json:"yield,omitempty"`
-	Quantity      string                 `protobuf:"bytes,9,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Quantity      int64                  `protobuf:"varint,9,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	NominalValue  string                 `protobuf:"bytes,10,opt,name=nominal_value,json=nominalValue,proto3" json:"nominal_value,omitempty"`
 	Fx            string                 `protobuf:"bytes,11,opt,name=fx,proto3" json:"fx,omitempty"`
 	Status        string                 `protobuf:"bytes,12,opt,name=status,proto3" json:"status,omitempty"`
@@ -128,11 +128,11 @@ func (x *Order) GetYield() string {
 	return ""
 }
 
-func (x *Order) GetQuantity() string {
+func (x *Order) GetQuantity() int64 {
 	if x != nil {
 		return x.Quantity
 	}
-	return ""
+	return 0
 }
 
 func (x *Order) GetNominalValue() string {
@@ -178,7 +178,7 @@ type CreateOrderRequest struct {
 	OrderType     string                 `protobuf:"bytes,4,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
 	Price         string                 `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Yield         string                 `protobuf:"bytes,6,opt,name=yield,proto3" json:"yield,omitempty"`
-	Quantity      string                 `protobuf:"bytes,7,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Quantity      int64                  `protobuf:"varint,7,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -255,11 +255,11 @@ func (x *CreateOrderRequest) GetYield() string {
 	return ""
 }
 
-func (x *CreateOrderRequest) GetQuantity() string {
+func (x *CreateOrderRequest) GetQuantity() int64 {
 	if x != nil {
 		return x.Quantity
 	}
-	return ""
+	return 0
 }
 
 type CreateOrderResponse struct {
@@ -642,7 +642,7 @@ const file_order_order_proto_rawDesc = "" +
 	"order_type\x18\x06 \x01(\tR\torderType\x12\x14\n" +
 	"\x05price\x18\a \x01(\tR\x05price\x12\x14\n" +
 	"\x05yield\x18\b \x01(\tR\x05yield\x12\x1a\n" +
-	"\bquantity\x18\t \x01(\tR\bquantity\x12#\n" +
+	"\bquantity\x18\t \x01(\x03R\bquantity\x12#\n" +
 	"\rnominal_value\x18\n" +
 	" \x01(\tR\fnominalValue\x12\x0e\n" +
 	"\x02fx\x18\v \x01(\tR\x02fx\x12\x16\n" +
@@ -660,7 +660,7 @@ const file_order_order_proto_rawDesc = "" +
 	"order_type\x18\x04 \x01(\tR\torderType\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\tR\x05price\x12\x14\n" +
 	"\x05yield\x18\x06 \x01(\tR\x05yield\x12\x1a\n" +
-	"\bquantity\x18\a \x01(\tR\bquantity\"n\n" +
+	"\bquantity\x18\a \x01(\x03R\bquantity\"n\n" +
 	"\x13CreateOrderResponse\x12$\n" +
 	"\x0eorder_group_id\x18\x01 \x01(\tR\forderGroupId\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x16\n" +

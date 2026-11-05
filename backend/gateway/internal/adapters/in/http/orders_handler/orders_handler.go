@@ -3,12 +3,13 @@ package ordershandler
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/victorinolavida/gateway/config"
-	"github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
+	authmiddleware "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
@@ -55,6 +56,7 @@ func (h *OrdersHandler) Routes() http.Handler {
 func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var req dtos.CreateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.Error("error reading body", slog.Any("error", err))
 		response.RenderBadRequest(w, "invalid body")
 		return
 	}

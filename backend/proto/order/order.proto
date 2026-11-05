@@ -14,7 +14,7 @@ message Order {
   string order_type = 6;
   string price = 7;
   string yield = 8;
-  string quantity = 9;
+  int64 quantity = 9;
   string nominal_value = 10;
   string fx = 11;
   string status = 12;
@@ -29,7 +29,7 @@ message CreateOrderRequest {
   string order_type = 4;
   string price = 5;
   string yield = 6;
-  string quantity = 7;
+  int64 quantity = 7;
 }
 
 message CreateOrderResponse {

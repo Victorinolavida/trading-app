@@ -5,9 +5,9 @@ import (
 
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
-	orderpb "github.com/victorinolavida/proto/order"
 	pkgconfig "github.com/victorinolavida/pkg/config"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
+	orderpb "github.com/victorinolavida/proto/order"
 )
 
 type OrdersService struct {
@@ -43,7 +43,7 @@ func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderReq
 		OrderType:  req.OrderType,
 		Price:      req.Price,
 		Yield:      req.Yield,
-		Quantity:   req.Quantity,
+		Quantity:   int64(req.Quantity),
 	})
 	if err != nil {
 		return dtos.CreateOrderResponse{}, err
@@ -88,7 +88,7 @@ func (s *OrdersService) GetOrderGroup(ctx context.Context, orderGroupID string) 
 			OrderType:    o.OrderType,
 			Price:        o.Price,
 			Yield:        o.Yield,
-			Quantity:     o.Quantity,
+			Quantity:     int(o.Quantity),
 			NominalValue: o.NominalValue,
 			Fx:           o.Fx,
 			Status:       o.Status,

@@ -1,6 +1,5 @@
 package dtos
 
-
 type CreateOrderRequest struct {
 	TraderID   string `json:"trader_id"`
 	SecurityID string `json:"security_id"`
@@ -8,7 +7,7 @@ type CreateOrderRequest struct {
 	OrderType  string `json:"order_type" validate:"required,oneof=limit market"`
 	Price      string `json:"price"`
 	Yield      string `json:"yield"`
-	Quantity   string `json:"quantity" validate:"required"`
+	Quantity   int    `json:"quantity" validate:"required"`
 }
 
 type CreateOrderResponse struct {
@@ -36,7 +35,7 @@ type Order struct {
 	OrderType    string `json:"order_type"`
 	Price        string `json:"price"`
 	Yield        string `json:"yield"`
-	Quantity     string `json:"quantity"`
+	Quantity     int    `json:"quantity"`
 	NominalValue string `json:"nominal_value"`
 	Fx           string `json:"fx"`
 	Status       string `json:"status"`
