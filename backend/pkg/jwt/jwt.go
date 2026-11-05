@@ -79,6 +79,7 @@ func (serv *TokenService) Issue(_ context.Context, p Claims) (string, error) {
 
 func (serv *TokenService) Verify(_ context.Context, raw string) (Claims, error) {
 	c := &tokenClaims{}
+
 	_, err := jwt.ParseWithClaims(raw, c,
 		func(*jwt.Token) (any, error) { return serv.secret, nil },
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),

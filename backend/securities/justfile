@@ -22,6 +22,9 @@ pg_container := "trading-postgres"
 # Schema file consumed by sqlc, regenerated from the migrated database.
 schema_file := "internal/adapters/out/postgres/schema.sql"
 
+# Directory containing idempotent seed SQL files.
+seeds := "internal/adapters/out/postgres/seeds"
+
 # =============================================================================
 # Service lifecycle
 # =============================================================================
@@ -83,6 +86,10 @@ new name:
 # Show pending/applied migrations.
 status: db-create
     dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
+
+# Seed reference securities (e.g. Mexico M-Bono 7.75% 2034). Idempotent.
+seed: migrate
+    docker exec -i {{pg_container}} psql -U postgres -d trading -v ON_ERROR_STOP=1 < "{{seeds}}/001_mexico_mbono_341123.sql"
 
 # =============================================================================
 # Private helpers
