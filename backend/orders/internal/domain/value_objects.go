@@ -4,7 +4,6 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/victorinolavida/orders/internal/domainerrors"
 )
 
@@ -40,7 +39,37 @@ const (
 	AllocationStatusAllocated AllocationStatus = "allocated"
 )
 
-var ErrInvalidNumericNumber = errors.New("invalid numeric value")
+const (
+	OrderGroupStatusActive         OrderGroupStatus = "active"
+	OrderGroupStatusFullyAllocated OrderGroupStatus = "fully_allocated"
+	OrderGroupStatusCancelled      OrderGroupStatus = "cancelled"
+	OrderGroupStatusExpired        OrderGroupStatus = "expired"
+	OrderGroupStatusKilled         OrderGroupStatus = "killed"
+)
+
+const (
+	PriceScale            = 1_000 // three decimals
+	DecimalScale          = 1_000_000
+	MaxPrice              = 1_000 * PriceScale
+	MaxQty       Quantity = 1_000_000_000
+	// MaxPrice is already scaled by PriceScale, so the largest scaled
+	// nominal value (price * qty) fits in int64: 1e6 * 1e9 = 1e15.
+	MaxDecimalValue = int64(MaxPrice) * int64(MaxQty)
+)
+
+type (
+	Quantity int64
+	Decimal  int64
+)
+
+func (d Decimal) Value() int64 {
+	return int64(d)
+}
+
+var (
+	ErrInvalidNumericNumber    = errors.New("invalid numeric value")
+	ErrInvalidAllocationStatus = errors.New("invalid allocation status")
+)
 
 func (d Direction) String() string { return string(d) }
 func (d Direction) validate() error {
@@ -90,10 +119,26 @@ func NewOrderStatus(val string) (OrderStatus, error) {
 	return o, nil
 }
 
+func (o OrderGroupStatus) String() string { return string(o) }
+func (o OrderGroupStatus) validate() error {
+	if !slices.Contains([]OrderGroupStatus{OrderGroupStatusActive, OrderGroupStatusFullyAllocated, OrderGroupStatusCancelled, OrderGroupStatusExpired, OrderGroupStatusKilled}, o) {
+		return domainerrors.ErrInvalidOrderGroupStatus
+	}
+	return nil
+}
+
+func NewOrderGroupStatus(val string) (OrderGroupStatus, error) {
+	o := OrderGroupStatus(val)
+	if err := o.validate(); err != nil {
+		return OrderGroupStatus(""), err
+	}
+	return o, nil
+}
+
 func (a AllocationStatus) String() string { return string(a) }
 func (a AllocationStatus) validate() error {
 	if !slices.Contains([]AllocationStatus{AllocationStatusNone, AllocationStatusPartial, AllocationStatusAllocated}, a) {
-		return domainerrors.ErrInvalidOrderGroupStatus
+		return ErrInvalidAllocationStatus
 	}
 	return nil
 }
@@ -106,13 +151,20 @@ func NewAllocationStatus(val string) (AllocationStatus, error) {
 	return a, nil
 }
 
-func NumericToFloat(n pgtype.Numeric) (float64, error) {
-	val, err := n.Float64Value()
-	if err != nil {
-		return float64(0), err
+func NewQuantity(qty int) (Quantity, error) {
+	if qty <= 0 {
+		return Quantity(0), domainerrors.ErrInvalidQuantity
 	}
-	if !val.Valid {
-		return float64(0), ErrInvalidNumericNumber
+	q := Quantity(qty)
+	if q > MaxQty {
+		return Quantity(0), domainerrors.ErrQtyTooLarge
 	}
-	return val.Float64, nil
+	return q, nil
+}
+
+func NewDecimal(val int64) (Decimal, error) {
+	if val < 0 || val > MaxDecimalValue {
+		return Decimal(0), ErrInvalidNumericNumber
+	}
+	return Decimal(val), nil
 }

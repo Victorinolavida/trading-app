@@ -12,6 +12,7 @@ import (
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/securities"
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/users"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
+	matchingengine "github.com/victorinolavida/orders/internal/application/services/matching-engine"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
 	conf "github.com/victorinolavida/pkg/config"
@@ -38,6 +39,8 @@ func main() {
 	}
 
 	orderRepo := postgres.NewOrderRepository(pool)
+	tradeRepo := postgres.NewTradeRepository(pool)
+	txManager := postgres.NewTxManager(pool)
 	usersConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Users.Host, cfg.Services.Users.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Fatal("error connecting to users service", slog.Any("error", err))
@@ -50,7 +53,8 @@ func main() {
 	userSvc := users.New(usersConn)
 	securitySvc := securities.New(securitiesConn)
 
-	createUC := create_order.New(orderRepo, securitySvc, userSvc)
+	matchingEngine := matchingengine.New(orderRepo)
+	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager)
 	cancelUC := cancel_order.New(orderRepo)
 
 	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)

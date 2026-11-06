@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
+	"github.com/victorinolavida/orders/internal/domain"
 )
 
 type SecurityInfo struct {
@@ -14,9 +14,9 @@ type SecurityInfo struct {
 	Name         string
 	SecurityType string
 	Serie        string
-	NominalValue decimal.Decimal
+	NominalValue domain.Decimal
 	Currency     string
-	Fx           decimal.Decimal
+	Fx           domain.Decimal
 	Enable       bool
 }
 

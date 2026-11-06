@@ -3,13 +3,18 @@ package securities
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/victorinolavida/orders/internal/application/ports"
+	"github.com/victorinolavida/orders/internal/domain"
 	securitypb "github.com/victorinolavida/proto/security"
-	"github.com/shopspring/decimal"
 	"google.golang.org/grpc"
 )
+
+func toDecimal(v float64) domain.Decimal {
+	return domain.Decimal(math.Round(v * float64(domain.DecimalScale)))
+}
 
 type Service struct {
 	client securitypb.AuthServiceClient
@@ -39,9 +44,9 @@ func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*ports.SecurityInf
 		Name:         res.Name,
 		SecurityType: res.SecurityType,
 		Serie:        res.Serie,
-		NominalValue: decimal.NewFromFloat(res.NominalValue),
+		NominalValue: toDecimal(res.NominalValue),
 		Currency:     res.Currency,
-		Fx:           decimal.NewFromFloat(res.Fx),
+		Fx:           toDecimal(res.Fx),
 		Enable:       res.Enable,
 	}, nil
 }
@@ -66,9 +71,9 @@ func (s *Service) GetByISIN(ctx context.Context, isin string) (*ports.SecurityIn
 		Name:         res.Name,
 		SecurityType: res.SecurityType,
 		Serie:        res.Serie,
-		NominalValue: decimal.NewFromFloat(res.NominalValue),
+		NominalValue: toDecimal(res.NominalValue),
 		Currency:     res.Currency,
-		Fx:           decimal.NewFromFloat(res.Fx),
+		Fx:           toDecimal(res.Fx),
 		Enable:       res.Enable,
 	}, nil
 }

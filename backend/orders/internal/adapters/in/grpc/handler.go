@@ -7,6 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	cancelorder "github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	createorder "github.com/victorinolavida/orders/internal/application/usecases/create_order"
+	"github.com/victorinolavida/orders/internal/domain"
 	orderpb "github.com/victorinolavida/proto/order"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,6 +29,17 @@ func NewOrderGRPCHandler(
 	}
 }
 
+func parseScaled(s string) (int64, error) {
+	if s == "" {
+		return 0, nil // absent
+	}
+	d, err := decimal.NewFromString(s)
+	if err != nil {
+		return 0, err
+	}
+	return d.Mul(decimal.NewFromInt(int64(domain.DecimalScale))).IntPart(), nil
+}
+
 func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.CreateOrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -42,13 +54,13 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		return nil, status.Error(codes.InvalidArgument, "invalid security_id")
 	}
 
-	price, err := decimal.NewFromString(req.Price)
+	price, err := parseScaled(req.Price)
 	if err != nil {
-		price = decimal.Zero
+		return nil, status.Error(codes.InvalidArgument, "invalid price")
 	}
-	yieldVal, err := decimal.NewFromString(req.Yield)
+	yieldVal, err := parseScaled(req.Yield)
 	if err != nil {
-		yieldVal = decimal.Zero
+		return nil, status.Error(codes.InvalidArgument, "invalid yield")
 	}
 	if req.Quantity <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid quantity")
@@ -61,7 +73,7 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		OrderType:  req.OrderType,
 		Price:      price,
 		Yield:      yieldVal,
-		Quantity:   uint(req.Quantity),
+		Quantity:   req.Quantity,
 	}
 
 	res, err := h.createOrder.Execute(ctx, cmd)

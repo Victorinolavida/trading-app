@@ -2,7 +2,6 @@ package create_order
 
 import (
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 type Command struct {
@@ -10,9 +9,9 @@ type Command struct {
 	SecurityID uuid.UUID
 	Direction  string
 	OrderType  string
-	Price      decimal.Decimal
-	Yield      decimal.Decimal
-	Quantity   uint
+	Price      int64
+	Yield      int64
+	Quantity   int64
 }
 
 type Result struct {

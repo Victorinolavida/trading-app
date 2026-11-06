@@ -56,6 +56,25 @@ CREATE TABLE public.orders (
 
 
 --
+-- Name: trades; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.trades (
+    id uuid NOT NULL,
+    public_id uuid NOT NULL,
+    maker_order_id uuid NOT NULL,
+    taker_order_id uuid NOT NULL,
+    price bigint NOT NULL,
+    quantity bigint NOT NULL,
+    taker_side text NOT NULL,
+    executed_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT trades_price_check CHECK ((price > 0)),
+    CONSTRAINT trades_quantity_check CHECK ((quantity > 0)),
+    CONSTRAINT trades_taker_side_check CHECK ((taker_side = ANY (ARRAY['bid'::text, 'ask'::text])))
+);
+
+
+--
 -- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -72,10 +91,56 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: trades trades_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trades
+    ADD CONSTRAINT trades_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: trades trades_public_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trades
+    ADD CONSTRAINT trades_public_id_key UNIQUE (public_id);
+
+
+--
 -- Name: orders_active_book_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX orders_active_book_idx ON public.orders USING btree (security_id, direction, price) WHERE (status = 'active'::text);
+
+
+--
+-- Name: trades_maker_order_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trades_maker_order_id_idx ON public.trades USING btree (maker_order_id);
+
+
+--
+-- Name: trades_taker_order_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trades_taker_order_id_idx ON public.trades USING btree (taker_order_id);
+
+
+--
+-- Name: trades trades_maker_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trades
+    ADD CONSTRAINT trades_maker_order_id_fkey FOREIGN KEY (maker_order_id) REFERENCES public.orders(id);
+
+
+--
+-- Name: trades trades_taker_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trades
+    ADD CONSTRAINT trades_taker_order_id_fkey FOREIGN KEY (taker_order_id) REFERENCES public.orders(id);
 
 
 --

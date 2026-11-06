@@ -2,27 +2,43 @@ package create_order
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/shopspring/decimal"
 	"github.com/victorinolavida/orders/internal/application/ports"
 	"github.com/victorinolavida/orders/internal/domain"
 )
 
 type Usecase struct {
-	orderRepo   ports.OrderRepository
-	securitySvc ports.SecurityService
-	userSvc     ports.UserService
+	orderRepo      ports.OrderRepository
+	tradeRepo      ports.TradeRepository
+	securitySvc    ports.SecurityService
+	userSvc        ports.UserService
+	matchingEngine ports.MatchingEngine
+	txManager      ports.TxManager
 }
 
-func New(orderRepo ports.OrderRepository, securitySvc ports.SecurityService, userSvc ports.UserService) *Usecase {
+func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager) *Usecase {
 	return &Usecase{
-		orderRepo:   orderRepo,
-		securitySvc: securitySvc,
-		userSvc:     userSvc,
+		orderRepo:      orderRepo,
+		tradeRepo:      tradeRepo,
+		securitySvc:    securitySvc,
+		userSvc:        userSvc,
+		matchingEngine: me,
+		txManager:      tx,
 	}
 }
 
 func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
+	slog.Debug("incoming order received",
+		slog.String("trader_id", cmd.TraderID.String()),
+		slog.String("security_id", cmd.SecurityID.String()),
+		slog.String("direction", cmd.Direction),
+		slog.String("order_type", cmd.OrderType),
+		slog.Int64("quantity", cmd.Quantity),
+		slog.Int64("price", cmd.Price),
+		slog.Int64("yield", cmd.Yield),
+	)
+
 	// Validate trader exists
 	if _, err := u.userSvc.GetByID(ctx, cmd.TraderID); err != nil {
 		return Result{}, err
@@ -35,20 +51,58 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	// Nominal value comes from quantity * security.nominal_value
-	nominalValue := sec.NominalValue.Mul(decimal.NewFromUint64(uint64(cmd.Quantity)))
-	fx := sec.Fx
+	qty := domain.Quantity(cmd.Quantity)
+	if qty != 0 && sec.NominalValue > domain.Decimal(domain.MaxDecimalValue)/domain.Decimal(qty) {
+		return Result{}, domain.ErrInvalidNumericNumber
+	}
+	nominalValue := sec.NominalValue * domain.Decimal(qty)
 
 	order, err := domain.NewOrder(
 		cmd.TraderID, cmd.SecurityID,
-		cmd.Direction, cmd.OrderType, cmd.Quantity,
+		cmd.Direction, cmd.OrderType,
+		int(cmd.Quantity),
 		cmd.Price, cmd.Yield,
-		nominalValue, fx,
+		nominalValue, sec.Fx,
 	)
 	if err != nil {
 		return Result{}, err
 	}
 
-	if err := u.orderRepo.Save(ctx, order); err != nil {
+	if err := u.txManager.WithTx(ctx, func(ctx context.Context) error {
+		if err := u.orderRepo.Save(ctx, order); err != nil {
+			return err
+		}
+
+		matches, trades, err := u.matchingEngine.ExecuteIncomingOrder(ctx, order)
+		if err != nil {
+			return err
+		}
+
+		var matchedQty domain.Quantity
+		for _, trade := range trades {
+			matchedQty += trade.Quantity
+		}
+		slog.Debug("order matching result",
+			slog.String("order_id", order.ID().String()),
+			slog.Bool("matched", len(trades) > 0),
+			slog.Int("trades", len(trades)),
+			slog.Int64("matched_quantity", int64(matchedQty)),
+		)
+
+		if len(trades) > 0 {
+			orders := make([]*domain.Order, 0, len(matches)+1)
+			orders = append(orders, order)
+			orders = append(orders, matches...)
+			if err := u.orderRepo.UpdateBulk(ctx, orders...); err != nil {
+				return err
+			}
+			if err := u.tradeRepo.Save(ctx, trades...); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
 		return Result{}, err
 	}
 

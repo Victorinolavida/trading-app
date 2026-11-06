@@ -12,8 +12,100 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getAsksToTrade = `-- name: GetAsksToTrade :many
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+WHERE direction = 'ask'
+  AND order_type = 'limit'
+  AND status = 'active'
+  AND security_id = $1
+ORDER BY price ASC, created_at ASC, id ASC
+`
+
+func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getAsksToTrade, securityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.TraderID,
+			&i.SecurityID,
+			&i.Direction,
+			&i.OrderType,
+			&i.Price,
+			&i.Yield,
+			&i.Quantity,
+			&i.AllocationQty,
+			&i.AllocationStatus,
+			&i.NominalValue,
+			&i.Fx,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBidsToTrade = `-- name: GetBidsToTrade :many
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+WHERE direction = 'bid'
+  AND order_type = 'limit'
+  AND status = 'active'
+  AND security_id = $1
+ORDER BY price DESC, created_at ASC, id ASC
+`
+
+func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getBidsToTrade, securityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.TraderID,
+			&i.SecurityID,
+			&i.Direction,
+			&i.OrderType,
+			&i.Price,
+			&i.Yield,
+			&i.Quantity,
+			&i.AllocationQty,
+			&i.AllocationStatus,
+			&i.NominalValue,
+			&i.Fx,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrderByID = `-- name: GetOrderByID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_ptc, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE id = $1
 `
 
@@ -29,9 +121,9 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (Order, error)
 		&i.OrderType,
 		&i.Price,
 		&i.Yield,
-		&i.AllocationPtc,
-		&i.AllocationQty,
 		&i.Quantity,
+		&i.AllocationQty,
+		&i.AllocationStatus,
 		&i.NominalValue,
 		&i.Fx,
 		&i.Status,
@@ -42,7 +134,7 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (Order, error)
 }
 
 const getOrderByPublicID = `-- name: GetOrderByPublicID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_ptc, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE public_id = $1
 `
 
@@ -58,9 +150,9 @@ func (q *Queries) GetOrderByPublicID(ctx context.Context, publicID uuid.UUID) (O
 		&i.OrderType,
 		&i.Price,
 		&i.Yield,
-		&i.AllocationPtc,
-		&i.AllocationQty,
 		&i.Quantity,
+		&i.AllocationQty,
+		&i.AllocationStatus,
 		&i.NominalValue,
 		&i.Fx,
 		&i.Status,
@@ -70,32 +162,93 @@ func (q *Queries) GetOrderByPublicID(ctx context.Context, publicID uuid.UUID) (O
 	return i, err
 }
 
+const getTradeByID = `-- name: GetTradeByID :one
+SELECT id, public_id, maker_order_id, taker_order_id, price, quantity, taker_side, executed_at FROM trades
+WHERE id = $1
+`
+
+func (q *Queries) GetTradeByID(ctx context.Context, id uuid.UUID) (Trade, error) {
+	row := q.db.QueryRow(ctx, getTradeByID, id)
+	var i Trade
+	err := row.Scan(
+		&i.ID,
+		&i.PublicID,
+		&i.MakerOrderID,
+		&i.TakerOrderID,
+		&i.Price,
+		&i.Quantity,
+		&i.TakerSide,
+		&i.ExecutedAt,
+	)
+	return i, err
+}
+
+const getTradesByOrderID = `-- name: GetTradesByOrderID :many
+SELECT id, public_id, maker_order_id, taker_order_id, price, quantity, taker_side, executed_at FROM trades
+WHERE maker_order_id = $1 OR taker_order_id = $1
+ORDER BY executed_at ASC, id ASC
+`
+
+func (q *Queries) GetTradesByOrderID(ctx context.Context, makerOrderID uuid.UUID) ([]Trade, error) {
+	rows, err := q.db.Query(ctx, getTradesByOrderID, makerOrderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Trade
+	for rows.Next() {
+		var i Trade
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.MakerOrderID,
+			&i.TakerOrderID,
+			&i.Price,
+			&i.Quantity,
+			&i.TakerSide,
+			&i.ExecutedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveOrder = `-- name: SaveOrder :exec
-INSERT INTO orders(
+INSERT INTO orders (
     id, public_id, trader_id, security_id,
     direction, order_type, price, yield, quantity,
-    allocation_ptc, allocation_qty,
+    allocation_qty, allocation_status,
     nominal_value, fx, status, created_at, updated_at
-) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, $15,$16)
+) VALUES (
+    $1, $2, $3, $4,
+    $5, $6, $7, $8, $9,
+    $10, $11,
+    $12, $13, $14, $15, $16
+)
 `
 
 type SaveOrderParams struct {
-	ID            uuid.UUID
-	PublicID      uuid.UUID
-	TraderID      uuid.UUID
-	SecurityID    uuid.UUID
-	Direction     string
-	OrderType     string
-	Price         pgtype.Numeric
-	Yield         pgtype.Numeric
-	Quantity      int32
-	AllocationPtc pgtype.Numeric
-	AllocationQty int32
-	NominalValue  pgtype.Numeric
-	Fx            pgtype.Numeric
-	Status        string
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
+	ID               uuid.UUID
+	PublicID         uuid.UUID
+	TraderID         uuid.UUID
+	SecurityID       uuid.UUID
+	Direction        string
+	OrderType        string
+	Price            pgtype.Int8
+	Yield            pgtype.Int8
+	Quantity         int64
+	AllocationQty    int64
+	AllocationStatus string
+	NominalValue     int64
+	Fx               int64
+	Status           string
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
 }
 
 func (q *Queries) SaveOrder(ctx context.Context, arg SaveOrderParams) error {
@@ -109,8 +262,8 @@ func (q *Queries) SaveOrder(ctx context.Context, arg SaveOrderParams) error {
 		arg.Price,
 		arg.Yield,
 		arg.Quantity,
-		arg.AllocationPtc,
 		arg.AllocationQty,
+		arg.AllocationStatus,
 		arg.NominalValue,
 		arg.Fx,
 		arg.Status,
@@ -120,20 +273,114 @@ func (q *Queries) SaveOrder(ctx context.Context, arg SaveOrderParams) error {
 	return err
 }
 
-const updateOrder = `-- name: UpdateOrder :exec
+const saveTrades = `-- name: SaveTrades :execrows
+INSERT INTO trades (
+    id, public_id, maker_order_id, taker_order_id,
+    price, quantity, taker_side, executed_at
+)
+SELECT unnest($1::uuid[]),
+       unnest($2::uuid[]),
+       unnest($3::uuid[]),
+       unnest($4::uuid[]),
+       unnest($5::bigint[]),
+       unnest($6::bigint[]),
+       unnest($7::text[]),
+       unnest($8::timestamptz[])
+`
+
+type SaveTradesParams struct {
+	Ids           []uuid.UUID
+	PublicIds     []uuid.UUID
+	MakerOrderIds []uuid.UUID
+	TakerOrderIds []uuid.UUID
+	Prices        []int64
+	Quantities    []int64
+	TakerSides    []string
+	ExecutedAts   []pgtype.Timestamptz
+}
+
+func (q *Queries) SaveTrades(ctx context.Context, arg SaveTradesParams) (int64, error) {
+	result, err := q.db.Exec(ctx, saveTrades,
+		arg.Ids,
+		arg.PublicIds,
+		arg.MakerOrderIds,
+		arg.TakerOrderIds,
+		arg.Prices,
+		arg.Quantities,
+		arg.TakerSides,
+		arg.ExecutedAts,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateOrder = `-- name: UpdateOrder :execrows
 UPDATE orders
-SET status = $1,
-    updated_at = $2
-WHERE id = $3
+SET status            = $1,
+    allocation_qty    = $2,
+    allocation_status = $3,
+    updated_at        = $4
+WHERE id = $5
 `
 
 type UpdateOrderParams struct {
-	Status    string
-	UpdatedAt pgtype.Timestamptz
-	ID        uuid.UUID
+	Status           string
+	AllocationQty    int64
+	AllocationStatus string
+	UpdatedAt        pgtype.Timestamptz
+	ID               uuid.UUID
 }
 
-func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) error {
-	_, err := q.db.Exec(ctx, updateOrder, arg.Status, arg.UpdatedAt, arg.ID)
-	return err
+func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateOrder,
+		arg.Status,
+		arg.AllocationQty,
+		arg.AllocationStatus,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateOrders = `-- name: UpdateOrders :execrows
+UPDATE orders AS o
+SET status            = u.status,
+    allocation_qty    = u.allocation_qty,
+    allocation_status = u.allocation_status,
+    updated_at        = u.updated_at
+FROM (
+    SELECT unnest($1::uuid[])                AS id,
+           unnest($2::text[])            AS status,
+           unnest($3::bigint[])  AS allocation_qty,
+           unnest($4::text[]) AS allocation_status,
+           unnest($5::timestamptz[])  AS updated_at
+) AS u
+WHERE o.id = u.id
+`
+
+type UpdateOrdersParams struct {
+	Ids                []uuid.UUID
+	Statuses           []string
+	AllocationQtys     []int64
+	AllocationStatuses []string
+	UpdatedAts         []pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateOrders(ctx context.Context, arg UpdateOrdersParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateOrders,
+		arg.Ids,
+		arg.Statuses,
+		arg.AllocationQtys,
+		arg.AllocationStatuses,
+		arg.UpdatedAts,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
