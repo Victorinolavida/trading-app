@@ -10,17 +10,17 @@ set shell := ["zsh", "-cu"]
 # Configuration
 # =============================================================================
 
-# Database connection used by dbmate. Override with DATABASE_URL if needed.
-db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading?sslmode=disable")
+# Database owned by the users service. Override with DATABASE_URL if needed.
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading_users?sslmode=disable")
 
 # Directory containing dbmate migration files.
-migrations := "internal/adapters/secondary_adapter/postgres/migrations"
+migrations := "internal/adapters/out/postgres/migrations"
 
 # Docker Compose service name for the local Postgres container. Used by pg_dump.
 pg_container := "trading-postgres"
 
 # Schema file consumed by sqlc, regenerated from the migrated database.
-schema_file := "internal/adapters/secondary_adapter/postgres/schema.sql"
+schema_file := "internal/adapters/out/postgres/schema.sql"
 
 # =============================================================================
 # Service lifecycle

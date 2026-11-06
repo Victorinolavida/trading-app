@@ -1,0 +1,99 @@
+# Task runner for the orders service.
+#
+# The orders service is its own Go module exposing a gRPC API and owning the
+# database schema. Migrations are managed with dbmate; generated DB code with
+# sqlc.
+
+set shell := ["zsh", "-cu"]
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Database owned by the orders service. Override with DATABASE_URL if needed.
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading_orders?sslmode=disable")
+
+# Directory containing dbmate migration files.
+migrations := "internal/adapters/out/postgres/migrations"
+
+# Docker Compose service name for the local Postgres container. Used by pg_dump.
+pg_container := "trading-postgres"
+
+# Schema file consumed by sqlc, regenerated from the migrated database.
+schema_file := "internal/adapters/out/postgres/schema.sql"
+
+# =============================================================================
+# Service lifecycle
+# =============================================================================
+
+# Run the orders service.
+run:
+    go run ./cmd
+
+# Build the orders binary into ./bin/orders.
+build:
+    go build -o bin/orders ./cmd
+
+# Run the test suite, starting from a clean test cache.
+test: cache-clean
+    go test ./...
+
+# =============================================================================
+# Code quality
+# =============================================================================
+
+# Format Go code with gofmt.
+fmt:
+    gofmt -w .
+
+# Vet Go code with the standard vet tool.
+vet:
+    go vet ./...
+
+# Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
+tidy:
+    GOWORK=off go mod tidy
+
+# =============================================================================
+# Database migrations
+# =============================================================================
+
+# Apply all pending DB migrations.
+migrate: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+
+# Regenerate sqlc schema.sql from the migrated database.
+schema: migrate
+    docker exec {{pg_container}} pg_dump --schema-only --no-owner --no-privileges \
+        --exclude-table=schema_migrations "{{db_url}}" | grep -v '^\\' > "{{schema_file}}"
+
+# Roll back the last migration batch.
+down: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" down
+
+# Drop the database and reapply all migrations.
+clean: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" drop
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+
+# Create a new migration file.
+new name:
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" new {{name}}
+
+# Show pending/applied migrations.
+status: db-create
+    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
+
+# =============================================================================
+# Private helpers
+# =============================================================================
+
+# Clear the Go test cache so `just test` always runs the full suite.
+[private]
+cache-clean:
+    go clean -testcache
+
+# Create the database if it does not exist yet.
+[private]
+db-create:
+    dbmate --url "{{db_url}}" create 2>/dev/null || true

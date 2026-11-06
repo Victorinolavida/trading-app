@@ -35,8 +35,8 @@ func WriteJsonResponse(w http.ResponseWriter, data any, status int) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(d)
-	return nil
+	_, err = w.Write(d)
+	return err
 }
 
 func RenderJson(w http.ResponseWriter, data any, status int) {
@@ -120,7 +120,7 @@ func GetTokenFromRequest(r *http.Request, cookieName string) (string, TokenSourc
 	bearerToken := r.Header.Get(authorizationHeader)
 	if bearerToken != "" {
 		if len(bearerToken) > 7 && strings.EqualFold(bearerToken[:7], "bearer ") {
-			return bearerToken[7:], SourceBearer, nil
+			return strings.TrimSpace(bearerToken[7:]), SourceBearer, nil
 		}
 		return "", SourceInvalid, ErrNoCredential
 	}
@@ -128,7 +128,7 @@ func GetTokenFromRequest(r *http.Request, cookieName string) (string, TokenSourc
 	if err != nil {
 		return "", SourceInvalid, ErrNoCredential
 	}
-	return cookie.Value, SourceCookie, nil
+	return strings.TrimSpace(cookie.Value), SourceCookie, nil
 }
 
 func getCleanToken(authHeader string) (string, error) {
@@ -137,6 +137,7 @@ func getCleanToken(authHeader string) (string, error) {
 	}
 	return "", errors.New("invalid token")
 }
+
 func ParseBodyFromRequest[T any](w http.ResponseWriter, r *http.Request) (T, error) {
 	// 1. Limit size to avoid abuse
 	r.Body = http.MaxBytesReader(w, r.Body, maxLimitBodyRequest) // 1 MiB

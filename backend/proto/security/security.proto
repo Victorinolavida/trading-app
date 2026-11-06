@@ -1,0 +1,57 @@
+syntax = "proto3";
+package security;
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/victorinolavida/proto/security";
+
+
+message Security {
+  string id = 1;
+  string isin = 2;
+  string name = 3;
+  string security_type = 4;
+  string serie = 5;
+  google.protobuf.Timestamp issue_date = 6;
+  google.protobuf.Timestamp maturity_date = 7;
+  double nominal_value = 8;
+  string currency = 9;
+  double fx = 10;
+  bool enable = 11;
+}
+
+message ListSecuritiesRequest {
+  // Filters
+  repeated string ids = 1;
+  repeated string isins = 2;
+  string currency = 3;
+  repeated string series = 4;
+  repeated string security_types = 5;
+  google.protobuf.Timestamp issue_before = 6;
+  google.protobuf.Timestamp issue_after = 7;
+  google.protobuf.Timestamp maturity_before = 8;
+  google.protobuf.Timestamp maturity_after = 9;
+  string id = 10;
+  string isin = 11;
+  string serie = 12;
+  string security_type = 13;
+  string name = 14;
+  string q = 15;
+}
+
+message ListSecuritiesResponse {
+  repeated Security securities = 1;
+}
+
+message GetSecurityResponse {
+  repeated Security securities = 1;
+}
+
+message Empty {}
+
+service AuthService {
+  rpc GetSecuritiesByParams(ListSecuritiesRequest) returns (ListSecuritiesResponse) {}
+  rpc GetByParams(ListSecuritiesRequest) returns (Security) {}
+  rpc GetEnableSecurities(Empty) returns (ListSecuritiesResponse) {}
+}
+
+

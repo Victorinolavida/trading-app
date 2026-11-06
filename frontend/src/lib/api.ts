@@ -88,3 +88,142 @@ export function whoami(): Promise<User> {
 export function logout(): Promise<void> {
   return request<void>("/auth/logout", { method: "POST" });
 }
+
+export interface Security {
+  id: string;
+  isin: string;
+  name: string;
+  security_type: string;
+  serie: string;
+  issue_date: string;
+  maturity_date: string;
+  nominal_value: number;
+  currency: string;
+  fx: number;
+  enable: boolean;
+}
+
+export interface SecuritiesResponse {
+  securities: Security[];
+}
+
+export function getSecuritiesActive(): Promise<SecuritiesResponse> {
+  return request<SecuritiesResponse>("/securities/active");
+}
+
+export function getSecuritiesByParams(params: {
+  id?: string;
+  isin?: string;
+  serie?: string;
+  security_type?: string;
+  name?: string;
+  q?: string;
+  query?: string;
+} = {}): Promise<SecuritiesResponse> {
+  const query = new URLSearchParams();
+  if (params.id) query.set("id", params.id);
+  if (params.isin) query.set("isin", params.isin);
+  if (params.serie) query.set("serie", params.serie);
+  if (params.security_type) query.set("security_type", params.security_type);
+  if (params.name) query.set("name", params.name);
+  const q = params.q ?? params.query;
+  if (q) query.set("q", q);
+  const qs = query.toString();
+  return request<SecuritiesResponse>(`/securities${qs ? `?${qs}` : ""}`);
+}
+
+export function getSecurityByParams(params: {
+  id?: string;
+  isin?: string;
+  serie?: string;
+  security_type?: string;
+  name?: string;
+  q?: string;
+  query?: string;
+} = {}): Promise<Security> {
+  const query = new URLSearchParams();
+  if (params.id) query.set("id", params.id);
+  if (params.isin) query.set("isin", params.isin);
+  if (params.serie) query.set("serie", params.serie);
+  if (params.security_type) query.set("security_type", params.security_type);
+  if (params.name) query.set("name", params.name);
+  const q = params.q ?? params.query;
+  if (q) query.set("q", q);
+  const qs = query.toString();
+  return request<Security>(`/securities/search${qs ? `?${qs}` : ""}`);
+}
+
+export interface CreateOrderRequest {
+  trader_id?: string;
+  security_id: string;
+  direction: "bid" | "ask";
+  order_type: "limit" | "market";
+  price?: string;
+  yield?: string;
+  quantity: string;
+}
+
+export interface CreateOrderResponse {
+  order_group_id: string;
+  order_id: string;
+  status: string;
+}
+
+export interface CancelOrderRequest {
+  order_group_id: string;
+  trader_id?: string;
+}
+
+export interface CancelOrderResponse {
+  order_group_id: string;
+  status: string;
+}
+
+export interface Order {
+  id: string;
+  order_group_id: string;
+  trader_id: string;
+  security_id: string;
+  direction: string;
+  order_type: string;
+  price: string;
+  yield: string;
+  quantity: string;
+  nominal_value: string;
+  fx: string;
+  status: string;
+}
+
+export interface OrderGroupDetail {
+  id: string;
+  public_id: string;
+  trader_id: string;
+  security_id: string;
+  direction: string;
+  order_type: string;
+  allocation_pc: string;
+  allocation_status: string;
+  order_group_status: string;
+  weighted_price: string;
+  weighted_yield: string;
+  weighted_fx: string;
+  orders: Order[];
+}
+
+export function createOrder(req: CreateOrderRequest): Promise<CreateOrderResponse> {
+  return request<CreateOrderResponse>("/orders", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function cancelOrder(req: CancelOrderRequest): Promise<CancelOrderResponse> {
+  return request<CancelOrderResponse>("/orders/cancel", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+}
+
+export function getOrderGroup(orderGroupId: string): Promise<OrderGroupDetail> {
+  return request<OrderGroupDetail>(`/orders/${orderGroupId}`);
+}

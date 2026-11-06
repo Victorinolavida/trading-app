@@ -15,6 +15,12 @@ auth_service:
   host: localhost
   port: 3030
 
+# securities service over gRPC
+securities_service:
+  host: localhost
+  port: 3031
+
+
 # must match the users service token.secret
 token:
   secret: change-me-to-a-long-random-secret
@@ -32,3 +38,8 @@ cookie:
   samesite: Lax
   ttl: 10h
   secret: change-me-to-a-long-random-csrf-secret # hmac key for the csrf token, >= 32 bytes, must differ from token.secret
+
+# orders service over gRPC
+orders_service:
+  host: localhost
+  port: 3033

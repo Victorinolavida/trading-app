@@ -12,16 +12,18 @@ set shell := ["zsh", "-cu"]
 
 mod gateway "gateway"
 mod users "users"
+mod securities "securities"
+mod orders "orders"
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
 # Every backend service. Used by the `all` target of the dispatch helpers.
-services := "gateway users"
+services := "gateway users securities orders"
 
 # Services that own database migrations. Used by the `all` target of DB recipes.
-db_services := "users"
+db_services := "users securities orders"
 
 # =============================================================================
 # Default
@@ -108,6 +110,7 @@ tidy service="all":
 # Database migrations
 # =============================================================================
 
+# Each service owns its own database (e.g. trading_users); see the service justfiles.
 # Apply pending DB migrations: `just migrate users` or `just migrate all`.
 migrate service:
     just _db migrate {{service}}
