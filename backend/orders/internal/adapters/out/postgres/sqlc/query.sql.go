@@ -274,6 +274,75 @@ func (q *Queries) GetTradesByOrderID(ctx context.Context, makerOrderID uuid.UUID
 	return items, nil
 }
 
+const listOrders = `-- name: ListOrders :many
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+WHERE
+    trader_id = $1
+    AND (
+            $2::uuid[] IS NULL
+            OR cardinality($2::uuid[]) = 0
+            OR public_id = ANY($2::uuid[])
+        )
+    AND (
+            $3::text IS NULL
+            OR direction = $3::text
+        )
+    AND (
+            $4::text IS NULL
+            OR status = $4::text
+        )
+ORDER BY created_at DESC, id ASC
+`
+
+type ListOrdersParams struct {
+	TraderID  uuid.UUID
+	OrderIds  []uuid.UUID
+	Direction pgtype.Text
+	Status    pgtype.Text
+}
+
+func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order, error) {
+	rows, err := q.db.Query(ctx, listOrders,
+		arg.TraderID,
+		arg.OrderIds,
+		arg.Direction,
+		arg.Status,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.TraderID,
+			&i.SecurityID,
+			&i.Direction,
+			&i.OrderType,
+			&i.Price,
+			&i.Yield,
+			&i.Quantity,
+			&i.AllocationQty,
+			&i.AllocationStatus,
+			&i.NominalValue,
+			&i.Fx,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveOrder = `-- name: SaveOrder :exec
 INSERT INTO orders (
     id, public_id, trader_id, security_id,

@@ -7,6 +7,15 @@ import (
 	"github.com/victorinolavida/orders/internal/domain"
 )
 
+// ListOrdersFilter holds the optional filters of a trader order listing.
+// Empty values mean "no filter".
+type ListOrdersFilter struct {
+	TraderID  uuid.UUID
+	OrderIDs  []uuid.UUID
+	Direction string
+	Status    string
+}
+
 type OrderRepository interface {
 	Save(ctx context.Context, order *domain.Order) error
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Order, error)
@@ -15,6 +24,7 @@ type OrderRepository interface {
 	UpdateBulk(ctx context.Context, orders ...*domain.Order) error
 	GetOrdersToTrade(context.Context, *domain.Order) ([]*domain.Order, error)
 	GetActiveOrders(context.Context, uuid.UUID, uuid.UUID, string) ([]*domain.Order, error)
+	ListOrders(context.Context, ListOrdersFilter) ([]*domain.Order, error)
 }
 
 type TxManager interface {

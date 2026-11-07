@@ -171,6 +171,34 @@ func (repo *OrderRepository) GetActiveOrders(ctx context.Context, traderID uuid.
 	return orders, nil
 }
 
+func (repo *OrderRepository) ListOrders(ctx context.Context, filter ports.ListOrdersFilter) ([]*domain.Order, error) {
+	rows, err := repo.queries.ListOrders(ctx, sqlc.ListOrdersParams{
+		TraderID: filter.TraderID,
+		OrderIds: filter.OrderIDs,
+		Direction: pgtype.Text{
+			String: filter.Direction,
+			Valid:  filter.Direction != "",
+		},
+		Status: pgtype.Text{
+			String: filter.Status,
+			Valid:  filter.Status != "",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make([]*domain.Order, 0, len(rows))
+	for _, row := range rows {
+		o, err := toDomainOrder(row)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, o)
+	}
+	return orders, nil
+}
+
 func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 	return domain.ReconstructOrder(
 		o.ID,

@@ -8,6 +8,7 @@ import (
 	activeorders "github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	cancelorder "github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	createorder "github.com/victorinolavida/orders/internal/application/usecases/create_order"
+	listorders "github.com/victorinolavida/orders/internal/application/usecases/list_orders"
 	"github.com/victorinolavida/orders/internal/domain"
 	orderpb "github.com/victorinolavida/proto/order"
 	"google.golang.org/grpc/codes"
@@ -20,17 +21,20 @@ type OrderGRPCHandler struct {
 	createOrder  *createorder.Usecase
 	cancelOrder  *cancelorder.Usecase
 	activeorders *activeorders.Usecase
+	listorders   *listorders.Usecase
 }
 
 func NewOrderGRPCHandler(
 	createOrder *createorder.Usecase,
 	cancelOrder *cancelorder.Usecase,
 	activeorders *activeorders.Usecase,
+	listorders *listorders.Usecase,
 ) *OrderGRPCHandler {
 	return &OrderGRPCHandler{
 		createOrder:  createOrder,
 		cancelOrder:  cancelOrder,
 		activeorders: activeorders,
+		listorders:   listorders,
 	}
 }
 
@@ -202,6 +206,74 @@ func (h *OrderGRPCHandler) GetActiveOrders(ctx context.Context, req *orderpb.Get
 	}
 
 	return &orderpb.GetActiveOrdersResponse{
+		Orders: orders,
+	}, nil
+}
+
+func (h *OrderGRPCHandler) ListOrders(ctx context.Context, req *orderpb.ListOrdersRequest) (*orderpb.ListOrdersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	traderID, err := uuid.Parse(req.TraderId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid trader_id")
+	}
+
+	orderIDs := make([]uuid.UUID, 0, len(req.OrderIds))
+	for _, id := range req.OrderIds {
+		orderID, err := uuid.Parse(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid order_id")
+		}
+		orderIDs = append(orderIDs, orderID)
+	}
+
+	if req.Direction != "" {
+		if _, err := domain.NewDirection(req.Direction); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid direction")
+		}
+	}
+	if req.Status != "" {
+		if _, err := domain.NewOrderStatus(req.Status); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid status")
+		}
+	}
+
+	cmd := listorders.Command{
+		TraderID:  traderID,
+		OrderIDs:  orderIDs,
+		Direction: req.Direction,
+		Status:    req.Status,
+	}
+
+	res, err := h.listorders.Execute(ctx, cmd)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	orders := make([]*orderpb.OrderResponse, len(res.Orders))
+	for i, order := range res.Orders {
+		orders[i] = &orderpb.OrderResponse{
+			Id:                order.ID,
+			SecurityId:        order.SecurityId,
+			Direction:         order.Direction,
+			OrderType:         order.OrderType,
+			Price:             order.Price,
+			Yield:             order.Yield,
+			Quantity:          order.Quantity,
+			NominalValue:      order.NominalValue,
+			AllocatedQuantity: order.AllocatedQuantity,
+			AllocationPtc:     order.AllocationPtc,
+			AllocationStatus:  order.AllocationStatus,
+			Fx:                order.Fx,
+			Status:            order.Status,
+			CreatedAt:         timestamppb.New(order.CreatedAt),
+			UpdatedAt:         timestamppb.New(order.UpdatedAt),
+		}
+	}
+
+	return &orderpb.ListOrdersResponse{
 		Orders: orders,
 	}, nil
 }

@@ -31,6 +31,25 @@ WHERE
         )
 ORDER BY created_at DESC, id ASC;
 
+-- name: ListOrders :many
+SELECT * FROM orders
+WHERE
+    trader_id = $1
+    AND (
+            sqlc.narg('order_ids')::uuid[] IS NULL
+            OR cardinality(sqlc.narg('order_ids')::uuid[]) = 0
+            OR public_id = ANY(sqlc.narg('order_ids')::uuid[])
+        )
+    AND (
+            sqlc.narg('direction')::text IS NULL
+            OR direction = sqlc.narg('direction')::text
+        )
+    AND (
+            sqlc.narg('status')::text IS NULL
+            OR status = sqlc.narg('status')::text
+        )
+ORDER BY created_at DESC, id ASC;
+
 -- name: UpdateOrder :execrows
 UPDATE orders
 SET status            = $1,
