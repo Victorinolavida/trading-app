@@ -93,14 +93,21 @@ func (s *OrdersService) CancelOrder(ctx context.Context, req dtos.CancelOrderReq
 	return toOrderResponse(res), nil
 }
 
-func (s *OrdersService) GetOrderByID(ctx context.Context, req dtos.GetOrderRequest) (dtos.OrderResponse, error) {
-	res, err := s.client.GetOrderByID(ctx, &orderpb.GetOrderRequest{
-		OrderId: req.OrderID,
+func (s *OrdersService) ListOrders(ctx context.Context, req dtos.ListOrdersRequest) (dtos.ListOrdersResponse, error) {
+	res, err := s.client.ListOrders(ctx, &orderpb.ListOrdersRequest{
+		TraderId:  req.TraderID,
+		OrderIds:  req.OrderIDs,
+		Direction: req.Direction,
+		Status:    req.Status,
 	})
 	if err != nil {
-		return dtos.OrderResponse{}, err
+		return dtos.ListOrdersResponse{}, err
 	}
-	return toOrderResponse(res), nil
+	orders := make([]dtos.OrderResponse, 0, len(res.Orders))
+	for _, o := range res.Orders {
+		orders = append(orders, toOrderResponse(o))
+	}
+	return dtos.ListOrdersResponse{Orders: orders}, nil
 }
 
 func (s *OrdersService) GetActiveOrders(ctx context.Context, req dtos.GetActiveOrdersRequest) (dtos.GetActiveOrdersResponse, error) {

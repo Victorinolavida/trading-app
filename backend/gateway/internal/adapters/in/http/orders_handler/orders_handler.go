@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -49,7 +50,7 @@ func (h *OrdersHandler) Routes() http.Handler {
 	protected.Post("/", h.CreateOrder)
 	protected.Patch("/{orderId}/cancel", h.CancelOrder)
 	protected.Get("/active", h.GetActiveOrders)
-	protected.Get("/{orderId}", h.GetOrderByID)
+	protected.Get("/", h.ListOrders)
 	return r
 }
 
@@ -106,19 +107,45 @@ func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	response.RenderJson(w, res, http.StatusOK)
 }
 
-func (h *OrdersHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderId")
-	req := dtos.GetOrderRequest{OrderID: orderID}
+func (h *OrdersHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
+	claims, err := authmiddleware.GetClaims(r.Context())
+	if err != nil {
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	q := r.URL.Query()
+	req := dtos.ListOrdersRequest{
+		TraderID:  claims.UserID,
+		OrderIDs:  parseOrderIDs(q["order_ids"]),
+		Direction: q.Get("direction"),
+		Status:    q.Get("status"),
+	}
 	if err := h.validate.Struct(req); err != nil {
 		response.RenderValidationError(w, err)
 		return
 	}
-	res, err := h.ordersService.GetOrderByID(r.Context(), req)
+
+	res, err := h.ordersService.ListOrders(r.Context(), req)
 	if err != nil {
 		response.RenderGRPCError(w, r, err)
 		return
 	}
 	response.RenderJson(w, res, http.StatusOK)
+}
+
+// parseOrderIDs accepts repeated ?order_ids=... parameters and
+// comma-separated values, dropping empty entries.
+func parseOrderIDs(values []string) []string {
+	ids := make([]string, 0, len(values))
+	for _, v := range values {
+		for _, id := range strings.Split(v, ",") {
+			if id = strings.TrimSpace(id); id != "" {
+				ids = append(ids, id)
+			}
+		}
+	}
+	return ids
 }
 
 func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) {

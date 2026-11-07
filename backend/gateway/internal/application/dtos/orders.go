@@ -17,8 +17,15 @@ type CancelOrderRequest struct {
 	TraderID string `json:"trader_id"`
 }
 
-type GetOrderRequest struct {
-	OrderID string `json:"order_id" validate:"required"`
+type ListOrdersRequest struct {
+	TraderID  string   `json:"-"`
+	OrderIDs  []string `json:"order_ids"`
+	Direction string   `json:"direction" validate:"omitempty,oneof=bid ask"`
+	Status    string   `json:"status" validate:"omitempty,oneof=active fully_allocated cancelled expired killed"`
+}
+
+type ListOrdersResponse struct {
+	Orders []OrderResponse `json:"orders"`
 }
 
 type GetActiveOrdersRequest struct {
