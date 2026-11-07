@@ -286,25 +286,46 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/v0/orders/{orderId}:
+  /api/v0/orders:
     get:
       tags: [orders]
-      summary: Get an order by its public id
-      operationId: getOrderByID
+      summary: List the authenticated trader's orders, most recently created first
+      operationId: listOrders
       parameters:
-        - name: orderId
-          in: path
-          required: true
+        - name: order_ids
+          in: query
+          required: false
+          description: Only return these public order ids; may be repeated or comma-separated
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+        - name: direction
+          in: query
+          required: false
           schema:
             type: string
-          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+            enum: [bid, ask]
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, fully_allocated, cancelled, expired, killed]
       responses:
         "200":
-          description: The order
+          description: The trader's orders, most recently created first
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OrderResponse"
+                $ref: "#/components/schemas/ListOrdersResponse"
+        "400":
+          description: A filter value is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Missing or invalid credentials
           content:
@@ -769,6 +790,15 @@ components:
           example: "2026-11-07T00:00:00Z"
 
     GetActiveOrdersResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderResponse"
+      required: [orders]
+
+    ListOrdersResponse:
       type: object
       properties:
         orders:
