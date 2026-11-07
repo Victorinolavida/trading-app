@@ -25,6 +25,7 @@ type ServerInterface interface {
 	MountModule(prefix string, m module.Module)
 	Handle(pattern string, handler http.HandlerFunc)
 	Method(method, pattern string, handler http.HandlerFunc)
+	ChiRoutes() chi.Routes
 }
 
 var _ ServerInterface = (*httpServer)(nil)
@@ -96,6 +97,10 @@ func NewHttpServer(conf config.Config) ServerInterface {
 
 // Mux returns the underlying chi router
 func (h *httpServer) Mux() *chi.Mux {
+	return h.router
+}
+
+func (h *httpServer) ChiRoutes() chi.Routes {
 	return h.router
 }
 
