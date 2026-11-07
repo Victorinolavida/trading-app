@@ -1,58 +1,38 @@
 package dtos
 
-type CreateOrderRequest struct {
-	TraderID   string `json:"trader_id"`
-	SecurityID string `json:"security_id"`
-	Direction  string `json:"direction" validate:"required,oneof=bid ask"`
-	OrderType  string `json:"order_type" validate:"required,oneof=limit market"`
-	Price      string `json:"price"`
-	Yield      string `json:"yield"`
-	Quantity   int    `json:"quantity" validate:"required"`
+type ListSecuritiesRequest struct {
+	Id             string
+	Ids            []string
+	Isin           string
+	Isins          []string
+	Currency       string
+	Serie          string
+	Series         []string
+	SecurityType   string
+	SecurityTypes  []string
+	IssueBefore    string
+	IssueAfter     string
+	MaturityBefore string
+	MaturityAfter  string
+	Name           string
+	Query          string
+	Q              string
 }
 
-type CreateOrderResponse struct {
-	OrderGroupID string `json:"order_group_id"`
-	OrderID      string `json:"order_id"`
-	Status       string `json:"status"`
+type Security struct {
+	ID           string  `json:"id"`
+	Isin         string  `json:"isin"`
+	Name         string  `json:"name"`
+	SecurityType string  `json:"security_type"`
+	Serie        string  `json:"serie"`
+	IssueDate    string  `json:"issue_date"`
+	MaturityDate string  `json:"maturity_date"`
+	NominalValue float64 `json:"nominal_value"`
+	Currency     string  `json:"currency"`
+	Fx           float64 `json:"fx"`
+	Enable       bool    `json:"enable"`
 }
 
-type CancelOrderRequest struct {
-	OrderGroupID string `json:"order_group_id" validate:"required"`
-	TraderID     string `json:"trader_id"`
-}
-
-type CancelOrderResponse struct {
-	OrderGroupID string `json:"order_group_id"`
-	Status       string `json:"status"`
-}
-
-type Order struct {
-	ID           string `json:"id"`
-	OrderGroupID string `json:"order_group_id"`
-	TraderID     string `json:"trader_id"`
-	SecurityID   string `json:"security_id"`
-	Direction    string `json:"direction"`
-	OrderType    string `json:"order_type"`
-	Price        string `json:"price"`
-	Yield        string `json:"yield"`
-	Quantity     int    `json:"quantity"`
-	NominalValue string `json:"nominal_value"`
-	Fx           string `json:"fx"`
-	Status       string `json:"status"`
-}
-
-type OrderGroupDetail struct {
-	ID               string  `json:"id"`
-	PublicID         string  `json:"public_id"`
-	TraderID         string  `json:"trader_id"`
-	SecurityID       string  `json:"security_id"`
-	Direction        string  `json:"direction"`
-	OrderType        string  `json:"order_type"`
-	AllocationPC     string  `json:"allocation_pc"`
-	AllocationStatus string  `json:"allocation_status"`
-	OrderGroupStatus string  `json:"order_group_status"`
-	WeightedPrice    string  `json:"weighted_price"`
-	WeightedYield    string  `json:"weighted_yield"`
-	WeightedFX       string  `json:"weighted_fx"`
-	Orders           []Order `json:"orders"`
+type ListSecuritiesResponse struct {
+	Securities []Security `json:"securities"`
 }

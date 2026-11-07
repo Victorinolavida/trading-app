@@ -49,7 +49,8 @@ func (h *OrdersHandler) Routes() http.Handler {
 	protected := r.With(authmiddleware.AuthMiddleware(h.jwtService, &h.conf.Cookie))
 	protected.Post("/", h.CreateOrder)
 	protected.Post("/cancel", h.CancelOrder)
-	protected.Get("/{orderGroupId}", h.GetOrderGroup)
+	protected.Get("/active", h.GetActiveOrders)
+	protected.Get("/{orderId}", h.GetOrderByID)
 	return r
 }
 
@@ -105,9 +106,27 @@ func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	response.RenderJson(w, res, http.StatusOK)
 }
 
-func (h *OrdersHandler) GetOrderGroup(w http.ResponseWriter, r *http.Request) {
-	orderGroupID := chi.URLParam(r, "orderGroupId")
-	res, err := h.ordersService.GetOrderGroup(r.Context(), orderGroupID)
+func (h *OrdersHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
+	orderID := chi.URLParam(r, "orderId")
+	res, err := h.ordersService.GetOrderByID(r.Context(), dtos.GetOrderRequest{OrderID: orderID})
+	if err != nil {
+		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	response.RenderJson(w, res, http.StatusOK)
+}
+
+func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	req := dtos.GetActiveOrdersRequest{
+		SecurityID: q.Get("security_id"),
+		Direction:  q.Get("direction"),
+	}
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderBadRequest(w, err.Error())
+		return
+	}
+	res, err := h.ordersService.GetActiveOrders(r.Context(), req)
 	if err != nil {
 		response.RenderError(w, http.StatusInternalServerError, err.Error())
 		return

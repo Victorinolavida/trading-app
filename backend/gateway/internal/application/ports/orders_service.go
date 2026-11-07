@@ -7,8 +7,9 @@ import (
 )
 
 type OrdersService interface {
-	CreateOrder(ctx context.Context, req dtos.CreateOrderRequest) (dtos.CreateOrderResponse, error)
-	CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.CancelOrderResponse, error)
-	GetOrderGroup(ctx context.Context, orderGroupID string) (dtos.OrderGroupDetail, error)
+	CreateOrder(ctx context.Context, req dtos.CreateOrderRequest) (dtos.OrderResponse, error)
+	CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.OrderResponse, error)
+	GetOrderByID(ctx context.Context, req dtos.GetOrderRequest) (dtos.OrderResponse, error)
+	GetActiveOrders(ctx context.Context, req dtos.GetActiveOrdersRequest) (dtos.GetActiveOrdersResponse, error)
 	Close() error
 }
