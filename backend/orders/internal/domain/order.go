@@ -230,26 +230,6 @@ type Execution struct {
 	Taker Direction
 }
 
-func (o *Order) canMatch(maker *Order) bool {
-	if o.Remaining() == 0 || maker.Remaining() == 0 {
-		return false
-	}
-	if o.status == OrderStatusCancelled || o.status == OrderStatusExpired {
-		return false
-	}
-	if maker.status == OrderStatusCancelled || maker.status == OrderStatusExpired {
-		return false
-	}
-	// DEBUG: comment for test propurses
-	// if o.traderID == maker.TraderID() {
-	// 	return false
-	// }
-	if o.direction == maker.direction {
-		return false
-	}
-	return true
-}
-
 // Remaining return the remaining/active quantity of a order
 func (o *Order) Remaining() Quantity {
 	return o.quantity - o.allocationQty
@@ -273,14 +253,44 @@ func (o *Order) updateAllocationStatus() {
 	}
 }
 
+func (o *Order) IsCancelled() bool {
+	return o.status == OrderStatusCancelled
+}
+
+func (o *Order) IsExpired() bool {
+	return o.status == OrderStatusExpired
+}
+
+func (o *Order) IsActive() bool {
+	return o.status == OrderStatusActive
+}
+
+func (o *Order) canMatch(maker *Order) bool {
+	if o.Remaining() == 0 || maker.Remaining() == 0 {
+		return false
+	}
+	if o.status == OrderStatusCancelled || o.status == OrderStatusExpired {
+		return false
+	}
+	if maker.status == OrderStatusCancelled || maker.status == OrderStatusExpired {
+		return false
+	}
+	if o.direction == maker.direction {
+		return false
+	}
+	return true
+}
+
 func (o *Order) MatchWith(maker *Order) (Execution, bool) {
 	if !o.canMatch(maker) {
 		return Execution{}, false
 	}
 	qty := min(o.Remaining(), maker.Remaining())
-	var price Decimal
-	if maker.price != nil {
-		price = *maker.price
+	// Execution price starts from the taker's price; a market taker
+	// has none of its own, so it takes the maker's (resting) price.
+	price := *maker.price
+	if o.price != nil {
+		price = *o.price
 	}
 	execution := Execution{
 		Qty:   qty,
