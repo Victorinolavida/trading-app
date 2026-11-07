@@ -43,6 +43,12 @@ func (o *Order) Status() OrderStatus                { return o.status }
 func (o *Order) CreatedAt() time.Time               { return o.createdAt }
 func (o *Order) UpdatedAt() time.Time               { return o.updatedAt }
 func (o *Order) touch()                             { o.updatedAt = time.Now() }
+func (o *Order) AllocationPtc() Decimal {
+	if o.quantity <= 0 || o.allocationQty <= 0 {
+		return Decimal(0)
+	}
+	return Decimal(o.allocationQty.Value() * 100 * int64(DecimalScale) / o.quantity.Value())
+}
 
 func toDecimalPtr(v int64) (*Decimal, error) {
 	if v == 0 {
@@ -154,7 +160,7 @@ func validateDecimalRange(d Decimal) error {
 
 func (o *Order) Cancel() error {
 	if o.status == OrderStatusCancelled {
-		return domainerrors.ErrOrderAlreadyAllocated
+		return domainerrors.ErrOrderAlreadyCanceled
 	}
 	o.status = OrderStatusCancelled
 	o.touch()

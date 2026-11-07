@@ -11,6 +11,7 @@ import (
 	orderpb "github.com/victorinolavida/proto/order"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type OrderGRPCHandler struct {
@@ -40,7 +41,7 @@ func parseScaled(s string) (int64, error) {
 	return d.Mul(decimal.NewFromInt(int64(domain.DecimalScale))).IntPart(), nil
 }
 
-func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.CreateOrderResponse, error) {
+func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.OrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -81,14 +82,26 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &orderpb.CreateOrderResponse{
-		OrderGroupId: res.OrderGroupID,
-		OrderId:      res.OrderID,
-		Status:       res.Status,
+	return &orderpb.OrderResponse{
+		Id:                res.ID,
+		SecurityId:        res.SecurityId,
+		Direction:         res.Direction,
+		OrderType:         res.OrderType,
+		Price:             res.Price,
+		Yield:             res.Yield,
+		Quantity:          res.Quantity,
+		NominalValue:      res.NominalValue,
+		AllocatedQuantity: res.AllocatedQuantity,
+		AllocationPtc:     res.AllocationPtc,
+		AllocationStatus:  res.AllocationStatus,
+		Fx:                res.Fx,
+		Status:            res.Status,
+		CreatedAt:         timestamppb.New(res.CreatedAt),
+		UpdatedAt:         timestamppb.New(res.UpdatedAt),
 	}, nil
 }
 
-func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelOrderRequest) (*orderpb.CancelOrderResponse, error) {
+func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelOrderRequest) (*orderpb.OrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -103,8 +116,8 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 	}
 
 	cmd := cancelorder.Command{
-		OrderGroupID: orderGroupID,
-		TraderID:     traderID,
+		OrderID:  orderGroupID,
+		TraderID: traderID,
 	}
 
 	res, err := h.cancelOrder.Execute(ctx, cmd)
@@ -112,8 +125,21 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &orderpb.CancelOrderResponse{
-		OrderGroupId: res.OrderGroupID,
-		Status:       res.Status,
+	return &orderpb.OrderResponse{
+		Id:                res.ID,
+		SecurityId:        res.SecurityId,
+		Direction:         res.Direction,
+		OrderType:         res.OrderType,
+		Price:             res.Price,
+		Yield:             res.Yield,
+		Quantity:          res.Quantity,
+		NominalValue:      res.NominalValue,
+		AllocatedQuantity: res.AllocatedQuantity,
+		AllocationPtc:     res.AllocationPtc,
+		AllocationStatus:  res.AllocationStatus,
+		Fx:                res.Fx,
+		Status:            res.Status,
+		CreatedAt:         timestamppb.New(res.CreatedAt),
+		UpdatedAt:         timestamppb.New(res.UpdatedAt),
 	}, nil
 }

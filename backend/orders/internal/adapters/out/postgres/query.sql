@@ -80,3 +80,4 @@ WHERE direction = 'ask'
   AND status = 'active'
   AND security_id = $1
 ORDER BY price ASC, created_at ASC, id ASC;
+

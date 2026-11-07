@@ -1,13 +1,30 @@
 package cancel_order
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Command struct {
-	OrderGroupID uuid.UUID
-	TraderID     uuid.UUID
+	OrderID  uuid.UUID
+	TraderID uuid.UUID
 }
 
 type Result struct {
-	OrderGroupID string
-	Status       string
+	ID                string
+	SecurityId        string
+	Direction         string
+	OrderType         string
+	Price             string
+	Yield             string
+	Quantity          int64
+	NominalValue      string
+	AllocatedQuantity int64
+	AllocationPtc     string
+	AllocationStatus  string
+	Fx                string
+	Status            string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }

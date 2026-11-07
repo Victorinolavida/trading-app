@@ -101,7 +101,7 @@ func TestOrder_CancelKillExpire(t *testing.T) {
 
 	require.NoError(t, order.Cancel())
 	require.Equal(t, domain.OrderStatusCancelled, order.Status())
-	require.ErrorIs(t, order.Cancel(), domainerrors.ErrOrderAlreadyAllocated)
+	require.ErrorIs(t, order.Cancel(), domainerrors.ErrOrderAlreadyCanceled)
 
 	order.Kill()
 	require.Equal(t, domain.OrderStatusKilled, order.Status())
@@ -187,6 +187,57 @@ func TestMatchWith_NoMatch(t *testing.T) {
 		_, ok = another.MatchWith(maker)
 		require.False(t, ok)
 	})
+}
+
+func TestOrder_AllocationPtc(t *testing.T) {
+	price := domain.Decimal(testPrice)
+	yield := domain.Decimal(testYield)
+
+	newOrder := func(t *testing.T, quantity, allocated domain.Quantity) *domain.Order {
+		t.Helper()
+		status := domain.AllocationStatusNone
+		if allocated > 0 {
+			status = domain.AllocationStatusPartial
+		}
+		if allocated == quantity {
+			status = domain.AllocationStatusAllocated
+		}
+		order, err := domain.ReconstructOrder(
+			uuid.New(), uuid.New(), uuid.New(), uuid.New(),
+			"bid", "limit", "active", string(status),
+			quantity, allocated,
+			&price, &yield,
+			domain.Decimal(testNominal), domain.Decimal(testFx),
+			time.Now(), time.Now(),
+		)
+		require.NoError(t, err)
+		return order
+	}
+
+	tests := []struct {
+		name      string
+		quantity  domain.Quantity
+		allocated domain.Quantity
+		want      domain.Decimal
+		wantStr   string
+	}{
+		{"zero allocated", 10, 0, 0, "0"},
+		{"half allocated", 10, 5, 50_000_000, "50"},
+		{"fully allocated", 10, 10, 100_000_000, "100"},
+		{"one third", 3, 1, 33_333_333, "33.333333"},
+		{"one sixth", 6, 1, 16_666_666, "16.666666"},
+		{"one eighth has fractional percent", 8, 1, 12_500_000, "12.5"},
+		{"almost fully allocated", 1_000, 999, 99_900_000, "99.9"},
+		{"large quantities", 1_000_000_000, 500_000_000, 50_000_000, "50"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := newOrder(t, tt.quantity, tt.allocated).AllocationPtc()
+			require.Equal(t, tt.want, got)
+			require.Equal(t, tt.wantStr, got.String())
+		})
+	}
 }
 
 func TestReconstructOrder(t *testing.T) {
