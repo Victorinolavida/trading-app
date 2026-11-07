@@ -38,8 +38,15 @@ message CancelOrderRequest {
   string trader_id = 2;
 }
 
-message GetOrderRequest {
-  string order_id = 1;
+message ListOrdersRequest {
+  string trader_id = 1;
+  repeated string order_ids = 2;
+  string direction = 3;
+  string status = 4;
+}
+
+message ListOrdersResponse {
+  repeated OrderResponse orders = 1;
 }
 
 message GetActiveOrdersRequest {
@@ -55,6 +62,6 @@ message GetActiveOrdersResponse {
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (OrderResponse) {}
   rpc CancelOrder(CancelOrderRequest) returns (OrderResponse) {}
-  rpc GetOrderByID(GetOrderRequest) returns (OrderResponse) {}
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {}
   rpc GetActiveOrders(GetActiveOrdersRequest) returns (GetActiveOrdersResponse){}
 }
