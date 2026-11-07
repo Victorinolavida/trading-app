@@ -38,7 +38,10 @@ func canExecute(taker, maker *domain.Order) Rejection {
 }
 
 func pricesCross(taker, maker *domain.Order) bool {
-	if taker.IsMarket() {
+	if taker.IsMarket() && maker.IsMarket() {
+		return false
+	}
+	if taker.IsMarket() || maker.IsMarket() {
 		return true
 	}
 	takerPrice := taker.Price().Value()

@@ -99,16 +99,14 @@ ORDER BY executed_at ASC, id ASC;
 -- name: GetBidsToTrade :many
 SELECT * FROM orders
 WHERE direction = 'bid'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price DESC, created_at ASC, id ASC;
+ORDER BY COALESCE(price, 9223372036854775807) DESC, created_at ASC, id ASC;
 
 -- name: GetAsksToTrade :many
 SELECT * FROM orders
 WHERE direction = 'ask'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price ASC, created_at ASC, id ASC;
+ORDER BY COALESCE(price, 0) ASC, created_at ASC, id ASC;
 

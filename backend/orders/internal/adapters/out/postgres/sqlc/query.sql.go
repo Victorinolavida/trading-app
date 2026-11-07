@@ -71,10 +71,9 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 const getAsksToTrade = `-- name: GetAsksToTrade :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE direction = 'ask'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price ASC, created_at ASC, id ASC
+ORDER BY COALESCE(price, 0) ASC, created_at ASC, id ASC
 `
 
 func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {
@@ -117,10 +116,9 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 const getBidsToTrade = `-- name: GetBidsToTrade :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE direction = 'bid'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price DESC, created_at ASC, id ASC
+ORDER BY COALESCE(price, 9223372036854775807) DESC, created_at ASC, id ASC
 `
 
 func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {
