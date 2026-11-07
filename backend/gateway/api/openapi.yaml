@@ -16,6 +16,8 @@ tags:
     description: Authentication and registration
   - name: orders
     description: Order creation, cancellation and lookup
+  - name: securities
+    description: Security listings and searches
 
 paths:
   /health:
@@ -123,6 +125,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v0/auth/logout:
+    post:
+      tags: [auth]
+      summary: Clear the session cookies
+      operationId: logout
+      responses:
+        "204":
+          description: Session cookies cleared
+
+  /api/v0/auth/whoami:
+    get:
+      tags: [auth]
+      summary: Return the authenticated user
+      operationId: whoami
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhoamiUser"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: invalid credentials
+
   /api/v0/orders:
     post:
       tags: [orders]
@@ -154,6 +186,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: '"security_id" must be a valid uuid'
         "401":
           description: Missing or invalid credentials
           content:
@@ -167,19 +201,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/v0/orders/cancel:
-    post:
+  /api/v0/orders/{orderId}/cancel:
+    patch:
       tags: [orders]
       summary: Cancel an order
       operationId: cancelOrder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CancelOrderRequest"
-            example:
-              order_group_id: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
       responses:
         "200":
           description: The cancelled order
@@ -285,6 +318,266 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v0/securities:
+    get:
+      tags: [securities]
+      summary: List securities matching the given filters
+      operationId: listSecurities
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        - name: ids
+          in: query
+          required: false
+          description: Multiple ids can be provided as repeated query parameters.
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+        - name: isin
+          in: query
+          required: false
+          schema:
+            type: string
+          example: US91232E20205D7F9L0P4
+        - name: isins
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Mexico Government Bond
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          example: mbono
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          example: mbono
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+          example: MXN
+        - name: serie
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "341"
+        - name: series
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["341"]
+        - name: security_type
+          in: query
+          required: false
+          schema:
+            type: string
+          example: M
+        - name: security_types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["M", "S"]
+        - name: issue_before
+          in: query
+          required: false
+          description: ISO date; only return securities issued before this date.
+          schema:
+            type: string
+            format: date
+        - name: issue_after
+          in: query
+          required: false
+          description: ISO date; only return securities issued after this date.
+          schema:
+            type: string
+            format: date
+        - name: maturity_before
+          in: query
+          required: false
+          description: ISO date; only return securities maturing before this date.
+          schema:
+            type: string
+            format: date
+        - name: maturity_after
+          in: query
+          required: false
+          description: ISO date; only return securities maturing after this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Securities matching the filters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecuritiesResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/securities/search:
+    get:
+      tags: [securities]
+      summary: Search securities by free text or exact filters
+      operationId: searchSecurities
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        - name: isin
+          in: query
+          required: false
+          schema:
+            type: string
+          example: US91232E20205D7F9L0P4
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Mexico Government Bond
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          example: mbono
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          example: mbono
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+          example: MXN
+        - name: serie
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "341"
+        - name: security_type
+          in: query
+          required: false
+          schema:
+            type: string
+          example: M
+      responses:
+        "200":
+          description: Securities matching the search
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecuritiesResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/securities/active:
+    get:
+      tags: [securities]
+      summary: List active securities
+      operationId: getActiveSecurities
+      responses:
+        "200":
+          description: Active securities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecuritiesResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/securities/enabled:
+    get:
+      tags: [securities]
+      summary: List enabled securities
+      operationId: getEnabledSecurities
+      responses:
+        "200":
+          description: Enabled securities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecuritiesResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthResponse:
@@ -350,6 +643,29 @@ components:
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature
       required: [user_id, first_name, last_name, token]
 
+    WhoamiUser:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        first_name:
+          type: string
+          example: Jane
+        last_name:
+          type: string
+          example: Doe
+        token:
+          type: string
+          description: "JWT access token, sent as `Authorization: Bearer <token>`"
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature
+        email:
+          type: string
+          format: email
+          example: jane@example.com
+      required: [user_id, first_name, last_name, token, email]
+
     CreateOrderRequest:
       type: object
       properties:
@@ -386,7 +702,7 @@ components:
     CancelOrderRequest:
       type: object
       properties:
-        order_group_id:
+        order_id:
           type: string
           format: uuid
           example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
@@ -395,7 +711,7 @@ components:
           format: uuid
           description: Inferred from the authenticated user when omitted
           example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
-      required: [order_group_id]
+      required: [order_id]
 
     OrderResponse:
       type: object
@@ -460,6 +776,58 @@ components:
           items:
             $ref: "#/components/schemas/OrderResponse"
       required: [orders]
+
+    SecuritiesResponse:
+      type: object
+      properties:
+        securities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Security"
+      required: [securities]
+
+    Security:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        isin:
+          type: string
+          example: US91232E20205D7F9L0P4
+        name:
+          type: string
+          example: Mexico Government Bond
+        security_type:
+          type: string
+          example: M
+        serie:
+          type: string
+          example: "341"
+        issue_date:
+          type: string
+          format: date
+          example: "2026-10-22"
+        maturity_date:
+          type: string
+          format: date
+          example: "2033-11-17"
+        nominal_value:
+          type: number
+          format: double
+          example: 1000
+        currency:
+          type: string
+          example: MXN
+        fx:
+          type: number
+          format: double
+          example: 1
+        enable:
+          type: boolean
+          example: true
+      required: [id, isin, security_type, issue_date, maturity_date, nominal_value, currency, fx, enable]
 
     ErrorResponse:
       type: object
