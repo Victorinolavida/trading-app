@@ -2,9 +2,11 @@ package cancel_order
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/victorinolavida/orders/internal/application/ports"
+	"github.com/victorinolavida/orders/internal/domain"
 	"github.com/victorinolavida/orders/internal/domainerrors"
 )
 
@@ -32,6 +34,9 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	if err := order.Cancel(); err != nil {
+		if errors.Is(err, domainerrors.ErrOrderAlreadyCanceled) {
+			return orderToResult(order), nil
+		}
 		return Result{}, err
 	}
 
@@ -40,6 +45,10 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, err
 	}
 
+	return orderToResult(order), nil
+}
+
+func orderToResult(order *domain.Order) Result {
 	return Result{
 		ID:                order.PublicID().String(),
 		SecurityId:        order.SecurityID().String(),
@@ -56,5 +65,5 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		Status:            string(order.Status()),
 		CreatedAt:         order.CreatedAt(),
 		UpdatedAt:         order.UpdatedAt(),
-	}, nil
+	}
 }
