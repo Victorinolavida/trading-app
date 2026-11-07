@@ -368,8 +368,9 @@ func (x *GetOrderRequest) GetOrderId() string {
 
 type GetActiveOrdersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SecurityId    string                 `protobuf:"bytes,1,opt,name=security_id,json=securityId,proto3" json:"security_id,omitempty"`
-	Direction     string                 `protobuf:"bytes,2,opt,name=direction,proto3" json:"direction,omitempty"`
+	TraderId      string                 `protobuf:"bytes,1,opt,name=trader_id,json=traderId,proto3" json:"trader_id,omitempty"`
+	SecurityId    string                 `protobuf:"bytes,2,opt,name=security_id,json=securityId,proto3" json:"security_id,omitempty"`
+	Direction     string                 `protobuf:"bytes,3,opt,name=direction,proto3" json:"direction,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -402,6 +403,13 @@ func (x *GetActiveOrdersRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetActiveOrdersRequest.ProtoReflect.Descriptor instead.
 func (*GetActiveOrdersRequest) Descriptor() ([]byte, []int) {
 	return file_order_order_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetActiveOrdersRequest) GetTraderId() string {
+	if x != nil {
+		return x.TraderId
+	}
+	return ""
 }
 
 func (x *GetActiveOrdersRequest) GetSecurityId() string {
@@ -502,11 +510,12 @@ const file_order_order_proto_rawDesc = "" +
 	"\x0eorder_group_id\x18\x01 \x01(\tR\forderGroupId\x12\x1b\n" +
 	"\ttrader_id\x18\x02 \x01(\tR\btraderId\",\n" +
 	"\x0fGetOrderRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\"W\n" +
-	"\x16GetActiveOrdersRequest\x12\x1f\n" +
-	"\vsecurity_id\x18\x01 \x01(\tR\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\"t\n" +
+	"\x16GetActiveOrdersRequest\x12\x1b\n" +
+	"\ttrader_id\x18\x01 \x01(\tR\btraderId\x12\x1f\n" +
+	"\vsecurity_id\x18\x02 \x01(\tR\n" +
 	"securityId\x12\x1c\n" +
-	"\tdirection\x18\x02 \x01(\tR\tdirection\"G\n" +
+	"\tdirection\x18\x03 \x01(\tR\tdirection\"G\n" +
 	"\x17GetActiveOrdersResponse\x12,\n" +
 	"\x06orders\x18\x01 \x03(\v2\x14.order.OrderResponseR\x06orders2\xa6\x02\n" +
 	"\fOrderService\x12@\n" +

@@ -43,8 +43,9 @@ message GetOrderRequest {
 }
 
 message GetActiveOrdersRequest {
-  string security_id = 1;
-  string direction = 2;
+  string trader_id = 1;
+  string security_id = 2;
+  string direction = 3;
 }
 
 message GetActiveOrdersResponse {
