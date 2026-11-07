@@ -14,6 +14,8 @@ tags:
     description: Liveness endpoint
   - name: auth
     description: Authentication and registration
+  - name: orders
+    description: Order creation, cancellation and lookup
 
 paths:
   /health:
@@ -121,6 +123,168 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v0/orders:
+    post:
+      tags: [orders]
+      summary: Create an order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+            example:
+              security_id: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+              direction: bid
+              order_type: limit
+              price: "101.25"
+              yield: "3.5"
+              quantity: 100
+      responses:
+        "201":
+          description: The created order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: The body could not be parsed or failed validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/orders/cancel:
+    post:
+      tags: [orders]
+      summary: Cancel an order
+      operationId: cancelOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelOrderRequest"
+            example:
+              order_group_id: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+      responses:
+        "200":
+          description: The cancelled order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: The body could not be parsed or failed validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/orders/active:
+    get:
+      tags: [orders]
+      summary: List active orders for a security
+      operationId: getActiveOrders
+      parameters:
+        - name: security_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        - name: direction
+          in: query
+          required: false
+          description: Optional filter; omit to return both directions
+          schema:
+            type: string
+            enum: [bid, ask]
+          example: bid
+      responses:
+        "200":
+          description: Active orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetActiveOrdersResponse"
+        "400":
+          description: security_id is required or direction is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v0/orders/{orderId}:
+    get:
+      tags: [orders]
+      summary: Get an order by its public id
+      operationId: getOrderByID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+      responses:
+        "200":
+          description: The order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthResponse:
@@ -185,6 +349,117 @@ components:
           description: "JWT access token, sent as `Authorization: Bearer <token>`"
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature
       required: [user_id, first_name, last_name, token]
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        trader_id:
+          type: string
+          format: uuid
+          description: Inferred from the authenticated user when omitted
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        security_id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        direction:
+          type: string
+          enum: [bid, ask]
+          example: bid
+        order_type:
+          type: string
+          enum: [limit, market]
+          example: limit
+        price:
+          type: string
+          example: "101.25"
+        yield:
+          type: string
+          example: "3.5"
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 100
+      required: [security_id, direction, order_type, quantity]
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        order_group_id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        trader_id:
+          type: string
+          format: uuid
+          description: Inferred from the authenticated user when omitted
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+      required: [order_group_id]
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public id of the order
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        security_id:
+          type: string
+          format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+        direction:
+          type: string
+          example: bid
+        order_type:
+          type: string
+          example: limit
+        price:
+          type: string
+          example: "101.25"
+        yield:
+          type: string
+          example: "3.5"
+        quantity:
+          type: integer
+          format: int64
+          example: 100
+        nominal_value:
+          type: string
+          example: "1000"
+        allocated_quantity:
+          type: integer
+          format: int64
+          example: 0
+        allocation_ptc:
+          type: string
+          example: ""
+        allocation_status:
+          type: string
+          example: pending
+        fx:
+          type: string
+          example: "1"
+        status:
+          type: string
+          example: open
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-11-07T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-11-07T00:00:00Z"
+
+    GetActiveOrdersResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderResponse"
+      required: [orders]
 
     ErrorResponse:
       type: object
