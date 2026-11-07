@@ -12,6 +12,62 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getActiveOrders = `-- name: GetActiveOrders :many
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+WHERE 
+    security_id = $1
+    AND trader_id = $2
+    AND status = 'active'
+    AND (
+            $3::text IS NULL
+            OR direction = $3::text
+        )
+ORDER BY created_at DESC, id ASC
+`
+
+type GetActiveOrdersParams struct {
+	SecurityID uuid.UUID
+	TraderID   uuid.UUID
+	Direction  pgtype.Text
+}
+
+func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getActiveOrders, arg.SecurityID, arg.TraderID, arg.Direction)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.TraderID,
+			&i.SecurityID,
+			&i.Direction,
+			&i.OrderType,
+			&i.Price,
+			&i.Yield,
+			&i.Quantity,
+			&i.AllocationQty,
+			&i.AllocationStatus,
+			&i.NominalValue,
+			&i.Fx,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAsksToTrade = `-- name: GetAsksToTrade :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE direction = 'ask'

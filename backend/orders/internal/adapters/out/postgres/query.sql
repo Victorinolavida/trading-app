@@ -19,6 +19,18 @@ WHERE id = $1;
 SELECT * FROM orders
 WHERE public_id = $1;
 
+-- name: GetActiveOrders :many
+SELECT * FROM orders
+WHERE 
+    security_id = $1
+    AND trader_id = $2
+    AND status = 'active'
+    AND (
+            sqlc.narg('direction')::text IS NULL
+            OR direction = sqlc.narg('direction')::text
+        )
+ORDER BY created_at DESC, id ASC;
+
 -- name: UpdateOrder :execrows
 UPDATE orders
 SET status            = $1,

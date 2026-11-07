@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	activeorders "github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	cancelorder "github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	createorder "github.com/victorinolavida/orders/internal/application/usecases/create_order"
 	"github.com/victorinolavida/orders/internal/domain"
@@ -16,17 +17,20 @@ import (
 
 type OrderGRPCHandler struct {
 	orderpb.UnimplementedOrderServiceServer
-	createOrder *createorder.Usecase
-	cancelOrder *cancelorder.Usecase
+	createOrder  *createorder.Usecase
+	cancelOrder  *cancelorder.Usecase
+	activeorders *activeorders.Usecase
 }
 
 func NewOrderGRPCHandler(
 	createOrder *createorder.Usecase,
 	cancelOrder *cancelorder.Usecase,
+	activeorders *activeorders.Usecase,
 ) *OrderGRPCHandler {
 	return &OrderGRPCHandler{
-		createOrder: createOrder,
-		cancelOrder: cancelOrder,
+		createOrder:  createOrder,
+		cancelOrder:  cancelOrder,
+		activeorders: activeorders,
 	}
 }
 
@@ -141,5 +145,63 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 		Status:            res.Status,
 		CreatedAt:         timestamppb.New(res.CreatedAt),
 		UpdatedAt:         timestamppb.New(res.UpdatedAt),
+	}, nil
+}
+
+func (h *OrderGRPCHandler) GetActiveOrders(ctx context.Context, req *orderpb.GetActiveOrdersRequest) (*orderpb.GetActiveOrdersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	traderID, err := uuid.Parse(req.TraderId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid trader_id")
+	}
+	securityID, err := uuid.Parse(req.SecurityId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid security_id")
+	}
+	if req.Direction != "" {
+		_, err := domain.NewDirection(req.Direction)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid direction")
+		}
+	}
+
+	cmd := activeorders.Command{
+		SecurityId: securityID,
+		TraderID:   traderID,
+		Direction:  req.Direction,
+	}
+
+	res, err := h.activeorders.Execute(ctx, cmd)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	orders := make([]*orderpb.OrderResponse, len(res.Orders))
+	for i, order := range res.Orders {
+		ord := &orderpb.OrderResponse{
+			Id:                order.ID,
+			SecurityId:        order.SecurityId,
+			Direction:         order.Direction,
+			OrderType:         order.OrderType,
+			Price:             order.Price,
+			Yield:             order.Yield,
+			Quantity:          order.Quantity,
+			NominalValue:      order.NominalValue,
+			AllocatedQuantity: order.AllocatedQuantity,
+			AllocationPtc:     order.AllocationPtc,
+			AllocationStatus:  order.AllocationStatus,
+			Fx:                order.Fx,
+			Status:            order.Status,
+			CreatedAt:         timestamppb.New(order.CreatedAt),
+			UpdatedAt:         timestamppb.New(order.UpdatedAt),
+		}
+		orders[i] = ord
+	}
+
+	return &orderpb.GetActiveOrdersResponse{
+		Orders: orders,
 	}, nil
 }

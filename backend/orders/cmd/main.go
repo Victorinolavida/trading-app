@@ -13,6 +13,7 @@ import (
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/users"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
 	matchingengine "github.com/victorinolavida/orders/internal/application/services/matching-engine"
+	"github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
 	"github.com/victorinolavida/orders/internal/domain"
@@ -63,9 +64,10 @@ func main() {
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
 	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager)
 	cancelUC := cancel_order.New(orderRepo)
+	activeUc := active_orders.New(orderRepo)
 
 	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)
-	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC)
+	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC, activeUc)
 	orderpb.RegisterOrderServiceServer(grpcServer.Server(), handler)
 
 	reflection.Register(grpcServer.Server())

@@ -14,6 +14,7 @@ type OrderRepository interface {
 	Update(ctx context.Context, order *domain.Order) error
 	UpdateBulk(ctx context.Context, orders ...*domain.Order) error
 	GetOrdersToTrade(context.Context, *domain.Order) ([]*domain.Order, error)
+	GetActiveOrders(context.Context, uuid.UUID, uuid.UUID, string) ([]*domain.Order, error)
 }
 
 type TxManager interface {

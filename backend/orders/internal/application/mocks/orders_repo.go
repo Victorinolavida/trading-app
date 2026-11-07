@@ -48,3 +48,8 @@ func (m *MockOrderRepo) GetOrdersToTrade(ctx context.Context, order *domain.Orde
 	args := m.Called(ctx, order)
 	return args.Get(0).([]*domain.Order), args.Error(1)
 }
+
+func (m *MockOrderRepo) GetActiveOrders(ctx context.Context, traderID uuid.UUID, securityID uuid.UUID, direction string) ([]*domain.Order, error) {
+	args := m.Called(ctx, traderID, securityID, direction)
+	return args.Get(0).([]*domain.Order), args.Error(1)
+}
