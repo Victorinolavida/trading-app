@@ -107,6 +107,7 @@ func (s *OrdersService) GetActiveOrders(ctx context.Context, req dtos.GetActiveO
 	res, err := s.client.GetActiveOrders(ctx, &orderpb.GetActiveOrdersRequest{
 		SecurityId: req.SecurityID,
 		Direction:  req.Direction,
+		TraderId:   req.TraderID,
 	})
 	if err != nil {
 		return dtos.GetActiveOrdersResponse{}, err

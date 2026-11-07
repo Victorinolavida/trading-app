@@ -24,6 +24,7 @@ type GetOrderRequest struct {
 type GetActiveOrdersRequest struct {
 	SecurityID string `json:"security_id" validate:"required"`
 	Direction  string `json:"direction" validate:"omitempty,oneof=bid ask"`
+	TraderID   string
 }
 
 type OrderResponse struct {

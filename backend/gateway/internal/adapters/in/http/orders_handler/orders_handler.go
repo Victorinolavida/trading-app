@@ -110,7 +110,7 @@ func (h *OrdersHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
 	res, err := h.ordersService.GetOrderByID(r.Context(), dtos.GetOrderRequest{OrderID: orderID})
 	if err != nil {
-		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 	response.RenderJson(w, res, http.StatusOK)
@@ -118,9 +118,16 @@ func (h *OrdersHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+
+	claims, err := authmiddleware.GetClaims(r.Context())
+	if err != nil {
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
 	req := dtos.GetActiveOrdersRequest{
 		SecurityID: q.Get("security_id"),
 		Direction:  q.Get("direction"),
+		TraderID:   claims.UserID,
 	}
 	if err := h.validate.Struct(req); err != nil {
 		response.RenderBadRequest(w, err.Error())
@@ -128,7 +135,7 @@ func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) 
 	}
 	res, err := h.ordersService.GetActiveOrders(r.Context(), req)
 	if err != nil {
-		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 	response.RenderJson(w, res, http.StatusOK)
