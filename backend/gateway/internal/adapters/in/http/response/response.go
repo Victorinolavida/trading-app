@@ -154,7 +154,7 @@ func ParseBodyFromRequest[T any](w http.ResponseWriter, r *http.Request) (T, err
 			args = append(args, slog.String("request_id", reqID))
 		}
 		slog.Error("error decoding", args...)
-		return *newStruct, errors.New("invalid data")
+		return *newStruct, errors.New(DecodeErrorMessage(err))
 	}
 	return *newStruct, nil
 }

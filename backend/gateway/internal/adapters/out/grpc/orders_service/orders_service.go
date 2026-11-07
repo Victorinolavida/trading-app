@@ -2,6 +2,7 @@ package ordersservice
 
 import (
 	"context"
+	"time"
 
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
@@ -35,7 +36,37 @@ func (s *OrdersService) Close() error {
 	return s.grpc.Close()
 }
 
-func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderRequest) (dtos.CreateOrderResponse, error) {
+func toOrderResponse(res *orderpb.OrderResponse) dtos.OrderResponse {
+	if res == nil {
+		return dtos.OrderResponse{}
+	}
+	var createdAt, updatedAt time.Time
+	if res.CreatedAt != nil {
+		createdAt = res.CreatedAt.AsTime()
+	}
+	if res.UpdatedAt != nil {
+		updatedAt = res.UpdatedAt.AsTime()
+	}
+	return dtos.OrderResponse{
+		ID:                res.Id,
+		SecurityID:        res.SecurityId,
+		Direction:         res.Direction,
+		OrderType:         res.OrderType,
+		Price:             res.Price,
+		Yield:             res.Yield,
+		Quantity:          res.Quantity,
+		NominalValue:      res.NominalValue,
+		AllocatedQuantity: res.AllocatedQuantity,
+		AllocationPtc:     res.AllocationPtc,
+		AllocationStatus:  res.AllocationStatus,
+		Fx:                res.Fx,
+		Status:            res.Status,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
+	}
+}
+
+func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderRequest) (dtos.OrderResponse, error) {
 	res, err := s.client.CreateOrder(ctx, &orderpb.CreateOrderRequest{
 		TraderId:   req.TraderID,
 		SecurityId: req.SecurityID,
@@ -43,71 +74,54 @@ func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderReq
 		OrderType:  req.OrderType,
 		Price:      req.Price,
 		Yield:      req.Yield,
-		Quantity:   int64(req.Quantity),
+		Quantity:   req.Quantity,
 	})
 	if err != nil {
-		return dtos.CreateOrderResponse{}, err
+		return dtos.OrderResponse{}, err
 	}
-	return dtos.CreateOrderResponse{
-		OrderGroupID: res.OrderGroupId,
-		OrderID:      res.OrderId,
-		Status:       res.Status,
-	}, nil
+	return toOrderResponse(res), nil
 }
 
-func (s *OrdersService) CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.CancelOrderResponse, error) {
+func (s *OrdersService) CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.OrderResponse, error) {
 	res, err := s.client.CancelOrder(ctx, &orderpb.CancelOrderRequest{
-		OrderGroupId: req.OrderGroupID,
-		TraderId:     req.TraderID,
+		OrderId:  req.OrderID,
+		TraderId: req.TraderID,
 	})
 	if err != nil {
-		return dtos.CancelOrderResponse{}, err
+		return dtos.OrderResponse{}, err
 	}
-	return dtos.CancelOrderResponse{
-		OrderGroupID: res.OrderGroupId,
-		Status:       res.Status,
-	}, nil
+	return toOrderResponse(res), nil
 }
 
-func (s *OrdersService) GetOrderGroup(ctx context.Context, orderGroupID string) (dtos.OrderGroupDetail, error) {
-	res, err := s.client.GetOrderGroup(ctx, &orderpb.GetOrderGroupRequest{
-		OrderGroupId: orderGroupID,
+func (s *OrdersService) ListOrders(ctx context.Context, req dtos.ListOrdersRequest) (dtos.ListOrdersResponse, error) {
+	res, err := s.client.ListOrders(ctx, &orderpb.ListOrdersRequest{
+		TraderId:  req.TraderID,
+		OrderIds:  req.OrderIDs,
+		Direction: req.Direction,
+		Status:    req.Status,
 	})
 	if err != nil {
-		return dtos.OrderGroupDetail{}, err
+		return dtos.ListOrdersResponse{}, err
 	}
-
-	orders := make([]dtos.Order, 0, len(res.Orders))
+	orders := make([]dtos.OrderResponse, 0, len(res.Orders))
 	for _, o := range res.Orders {
-		orders = append(orders, dtos.Order{
-			ID:           o.Id,
-			OrderGroupID: o.OrderGroupId,
-			TraderID:     o.TraderId,
-			SecurityID:   o.SecurityId,
-			Direction:    o.Direction,
-			OrderType:    o.OrderType,
-			Price:        o.Price,
-			Yield:        o.Yield,
-			Quantity:     int(o.Quantity),
-			NominalValue: o.NominalValue,
-			Fx:           o.Fx,
-			Status:       o.Status,
-		})
+		orders = append(orders, toOrderResponse(o))
 	}
+	return dtos.ListOrdersResponse{Orders: orders}, nil
+}
 
-	return dtos.OrderGroupDetail{
-		ID:               res.Id,
-		PublicID:         res.PublicId,
-		TraderID:         res.TraderId,
-		SecurityID:       res.SecurityId,
-		Direction:        res.Direction,
-		OrderType:        res.OrderType,
-		AllocationPC:     res.AllocationPc,
-		AllocationStatus: res.AllocationStatus,
-		OrderGroupStatus: res.OrderGroupStatus,
-		WeightedPrice:    res.WeightedPrice,
-		WeightedYield:    res.WeightedYield,
-		WeightedFX:       res.WeightedFx,
-		Orders:           orders,
-	}, nil
+func (s *OrdersService) GetActiveOrders(ctx context.Context, req dtos.GetActiveOrdersRequest) (dtos.GetActiveOrdersResponse, error) {
+	res, err := s.client.GetActiveOrders(ctx, &orderpb.GetActiveOrdersRequest{
+		SecurityId: req.SecurityID,
+		Direction:  req.Direction,
+		TraderId:   req.TraderID,
+	})
+	if err != nil {
+		return dtos.GetActiveOrdersResponse{}, err
+	}
+	orders := make([]dtos.OrderResponse, 0, len(res.Orders))
+	for _, o := range res.Orders {
+		orders = append(orders, toOrderResponse(o))
+	}
+	return dtos.GetActiveOrdersResponse{Orders: orders}, nil
 }

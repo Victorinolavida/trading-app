@@ -1,10 +1,10 @@
 package ordershandler
 
 import (
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -48,20 +48,20 @@ func (h *OrdersHandler) Routes() http.Handler {
 	r := chi.NewMux()
 	protected := r.With(authmiddleware.AuthMiddleware(h.jwtService, &h.conf.Cookie))
 	protected.Post("/", h.CreateOrder)
-	protected.Post("/cancel", h.CancelOrder)
-	protected.Get("/{orderGroupId}", h.GetOrderGroup)
+	protected.Patch("/{orderId}/cancel", h.CancelOrder)
+	protected.Get("/active", h.GetActiveOrders)
+	protected.Get("/", h.ListOrders)
 	return r
 }
 
 func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	var req dtos.CreateOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Error("error reading body", slog.Any("error", err))
-		response.RenderBadRequest(w, "invalid body")
+	req, err := response.ParseBodyFromRequest[dtos.CreateOrderRequest](w, r)
+	if err != nil {
+		response.RenderBadRequest(w, err.Error())
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		response.RenderBadRequest(w, err.Error())
+		response.RenderValidationError(w, err)
 		return
 	}
 
@@ -81,20 +81,22 @@ func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	var req dtos.CancelOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.RenderBadRequest(w, "invalid body")
-		return
-	}
-	if err := h.validate.Struct(req); err != nil {
-		response.RenderBadRequest(w, err.Error())
+	claims, err := authmiddleware.GetClaims(r.Context())
+	if err != nil {
+		slog.Error("error getting claims", slog.Any("error", err))
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	if claims, err := authmiddleware.GetClaims(r.Context()); err == nil {
-		if req.TraderID == "" {
-			req.TraderID = claims.UserID
-		}
+	orderID := chi.URLParam(r, "orderId")
+	req := dtos.CancelOrderRequest{
+		TraderID: claims.UserID,
+		OrderID:  orderID,
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
 	}
 
 	res, err := h.ordersService.CancelOrder(r.Context(), req)
@@ -105,11 +107,67 @@ func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	response.RenderJson(w, res, http.StatusOK)
 }
 
-func (h *OrdersHandler) GetOrderGroup(w http.ResponseWriter, r *http.Request) {
-	orderGroupID := chi.URLParam(r, "orderGroupId")
-	res, err := h.ordersService.GetOrderGroup(r.Context(), orderGroupID)
+func (h *OrdersHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
+	claims, err := authmiddleware.GetClaims(r.Context())
 	if err != nil {
-		response.RenderError(w, http.StatusInternalServerError, err.Error())
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	q := r.URL.Query()
+	req := dtos.ListOrdersRequest{
+		TraderID:  claims.UserID,
+		OrderIDs:  parseOrderIDs(q["order_ids"]),
+		Direction: q.Get("direction"),
+		Status:    q.Get("status"),
+	}
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
+	}
+
+	res, err := h.ordersService.ListOrders(r.Context(), req)
+	if err != nil {
+		response.RenderGRPCError(w, r, err)
+		return
+	}
+	response.RenderJson(w, res, http.StatusOK)
+}
+
+// parseOrderIDs accepts repeated ?order_ids=... parameters and
+// comma-separated values, dropping empty entries.
+func parseOrderIDs(values []string) []string {
+	ids := make([]string, 0, len(values))
+	for _, v := range values {
+		for _, id := range strings.Split(v, ",") {
+			if id = strings.TrimSpace(id); id != "" {
+				ids = append(ids, id)
+			}
+		}
+	}
+	return ids
+}
+
+func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	claims, err := authmiddleware.GetClaims(r.Context())
+	if err != nil {
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+	req := dtos.GetActiveOrdersRequest{
+		SecurityID: q.Get("security_id"),
+		Direction:  q.Get("direction"),
+		TraderID:   claims.UserID,
+	}
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
+	}
+	res, err := h.ordersService.GetActiveOrders(r.Context(), req)
+	if err != nil {
+		response.RenderGRPCError(w, r, err)
 		return
 	}
 	response.RenderJson(w, res, http.StatusOK)

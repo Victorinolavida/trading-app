@@ -13,8 +13,11 @@ import (
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/users"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
 	matchingengine "github.com/victorinolavida/orders/internal/application/services/matching-engine"
+	"github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
+	"github.com/victorinolavida/orders/internal/application/usecases/list_orders"
+	"github.com/victorinolavida/orders/internal/domain"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
 	grpcserver "github.com/victorinolavida/pkg/grpc_server"
@@ -53,12 +56,20 @@ func main() {
 	userSvc := users.New(usersConn)
 	securitySvc := securities.New(securitiesConn)
 
-	matchingEngine := matchingengine.New(orderRepo)
+	var internalCrossinPolicy domain.InternalCrossingPolicy = domain.SameTraderCrossingPolicy{Action: domain.CrossingCancelTaker}
+	if cfg.AllowInternalCrossing {
+		logs.Warn("internal crossing is DISABLE, be sure that this is expected in configs for production env")
+		internalCrossinPolicy = domain.AllowCrossingPolicy{}
+	}
+
+	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
 	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager)
 	cancelUC := cancel_order.New(orderRepo)
+	activeUc := active_orders.New(orderRepo)
+	listUc := list_orders.New(orderRepo)
 
 	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)
-	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC)
+	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC, activeUc, listUc)
 	orderpb.RegisterOrderServiceServer(grpcServer.Server(), handler)
 
 	reflection.Register(grpcServer.Server())

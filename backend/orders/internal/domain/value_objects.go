@@ -2,7 +2,9 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/victorinolavida/orders/internal/domainerrors"
 )
@@ -11,7 +13,6 @@ type (
 	Direction        string
 	OrderType        string
 	OrderStatus      string
-	OrderGroupStatus string
 	AllocationStatus string
 )
 
@@ -40,14 +41,6 @@ const (
 )
 
 const (
-	OrderGroupStatusActive         OrderGroupStatus = "active"
-	OrderGroupStatusFullyAllocated OrderGroupStatus = "fully_allocated"
-	OrderGroupStatusCancelled      OrderGroupStatus = "cancelled"
-	OrderGroupStatusExpired        OrderGroupStatus = "expired"
-	OrderGroupStatusKilled         OrderGroupStatus = "killed"
-)
-
-const (
 	PriceScale            = 1_000 // three decimals
 	DecimalScale          = 1_000_000
 	MaxPrice              = 1_000 * PriceScale
@@ -64,6 +57,10 @@ type (
 
 func (d Decimal) Value() int64 {
 	return int64(d)
+}
+
+func (q Quantity) Value() int64 {
+	return int64(q)
 }
 
 var (
@@ -119,23 +116,8 @@ func NewOrderStatus(val string) (OrderStatus, error) {
 	return o, nil
 }
 
-func (o OrderGroupStatus) String() string { return string(o) }
-func (o OrderGroupStatus) validate() error {
-	if !slices.Contains([]OrderGroupStatus{OrderGroupStatusActive, OrderGroupStatusFullyAllocated, OrderGroupStatusCancelled, OrderGroupStatusExpired, OrderGroupStatusKilled}, o) {
-		return domainerrors.ErrInvalidOrderGroupStatus
-	}
-	return nil
-}
-
-func NewOrderGroupStatus(val string) (OrderGroupStatus, error) {
-	o := OrderGroupStatus(val)
-	if err := o.validate(); err != nil {
-		return OrderGroupStatus(""), err
-	}
-	return o, nil
-}
-
 func (a AllocationStatus) String() string { return string(a) }
+
 func (a AllocationStatus) validate() error {
 	if !slices.Contains([]AllocationStatus{AllocationStatusNone, AllocationStatusPartial, AllocationStatusAllocated}, a) {
 		return ErrInvalidAllocationStatus
@@ -167,4 +149,21 @@ func NewDecimal(val int64) (Decimal, error) {
 		return Decimal(0), ErrInvalidNumericNumber
 	}
 	return Decimal(val), nil
+}
+
+func (d Decimal) String() string {
+	v := int64(d)
+	neg := v < 0
+	if neg {
+		v = -v
+	}
+	whole, frac := v/int64(DecimalScale), v%int64(DecimalScale)
+	s := fmt.Sprintf("%d", whole)
+	if frac != 0 {
+		s += "." + strings.TrimRight(fmt.Sprintf("%06d", frac), "0")
+	}
+	if neg {
+		return "-" + s
+	}
+	return s
 }

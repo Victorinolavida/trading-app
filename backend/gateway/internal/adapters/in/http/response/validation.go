@@ -1,8 +1,10 @@
 package response
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -19,11 +21,12 @@ func NewValidator() *validator.Validate {
 	return validate
 }
 
-// jsonTagName returns the json name of a struct field.
+// jsonTagName returns the json name of a struct field, falling back to the
+// Go field name when the field is not exposed in JSON.
 func jsonTagName(field reflect.StructField) string {
 	name := strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
-	if name == "-" {
-		return ""
+	if name == "-" || name == "" {
+		return field.Name
 	}
 	return name
 }
@@ -32,6 +35,39 @@ func jsonTagName(field reflect.StructField) string {
 // error. It never exposes the internals of the validation library.
 func RenderValidationError(w http.ResponseWriter, err error) {
 	RenderBadRequest(w, ValidationMessage(err))
+}
+
+// DecodeErrorMessage builds a human readable, client safe message out of a
+// JSON body decoding error. It never exposes Go struct or type internals,
+// e.g. a quantity sent as a string becomes "invalid quantity field".
+func DecodeErrorMessage(err error) string {
+	var typeErr *json.UnmarshalTypeError
+	if errors.As(err, &typeErr) {
+		field := typeErr.Field
+		if i := strings.LastIndex(field, "."); i >= 0 {
+			field = field[i+1:]
+		}
+		if field == "" {
+			return "invalid body"
+		}
+		return fmt.Sprintf("invalid %s field", field)
+	}
+
+	var maxBytesErr *http.MaxBytesError
+	if errors.As(err, &maxBytesErr) {
+		return "request body too large"
+	}
+
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return "invalid body"
+	}
+
+	// json.SyntaxError and unknown-field errors have no dedicated type.
+	if msg := err.Error(); strings.HasPrefix(msg, "json: unknown field ") {
+		return strings.TrimPrefix(msg, "json: ")
+	}
+
+	return "invalid body"
 }
 
 // ValidationMessage builds a human readable message out of the validation

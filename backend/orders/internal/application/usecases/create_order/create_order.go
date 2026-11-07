@@ -107,7 +107,20 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	return Result{
-		OrderID: order.PublicID().String(),
-		Status:  string(order.Status()),
+		ID:                order.PublicID().String(),
+		SecurityId:        order.SecurityID().String(),
+		Direction:         order.Direction().String(),
+		OrderType:         order.OrderType().String(),
+		Price:             order.Price().String(),
+		Yield:             order.Yield().String(),
+		Quantity:          order.Quantity().Value(),
+		NominalValue:      order.NominalValue().String(),
+		AllocatedQuantity: order.AllocationQty().Value(),
+		AllocationPtc:     order.AllocationPtc().String(),
+		AllocationStatus:  order.AllocationStatus().String(),
+		Fx:                order.Fx().String(),
+		Status:            order.Status().String(),
+		CreatedAt:         order.CreatedAt(),
+		UpdatedAt:         order.UpdatedAt(),
 	}, nil
 }

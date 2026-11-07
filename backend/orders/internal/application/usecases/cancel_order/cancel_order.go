@@ -2,8 +2,12 @@ package cancel_order
 
 import (
 	"context"
+	"errors"
 
+	"github.com/google/uuid"
 	"github.com/victorinolavida/orders/internal/application/ports"
+	"github.com/victorinolavida/orders/internal/domain"
+	"github.com/victorinolavida/orders/internal/domainerrors"
 )
 
 type Usecase struct {
@@ -17,22 +21,49 @@ func New(orderRepo ports.OrderRepository) *Usecase {
 }
 
 func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
+	if cmd.OrderID == uuid.Nil {
+		return Result{}, domainerrors.ErrInvalidOrderId
+	}
 	// Then cancel orders
-	// for _, o := range orderGroup.Orders() {
-	// 	if o.Status() == domain.OrderStatusActive {
-	// 		if err := o.Cancel(); err != nil {
-	// 			continue
-	// 		}
-	// 		if err := u.orderRepo.Update(ctx, o); err != nil {
-	// 			return Result{}, err
-	// 		}
-	// 	}
-	// }
-	//
-	// return Result{
-	// 	OrderGroupID: orderGroup.PublicID().String(),
-	// 	Status:       string(orderGroup.OrderGroupStatus()),
-	// }, nil
+	order, err := u.orderRepo.GetByPublicID(ctx, cmd.OrderID)
+	if err != nil {
+		return Result{}, err
+	}
+	if cmd.TraderID != order.TraderID() {
+		return Result{}, domainerrors.ErrOrderNotFound
+	}
 
-	return Result{}, nil
+	if err := order.Cancel(); err != nil {
+		if errors.Is(err, domainerrors.ErrOrderAlreadyCanceled) {
+			return orderToResult(order), nil
+		}
+		return Result{}, err
+	}
+
+	err = u.orderRepo.Update(ctx, order)
+	if err != nil {
+		return Result{}, err
+	}
+
+	return orderToResult(order), nil
+}
+
+func orderToResult(order *domain.Order) Result {
+	return Result{
+		ID:                order.PublicID().String(),
+		SecurityId:        order.SecurityID().String(),
+		Direction:         order.Direction().String(),
+		OrderType:         order.OrderType().String(),
+		Price:             order.Price().String(),
+		Yield:             order.Yield().String(),
+		Quantity:          int64(order.Quantity()),
+		NominalValue:      order.NominalValue().String(),
+		AllocatedQuantity: int64(order.AllocationQty()),
+		AllocationPtc:     order.AllocationPtc().String(),
+		AllocationStatus:  order.AllocationStatus().String(),
+		Fx:                order.Fx().String(),
+		Status:            string(order.Status()),
+		CreatedAt:         order.CreatedAt(),
+		UpdatedAt:         order.UpdatedAt(),
+	}
 }

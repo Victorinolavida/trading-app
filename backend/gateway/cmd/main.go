@@ -8,16 +8,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	cfg "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/logger"
 
 	"github.com/victorinolavida/gateway/config"
 	authhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/auth_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
-	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
-	httpserver "github.com/victorinolavida/gateway/internal/adapters/in/http/server"
-	securityhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/security_handler"
 	ordershandler "github.com/victorinolavida/gateway/internal/adapters/in/http/orders_handler"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	securityhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/security_handler"
+	httpserver "github.com/victorinolavida/gateway/internal/adapters/in/http/server"
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
 	ordersservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/orders_service"
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
@@ -89,6 +90,19 @@ func main() {
 		httpServer.MountModule(apiPrefix, mod)
 	}
 
+	// Walk and log all registered routes
+	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		slog.Info("Route registered",
+			slog.String("method", method),
+			slog.String("route", route),
+			slog.Int("middlewares_count", len(middlewares)),
+		)
+		return nil
+	}
+
+	if err := chi.Walk(httpServer.ChiRoutes(), walkFunc); err != nil {
+		slog.Error("Failed to walk routes", slog.Any("error", err))
+	}
 	go func() {
 		if err := httpServer.Start(); err != nil && http.ErrServerClosed != err {
 			logger.Fatal("closing http server", slog.Any("error", err))
@@ -118,4 +132,3 @@ func main() {
 
 	log.Info("gateway server shutdown successfully")
 }
-
