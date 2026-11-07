@@ -13,8 +13,8 @@ type CreateOrderRequest struct {
 }
 
 type CancelOrderRequest struct {
-	OrderGroupID string `json:"order_group_id" validate:"required"`
-	TraderID     string `json:"trader_id"`
+	OrderID  string `json:"order_id" validate:"required"`
+	TraderID string `json:"trader_id"`
 }
 
 type GetOrderRequest struct {

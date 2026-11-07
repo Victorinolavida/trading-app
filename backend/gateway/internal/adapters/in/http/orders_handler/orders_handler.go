@@ -2,6 +2,7 @@ package ordershandler
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -46,7 +47,7 @@ func (h *OrdersHandler) Routes() http.Handler {
 	r := chi.NewMux()
 	protected := r.With(authmiddleware.AuthMiddleware(h.jwtService, &h.conf.Cookie))
 	protected.Post("/", h.CreateOrder)
-	protected.Post("/cancel", h.CancelOrder)
+	protected.Patch("/{orderId}/cancel", h.CancelOrder)
 	protected.Get("/active", h.GetActiveOrders)
 	protected.Get("/{orderId}", h.GetOrderByID)
 	return r
@@ -79,20 +80,22 @@ func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	req, err := response.ParseBodyFromRequest[dtos.CancelOrderRequest](w, r)
+	claims, err := authmiddleware.GetClaims(r.Context())
 	if err != nil {
-		response.RenderBadRequest(w, err.Error())
-		return
-	}
-	if err := h.validate.Struct(req); err != nil {
-		response.RenderValidationError(w, err)
+		slog.Error("error getting claims", slog.Any("error", err))
+		response.RenderError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	if claims, err := authmiddleware.GetClaims(r.Context()); err == nil {
-		if req.TraderID == "" {
-			req.TraderID = claims.UserID
-		}
+	orderID := chi.URLParam(r, "orderId")
+	req := dtos.CancelOrderRequest{
+		TraderID: claims.UserID,
+		OrderID:  orderID,
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
 	}
 
 	res, err := h.ordersService.CancelOrder(r.Context(), req)
@@ -105,7 +108,12 @@ func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrdersHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
-	res, err := h.ordersService.GetOrderByID(r.Context(), dtos.GetOrderRequest{OrderID: orderID})
+	req := dtos.GetOrderRequest{OrderID: orderID}
+	if err := h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
+	}
+	res, err := h.ordersService.GetOrderByID(r.Context(), req)
 	if err != nil {
 		response.RenderGRPCError(w, r, err)
 		return

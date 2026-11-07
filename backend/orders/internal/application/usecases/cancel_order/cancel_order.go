@@ -35,6 +35,11 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, err
 	}
 
+	err = u.orderRepo.Update(ctx, order)
+	if err != nil {
+		return Result{}, err
+	}
+
 	return Result{
 		ID:                order.PublicID().String(),
 		SecurityId:        order.SecurityID().String(),

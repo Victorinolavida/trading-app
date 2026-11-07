@@ -272,7 +272,7 @@ func (x *CreateOrderRequest) GetQuantity() int64 {
 
 type CancelOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderGroupId  string                 `protobuf:"bytes,1,opt,name=order_group_id,json=orderGroupId,proto3" json:"order_group_id,omitempty"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	TraderId      string                 `protobuf:"bytes,2,opt,name=trader_id,json=traderId,proto3" json:"trader_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -308,9 +308,9 @@ func (*CancelOrderRequest) Descriptor() ([]byte, []int) {
 	return file_order_order_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CancelOrderRequest) GetOrderGroupId() string {
+func (x *CancelOrderRequest) GetOrderId() string {
 	if x != nil {
-		return x.OrderGroupId
+		return x.OrderId
 	}
 	return ""
 }
@@ -505,9 +505,9 @@ const file_order_order_proto_rawDesc = "" +
 	"order_type\x18\x04 \x01(\tR\torderType\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\tR\x05price\x12\x14\n" +
 	"\x05yield\x18\x06 \x01(\tR\x05yield\x12\x1a\n" +
-	"\bquantity\x18\a \x01(\x03R\bquantity\"W\n" +
-	"\x12CancelOrderRequest\x12$\n" +
-	"\x0eorder_group_id\x18\x01 \x01(\tR\forderGroupId\x12\x1b\n" +
+	"\bquantity\x18\a \x01(\x03R\bquantity\"L\n" +
+	"\x12CancelOrderRequest\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1b\n" +
 	"\ttrader_id\x18\x02 \x01(\tR\btraderId\",\n" +
 	"\x0fGetOrderRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\"t\n" +

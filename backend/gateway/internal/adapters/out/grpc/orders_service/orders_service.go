@@ -84,8 +84,8 @@ func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderReq
 
 func (s *OrdersService) CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.OrderResponse, error) {
 	res, err := s.client.CancelOrder(ctx, &orderpb.CancelOrderRequest{
-		OrderGroupId: req.OrderGroupID,
-		TraderId:     req.TraderID,
+		OrderId:  req.OrderID,
+		TraderId: req.TraderID,
 	})
 	if err != nil {
 		return dtos.OrderResponse{}, err

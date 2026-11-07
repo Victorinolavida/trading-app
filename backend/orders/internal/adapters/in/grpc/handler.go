@@ -114,13 +114,13 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid trader_id")
 	}
-	orderGroupID, err := uuid.Parse(req.OrderGroupId)
+	orderID, err := uuid.Parse(req.OrderId)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid order_group_id")
+		return nil, status.Error(codes.InvalidArgument, "invalid order_id")
 	}
 
 	cmd := cancelorder.Command{
-		OrderID:  orderGroupID,
+		OrderID:  orderID,
 		TraderID: traderID,
 	}
 

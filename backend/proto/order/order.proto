@@ -34,7 +34,7 @@ message CreateOrderRequest {
 }
 
 message CancelOrderRequest {
-  string order_group_id = 1;
+  string order_id = 1;
   string trader_id = 2;
 }
 
