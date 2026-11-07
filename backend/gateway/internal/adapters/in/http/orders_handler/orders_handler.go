@@ -1,9 +1,7 @@
 package ordershandler
 
 import (
-	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -55,14 +53,13 @@ func (h *OrdersHandler) Routes() http.Handler {
 }
 
 func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	var req dtos.CreateOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Error("error reading body", slog.Any("error", err))
-		response.RenderBadRequest(w, "invalid body")
+	req, err := response.ParseBodyFromRequest[dtos.CreateOrderRequest](w, r)
+	if err != nil {
+		response.RenderBadRequest(w, err.Error())
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		response.RenderBadRequest(w, err.Error())
+		response.RenderValidationError(w, err)
 		return
 	}
 
@@ -82,13 +79,13 @@ func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
-	var req dtos.CancelOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.RenderBadRequest(w, "invalid body")
+	req, err := response.ParseBodyFromRequest[dtos.CancelOrderRequest](w, r)
+	if err != nil {
+		response.RenderBadRequest(w, err.Error())
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		response.RenderBadRequest(w, err.Error())
+		response.RenderValidationError(w, err)
 		return
 	}
 
@@ -130,7 +127,7 @@ func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) 
 		TraderID:   claims.UserID,
 	}
 	if err := h.validate.Struct(req); err != nil {
-		response.RenderBadRequest(w, err.Error())
+		response.RenderValidationError(w, err)
 		return
 	}
 	res, err := h.ordersService.GetActiveOrders(r.Context(), req)

@@ -10,6 +10,10 @@ type validationPayload struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type validationPayloadNoJSONTag struct {
+	Email string `validate:"required"`
+}
+
 func TestValidationMessage(t *testing.T) {
 	validate := NewValidator()
 
@@ -43,6 +47,16 @@ func TestValidationMessage(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("field without json tag falls back to Go field name", func(t *testing.T) {
+		err := validate.Struct(validationPayloadNoJSONTag{})
+		if err == nil {
+			t.Fatal("expected a validation error, got nil")
+		}
+		if got, want := ValidationMessage(err), `"Email" is required`; got != want {
+			t.Errorf("ValidationMessage() = %q, want %q", got, want)
+		}
+	})
 }
 
 func TestRenderValidationError(t *testing.T) {

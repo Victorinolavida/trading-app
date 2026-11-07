@@ -61,7 +61,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	loginReq, err := response.ParseBodyFromRequest[LoginRequest](w, r)
 	if err != nil {
 		slog.Error("error parsing body", slog.Any("error", err))
-		response.RenderBadRequest(w, "can not parse the body request")
+		response.RenderBadRequest(w, err.Error())
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	registerReq, err := response.ParseBodyFromRequest[RegisterRequest](w, r)
 	if err != nil {
 		slog.Error("error parsing body", slog.Any("error", err))
-		response.RenderBadRequest(w, "can not parse the body request")
+		response.RenderBadRequest(w, err.Error())
 		return
 	}
 
