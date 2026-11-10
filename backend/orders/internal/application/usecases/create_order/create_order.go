@@ -101,6 +101,14 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 			}
 		}
 
+		// update market event
+		marketSnaptshot, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
+		if err != nil {
+			return err
+		}
+
+		slog.Debug("market price pa", slog.Any("data", marketSnaptshot))
+
 		return nil
 	}); err != nil {
 		return Result{}, err

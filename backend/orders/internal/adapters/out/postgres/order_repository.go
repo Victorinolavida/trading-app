@@ -199,6 +199,66 @@ func (repo *OrderRepository) ListOrders(ctx context.Context, filter ports.ListOr
 	return orders, nil
 }
 
+func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid.UUID) (*domain.MarketDepth, error) {
+	askRows, err := repo.queriesFor(ctx).AskMarketDepth(ctx, securityID)
+	if err != nil {
+		return nil, err
+	}
+
+	bidRows, err := repo.queriesFor(ctx).BidMarketDepth(ctx, securityID)
+	if err != nil {
+		return nil, err
+	}
+
+	bid := make([]*domain.MarketDepthSide, len(bidRows))
+	ask := make([]*domain.MarketDepthSide, len(askRows))
+
+	for i, row := range askRows {
+
+		aggNomVal, err := numericToDecimal(row.AggNominalValue)
+		if err != nil {
+			return nil, err
+		}
+		aggQty, err := numericToDecimal(row.AggQty)
+		if err != nil {
+			return nil, err
+		}
+		ask[i] = domain.ReconstructMarketDepth(
+			*int8ToDecimalPtr(row.Price),
+			aggNomVal,
+			domain.Quantity(aggQty),
+			domain.DirectionAsk,
+			row.OrderCount,
+		)
+
+	}
+
+	for i, row := range bidRows {
+
+		aggNomVal, err := numericToDecimal(row.AggNominalValue)
+		if err != nil {
+			return nil, err
+		}
+		aggQty, err := numericToDecimal(row.AggQty)
+		if err != nil {
+			return nil, err
+		}
+		bid[i] = domain.ReconstructMarketDepth(
+			*int8ToDecimalPtr(row.Price),
+			aggNomVal,
+			domain.Quantity(aggQty),
+			domain.DirectionBid,
+			row.OrderCount,
+		)
+
+	}
+
+	return &domain.MarketDepth{
+		Ask: ask,
+		Bid: bid,
+	}, nil
+}
+
 func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 	return domain.ReconstructOrder(
 		o.ID,
@@ -218,4 +278,15 @@ func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 		o.CreatedAt.Time,
 		o.UpdatedAt.Time,
 	)
+}
+
+func numericToDecimal(d pgtype.Numeric) (domain.Decimal, error) {
+	v, err := d.Int64Value()
+	if err != nil {
+		return domain.Decimal(0), err
+	}
+	if !v.Valid {
+		return domain.Decimal(0), errors.New("numeric is NULL")
+	}
+	return domain.Decimal(v.Int64), nil
 }

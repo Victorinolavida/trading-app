@@ -110,3 +110,30 @@ WHERE direction = 'ask'
   AND security_id = $1
 ORDER BY COALESCE(price, 0) ASC, created_at ASC, id ASC;
 
+
+
+-- name: AskMarketDepth :many
+select
+    price,
+    sum(nominal_value)::numeric as agg_nominal_value,
+    sum(quantity)::numeric      as agg_qty,
+    count(*)                    as order_count
+from orders
+where status = 'active'
+  and security_id =  $1
+  and direction  = 'ask'
+group by price
+order by price asc;
+
+-- name: BidMarketDepth :many
+select
+    price,
+    sum(nominal_value)::numeric as agg_nominal_value,
+    sum(quantity)::numeric      as agg_qty,
+    count(*)                    as order_count
+from orders
+where status = 'active'
+  and security_id =  $1
+  and direction  = 'bid'
+group by price
+order by price desc;
