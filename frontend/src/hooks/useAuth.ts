@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError, login, logout, register, whoami, type AuthUser, type User } from "../lib/api";
+import {
+  ApiError,
+  login,
+  logout,
+  register,
+  whoami,
+  type AuthUser,
+  type User,
+} from "../lib/api";
 
 export const userKey = ["user"];
 

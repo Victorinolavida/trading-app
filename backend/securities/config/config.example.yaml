@@ -1,9 +1,20 @@
 # Copy this file to config.yaml and adjust the values.
 #   cp config/config.example.yaml config/config.yaml
-# Every key can be overridden with an env var (SERVER_HOST, SERVER_PORT, ...).
+# Every key can be overridden with an env var (GRPC_HOST, GRPC_PORT, ...).
 
 env: development
 
-server:
+grpc:
+  protocol: tcp
   host: localhost
-  port: 8080
+  port: 3031
+  service: securities
+
+database:
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+  name: trading_securities
+  max_conns: 10
+  min_conns: 1

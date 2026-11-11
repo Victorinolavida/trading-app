@@ -292,11 +292,18 @@ func (o *Order) MatchWith(maker *Order) (Execution, bool) {
 		return Execution{}, false
 	}
 	qty := min(o.Remaining(), maker.Remaining())
-	// Execution price starts from the taker's price; a market taker
-	// has none of its own, so it takes the maker's (resting) price.
-	price := *maker.price
+	// Execution price starts from the maker's price; a market maker
+	// has none of its own, so it takes the taker's price. If both
+	// are market there is no price to discover.
+	var price Decimal
+	if maker.price != nil {
+		price = *maker.price
+	}
 	if o.price != nil {
 		price = *o.price
+	}
+	if price == 0 {
+		return Execution{}, false
 	}
 	execution := Execution{
 		Qty:   qty,

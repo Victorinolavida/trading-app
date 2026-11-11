@@ -8,6 +8,7 @@ import (
 	activeorders "github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	cancelorder "github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	createorder "github.com/victorinolavida/orders/internal/application/usecases/create_order"
+	getmarketdepth "github.com/victorinolavida/orders/internal/application/usecases/get_market_depth"
 	listorders "github.com/victorinolavida/orders/internal/application/usecases/list_orders"
 	"github.com/victorinolavida/orders/internal/domain"
 	orderpb "github.com/victorinolavida/proto/order"
@@ -18,10 +19,11 @@ import (
 
 type OrderGRPCHandler struct {
 	orderpb.UnimplementedOrderServiceServer
-	createOrder  *createorder.Usecase
-	cancelOrder  *cancelorder.Usecase
-	activeorders *activeorders.Usecase
-	listorders   *listorders.Usecase
+	createOrder    *createorder.Usecase
+	cancelOrder    *cancelorder.Usecase
+	activeorders   *activeorders.Usecase
+	listorders     *listorders.Usecase
+	getMarketDepth *getmarketdepth.Usecase
 }
 
 func NewOrderGRPCHandler(
@@ -29,12 +31,14 @@ func NewOrderGRPCHandler(
 	cancelOrder *cancelorder.Usecase,
 	activeorders *activeorders.Usecase,
 	listorders *listorders.Usecase,
+	getMarketDepth *getmarketdepth.Usecase,
 ) *OrderGRPCHandler {
 	return &OrderGRPCHandler{
-		createOrder:  createOrder,
-		cancelOrder:  cancelOrder,
-		activeorders: activeorders,
-		listorders:   listorders,
+		createOrder:    createOrder,
+		cancelOrder:    cancelOrder,
+		activeorders:   activeorders,
+		listorders:     listorders,
+		getMarketDepth: getMarketDepth,
 	}
 }
 
@@ -208,6 +212,60 @@ func (h *OrderGRPCHandler) GetActiveOrders(ctx context.Context, req *orderpb.Get
 	return &orderpb.GetActiveOrdersResponse{
 		Orders: orders,
 	}, nil
+}
+
+func (h *OrderGRPCHandler) GetMarketDepth(ctx context.Context, req *orderpb.GetMarketDepthRequest) (*orderpb.GetMarketDepthResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	securityID, err := uuid.Parse(req.SecurityId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid security_id")
+	}
+
+	cmd := getmarketdepth.Command{
+		SecurityID: securityID,
+	}
+
+	res, err := h.getMarketDepth.Execute(ctx, cmd)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if res.MarketDepth == nil {
+		return &orderpb.GetMarketDepthResponse{}, nil
+	}
+
+	bids := make([]*orderpb.MarketDepthLevel, len(res.MarketDepth.Bid))
+	for i, side := range res.MarketDepth.Bid {
+		bids[i] = toProtoMarketDepthLevel(side)
+	}
+
+	asks := make([]*orderpb.MarketDepthLevel, len(res.MarketDepth.Ask))
+	for i, side := range res.MarketDepth.Ask {
+		asks[i] = toProtoMarketDepthLevel(side)
+	}
+
+	return &orderpb.GetMarketDepthResponse{
+		MarketDepth: &orderpb.MarketDepth{
+			Bids: bids,
+			Asks: asks,
+		},
+	}, nil
+}
+
+func toProtoMarketDepthLevel(side *domain.MarketDepthSide) *orderpb.MarketDepthLevel {
+	if side == nil {
+		return nil
+	}
+	return &orderpb.MarketDepthLevel{
+		Price:        side.Price.String(),
+		NominalValue: side.AggNominalValue.String(),
+		Quantity:     side.AggQuantity.Value(),
+		OrderCounts:  side.OrderCounts,
+		Direction:    side.Direction.String(),
+	}
 }
 
 func (h *OrderGRPCHandler) ListOrders(ctx context.Context, req *orderpb.ListOrdersRequest) (*orderpb.ListOrdersResponse, error) {

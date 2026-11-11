@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	cfg "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/logger"
 
@@ -75,7 +76,17 @@ func main() {
 		logger.Fatal("error creating security handler", slog.Any("error", err))
 	}
 
-	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator())
+	rabbitClient := rabbitmq.NewClientFromConfig(conf.RabbitMQ)
+	defer rabbitClient.Close()
+
+	for i := 0; i < 30 && !rabbitClient.IsReady(); i++ {
+		time.Sleep(500 * time.Millisecond)
+	}
+	if !rabbitClient.IsReady() {
+		logger.Fatal("error connecting to rabbitmq", slog.String("host", conf.RabbitMQ.Host), slog.Int("port", conf.RabbitMQ.Port))
+	}
+
+	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient)
 	if err != nil {
 		logger.Fatal("error creating orders handler", slog.Any("error", err))
 	}

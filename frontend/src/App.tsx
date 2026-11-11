@@ -3,6 +3,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { HomePage } from "./pages/HomePage";
 import { SecurityDetailPage } from "./pages/SecurityDetailPage";
+import { BlotterPage } from "./pages/BlotterPage";
 import { useSession } from "./hooks/useAuth";
 
 type AuthView = "login" | "register";
@@ -16,6 +17,11 @@ function getSecurityIdFromHash(hash: string): string | null {
     return decodeURIComponent(m[1].replace(/\/+$/, ""));
   }
   return null;
+}
+
+function getBlotterFromHash(hash: string): boolean {
+  if (!hash) return false;
+  return hash === "#/blotter" || hash === "#/blotter/";
 }
 
 export default function App() {
@@ -57,6 +63,10 @@ export default function App() {
         <SecurityDetailPage securityId={securityId} />
       </div>
     );
+  }
+
+  if (getBlotterFromHash(hash)) {
+    return <BlotterPage />;
   }
 
   return (

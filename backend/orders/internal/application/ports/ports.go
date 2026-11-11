@@ -25,6 +25,7 @@ type OrderRepository interface {
 	GetOrdersToTrade(context.Context, *domain.Order) ([]*domain.Order, error)
 	GetActiveOrders(context.Context, uuid.UUID, uuid.UUID, string) ([]*domain.Order, error)
 	ListOrders(context.Context, ListOrdersFilter) ([]*domain.Order, error)
+	GetMarketDepth(context.Context, uuid.UUID) (*domain.MarketDepth, error)
 }
 
 type TxManager interface {
@@ -39,4 +40,12 @@ type TradeRepository interface {
 
 type MatchingEngine interface {
 	ExecuteIncomingOrder(ctx context.Context, order *domain.Order) ([]*domain.Order, []*domain.Trade, error)
+}
+
+type EventPublisher interface {
+	Publish(ctx context.Context, events ...domain.Event) error
+}
+
+type MemoryPort interface {
+	Incr(context.Context, string) (int64, error)
 }

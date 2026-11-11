@@ -59,9 +59,31 @@ message GetActiveOrdersResponse {
   repeated OrderResponse orders = 1;
 }
 
+message MarketDepthLevel {
+  string price = 1;
+  string nominal_value = 2;
+  int64 quantity = 3;
+  int64 order_counts = 4;
+  string direction = 5;
+}
+
+message MarketDepth {
+  repeated MarketDepthLevel bids = 1;
+  repeated MarketDepthLevel asks = 2;
+}
+
+message GetMarketDepthRequest {
+  string security_id = 1;
+}
+
+message GetMarketDepthResponse {
+  MarketDepth market_depth = 1;
+}
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (OrderResponse) {}
   rpc CancelOrder(CancelOrderRequest) returns (OrderResponse) {}
   rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {}
   rpc GetActiveOrders(GetActiveOrdersRequest) returns (GetActiveOrdersResponse){}
+  rpc GetMarketDepth(GetMarketDepthRequest) returns (GetMarketDepthResponse){}
 }

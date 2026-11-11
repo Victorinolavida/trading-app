@@ -80,7 +80,9 @@ func NewHttpServer(conf config.Config) ServerInterface {
 		Addr:        formatServerAddress(conf.Server.Host, conf.Server.Port),
 		Handler:     r,
 		ReadTimeout: time.Duration(10 * time.Second),
-		IdleTimeout: time.Duration(100 * time.Second),
+		// Server sent events streams hold the connection open indefinitely,
+		// so the idle timeout has to stay disabled.
+		IdleTimeout: 0,
 	}
 
 	httpSvc := &httpServer{

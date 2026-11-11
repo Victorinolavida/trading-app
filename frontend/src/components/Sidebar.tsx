@@ -17,6 +17,13 @@ export function Sidebar() {
         >
           {logout.isPending ? "Signing out..." : "Logout"}
         </button>
+        <button
+          className="w-full cursor-pointer rounded-md bg-zinc-800 px-4 py-2.5 text-base text-gray-400 hover:text-white margin-y-2"
+          type="button"
+          onClick={() => (window.location.hash = "#/blotter")}
+        >
+          Blotter
+        </button>
       </div>
     </aside>
   );

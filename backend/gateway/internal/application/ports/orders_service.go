@@ -11,5 +11,6 @@ type OrdersService interface {
 	CancelOrder(ctx context.Context, req dtos.CancelOrderRequest) (dtos.OrderResponse, error)
 	ListOrders(ctx context.Context, req dtos.ListOrdersRequest) (dtos.ListOrdersResponse, error)
 	GetActiveOrders(ctx context.Context, req dtos.GetActiveOrdersRequest) (dtos.GetActiveOrdersResponse, error)
+	GetMarketDepth(ctx context.Context, req dtos.GetMarketDepthRequest) (dtos.MarketDepthResponse, error)
 	Close() error
 }

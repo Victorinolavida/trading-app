@@ -12,6 +12,98 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const askMarketDepth = `-- name: AskMarketDepth :many
+select
+    price,
+    sum(nominal_value)::numeric as agg_nominal_value,
+    sum(quantity)::numeric      as agg_qty,
+    count(*)                    as order_count
+from orders
+where status = 'active'
+  and security_id =  $1
+  and direction  = 'ask'
+group by price
+order by price asc
+`
+
+type AskMarketDepthRow struct {
+	Price           pgtype.Int8
+	AggNominalValue pgtype.Numeric
+	AggQty          pgtype.Numeric
+	OrderCount      int64
+}
+
+func (q *Queries) AskMarketDepth(ctx context.Context, securityID uuid.UUID) ([]AskMarketDepthRow, error) {
+	rows, err := q.db.Query(ctx, askMarketDepth, securityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AskMarketDepthRow
+	for rows.Next() {
+		var i AskMarketDepthRow
+		if err := rows.Scan(
+			&i.Price,
+			&i.AggNominalValue,
+			&i.AggQty,
+			&i.OrderCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const bidMarketDepth = `-- name: BidMarketDepth :many
+select
+    price,
+    sum(nominal_value)::numeric as agg_nominal_value,
+    sum(quantity)::numeric      as agg_qty,
+    count(*)                    as order_count
+from orders
+where status = 'active'
+  and security_id =  $1
+  and direction  = 'bid'
+group by price
+order by price desc
+`
+
+type BidMarketDepthRow struct {
+	Price           pgtype.Int8
+	AggNominalValue pgtype.Numeric
+	AggQty          pgtype.Numeric
+	OrderCount      int64
+}
+
+func (q *Queries) BidMarketDepth(ctx context.Context, securityID uuid.UUID) ([]BidMarketDepthRow, error) {
+	rows, err := q.db.Query(ctx, bidMarketDepth, securityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BidMarketDepthRow
+	for rows.Next() {
+		var i BidMarketDepthRow
+		if err := rows.Scan(
+			&i.Price,
+			&i.AggNominalValue,
+			&i.AggQty,
+			&i.OrderCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getActiveOrders = `-- name: GetActiveOrders :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE 
@@ -71,10 +163,9 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 const getAsksToTrade = `-- name: GetAsksToTrade :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE direction = 'ask'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price ASC, created_at ASC, id ASC
+ORDER BY COALESCE(price, 0) ASC, created_at ASC, id ASC
 `
 
 func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {
@@ -117,10 +208,9 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 const getBidsToTrade = `-- name: GetBidsToTrade :many
 SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
 WHERE direction = 'bid'
-  AND order_type = 'limit'
   AND status = 'active'
   AND security_id = $1
-ORDER BY price DESC, created_at ASC, id ASC
+ORDER BY COALESCE(price, 9223372036854775807) DESC, created_at ASC, id ASC
 `
 
 func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]Order, error) {

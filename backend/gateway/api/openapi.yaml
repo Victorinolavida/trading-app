@@ -286,6 +286,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v0/orders/securities/{securityId}/book:
+    get:
+      tags: [orders]
+      summary: Stream order book updates for a security as server sent events
+      operationId: streamOrderBook
+      parameters:
+        - name: securityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f
+      responses:
+        "200":
+          description: Order book updates pushed as server sent events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          description: securityId is not a valid uuid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Orders event broker is not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v0/orders:
     get:
       tags: [orders]

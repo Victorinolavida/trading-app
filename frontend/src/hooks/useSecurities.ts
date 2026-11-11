@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSecuritiesActive, getSecuritiesByParams, getSecurityByParams, type Security } from "../lib/api";
+import {
+  getSecuritiesActive,
+  getSecuritiesByParams,
+  getSecurityByParams,
+  type Security,
+} from "../lib/api";
 import { useDebounce } from "./useDebounce";
 
 export function useActiveSecurities() {
