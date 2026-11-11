@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "./api";
 import { AuthUser } from "./types";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../lib/apiError";
 
 export const authKeys = Object.freeze({
   whoami: ["auth", "whoami"],
@@ -28,6 +30,7 @@ export function useLogin() {
         email: "",
       });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 
@@ -53,5 +56,6 @@ export function useRegister() {
         email: "",
       });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }

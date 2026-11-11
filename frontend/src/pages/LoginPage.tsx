@@ -3,16 +3,20 @@ import { PasswordInput } from "../components/PasswordInput";
 import { useLogin } from "../features/auth/hooks";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router";
+import { useRedirectTo } from "../hooks/useRedirectTo";
 
 const loginSchema = z.object({
   email: z.email("Invalid email"),
-  password: z.string().min(8, "At least 8 characters").max(23, "Password cannot exceed 23 characters.")
-
+  password: z
+    .string()
+    .min(8, "At least 8 characters")
+    .max(23, "Password cannot exceed 23 characters."),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
+export function LoginPage() {
   const login = useLogin();
   const {
     register,
@@ -20,10 +24,13 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
     formState: { errors },
   } = useForm<LoginValues>({
     defaultValues: { email: "", password: "" },
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
   });
+  const { goToRedirect } = useRedirectTo();
 
-  const onSubmit = (values: LoginValues) => login.mutate(values);
+  const onSubmit = (values: LoginValues) =>
+    login.mutate(values, { onSuccess: () => goToRedirect() });
+  console.log("render");
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
@@ -71,13 +78,13 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
       </form>
       <p className="mt-5 text-center text-sm text-gray-400">
         No account?{" "}
-        <button
+        <Link
           className="cursor-pointer text-blue-400"
           type="button"
-          onClick={onSwitch}
+          to="/register"
         >
           Create one
-        </button>
+        </Link>
       </p>
     </div>
   );
