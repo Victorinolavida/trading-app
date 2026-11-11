@@ -1,26 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getSecurityByParams, getSecuritiesByParams, createOrder, type Security } from "../lib/api";
+import { useOrderBookSSE } from "../hooks/useOrderBookSSE";
 import { Sidebar } from "../components/Sidebar";
-
-type Order = {
-  id: string;
-  side: "ask" | "bid";
-  price: number;
-  quantity: number;
-};
 
 export function SecurityDetailPage({ securityId }: { securityId: string }) {
   const [security, setSecurity] = useState<Security | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // placeholder orders
-  const [orders] = useState<Order[]>([
-    { id: "1", side: "bid", price: 98.45, quantity: 100 },
-    { id: "2", side: "bid", price: 98.42, quantity: 250 },
-    { id: "3", side: "ask", price: 98.5, quantity: 150 },
-    { id: "4", side: "ask", price: 98.52, quantity: 300 },
-  ]);
 
   const [side, setSide] = useState<"bid" | "ask">("bid");
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
@@ -29,6 +15,26 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
   const [quantity, setQuantity] = useState("");
   const [creating, setCreating] = useState(false);
   const [createMsg, setCreateMsg] = useState<string | null>(null);
+
+  // State for order book
+  const [book, setBook] = useState<{
+    bids: any[];
+    asks: any[];
+  }>({ bids: [], asks: [] });
+
+  // SSE update handler
+  const handleOrderBookUpdate = useCallback((update: any) => {
+    setBook({
+      bids: update.payload?.bids ?? [],
+      asks: update.payload?.asks ?? [],
+    });
+  }, []);
+
+  // Executed trade handler
+  const handleExecutedTrade = useCallback((trade: any) => {
+    console.log("Executed trade:", trade);
+    // Could show a notification here
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -65,8 +71,8 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
     };
   }, [securityId]);
 
-  const bids = orders.filter((o) => o.side === "bid").sort((a, b) => b.price - a.price);
-  const asks = orders.filter((o) => o.side === "ask").sort((a, b) => a.price - b.price);
+  // Subscribe to order book SSE when security is loaded
+  useOrderBookSSE(security?.id ?? "", handleOrderBookUpdate, handleExecutedTrade);
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +86,7 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
         order_type: orderType,
         price: price || "0",
         yield: yieldVal || "0",
-        quantity,
+        quantity: Number(quantity),
       });
       setCreateMsg(`Order created: group ${res.order_group_id}, order ${res.order_id}, status ${res.status}`);
       setQuantity("");
@@ -197,25 +203,25 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
                   <h2 className="mb-3 text-lg font-semibold">Bids (Bid)</h2>
                   <div className="space-y-1">
-                    {bids.map((o) => (
-                      <div key={o.id} className="flex justify-between text-sm">
-                        <span className="text-green-400">{o.price.toFixed(2)}</span>
-                        <span className="text-gray-400">{o.quantity}</span>
+                    {book.bids.map((b: any) => (
+                      <div key={b.price} className="flex justify-between text-sm">
+                        <span className="text-green-400">{Number(b.price).toFixed(2)}</span>
+                        <span className="text-gray-400">{b.quantity}</span>
                       </div>
                     ))}
-                    {bids.length === 0 && <p className="text-sm text-gray-400">No bids</p>}
+                    {book.bids.length === 0 && <p className="text-sm text-gray-400">No bids</p>}
                   </div>
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
                   <h2 className="mb-3 text-lg font-semibold">Asks (Ask)</h2>
                   <div className="space-y-1">
-                    {asks.map((o) => (
-                      <div key={o.id} className="flex justify-between text-sm">
-                        <span className="text-red-400">{o.price.toFixed(2)}</span>
-                        <span className="text-gray-400">{o.quantity}</span>
+                    {book.asks.map((a: any) => (
+                      <div key={a.price} className="flex justify-between text-sm">
+                        <span className="text-red-400">{Number(a.price).toFixed(2)}</span>
+                        <span className="text-gray-400">{a.quantity}</span>
                       </div>
                     ))}
-                    {asks.length === 0 && <p className="text-sm text-gray-400">No asks</p>}
+                    {book.asks.length === 0 && <p className="text-sm text-gray-400">No asks</p>}
                   </div>
                 </div>
               </div>
@@ -233,5 +239,3 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
     </div>
   );
 }
-
-// Add order creation UI
