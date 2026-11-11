@@ -57,7 +57,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function login(email: string, password: string): Promise<AuthUser> {
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthUser> {
   return request<AuthUser>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
@@ -111,15 +114,17 @@ export function getSecuritiesActive(): Promise<SecuritiesResponse> {
   return request<SecuritiesResponse>("/securities/active");
 }
 
-export function getSecuritiesByParams(params: {
-  id?: string;
-  isin?: string;
-  serie?: string;
-  security_type?: string;
-  name?: string;
-  q?: string;
-  query?: string;
-} = {}): Promise<SecuritiesResponse> {
+export function getSecuritiesByParams(
+  params: {
+    id?: string;
+    isin?: string;
+    serie?: string;
+    security_type?: string;
+    name?: string;
+    q?: string;
+    query?: string;
+  } = {},
+): Promise<SecuritiesResponse> {
   const query = new URLSearchParams();
   if (params.id) query.set("id", params.id);
   if (params.isin) query.set("isin", params.isin);
@@ -132,15 +137,17 @@ export function getSecuritiesByParams(params: {
   return request<SecuritiesResponse>(`/securities${qs ? `?${qs}` : ""}`);
 }
 
-export function getSecurityByParams(params: {
-  id?: string;
-  isin?: string;
-  serie?: string;
-  security_type?: string;
-  name?: string;
-  q?: string;
-  query?: string;
-} = {}): Promise<Security> {
+export function getSecurityByParams(
+  params: {
+    id?: string;
+    isin?: string;
+    serie?: string;
+    security_type?: string;
+    name?: string;
+    q?: string;
+    query?: string;
+  } = {},
+): Promise<Security> {
   const query = new URLSearchParams();
   if (params.id) query.set("id", params.id);
   if (params.isin) query.set("isin", params.isin);
@@ -194,38 +201,22 @@ export interface Order {
   status: string;
 }
 
-export interface OrderGroupDetail {
-  id: string;
-  public_id: string;
-  trader_id: string;
-  security_id: string;
-  direction: string;
-  order_type: string;
-  allocation_pc: string;
-  allocation_status: string;
-  order_group_status: string;
-  weighted_price: string;
-  weighted_yield: string;
-  weighted_fx: string;
-  orders: Order[];
-}
-
-export function createOrder(req: CreateOrderRequest): Promise<CreateOrderResponse> {
+export function createOrder(
+  req: CreateOrderRequest,
+): Promise<CreateOrderResponse> {
   return request<CreateOrderResponse>("/orders", {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 
-export function cancelOrder(req: CancelOrderRequest): Promise<CancelOrderResponse> {
+export function cancelOrder(
+  req: CancelOrderRequest,
+): Promise<CancelOrderResponse> {
   return request<CancelOrderResponse>("/orders/cancel", {
     method: "POST",
     body: JSON.stringify(req),
   });
-}
-
-export function getOrderGroup(orderGroupId: string): Promise<OrderGroupDetail> {
-  return request<OrderGroupDetail>(`/orders/${orderGroupId}`);
 }
 
 export interface OrderBookLevel {
@@ -279,11 +270,14 @@ export interface SseMessage {
 export function subscribeOrderBook(
   securityId: string,
   onUpdate: (update: OrderBookUpdate) => void,
-  onExecuted: (trade: ExecutedTrade) => void
+  onExecuted: (trade: ExecutedTrade) => void,
 ): EventSource {
-  const source = new EventSource(`${API_BASE}/orders/securities/${securityId}/book`, {
-    withCredentials: true,
-  });
+  const source = new EventSource(
+    `${API_BASE}/orders/securities/${securityId}/book`,
+    {
+      withCredentials: true,
+    },
+  );
 
   source.onopen = () => {
     console.log("Order book SSE connection established for", securityId);
@@ -292,7 +286,7 @@ export function subscribeOrderBook(
   source.onmessage = (event) => {
     try {
       const data: SseMessage = JSON.parse(event.data);
-      
+
       if (data.type === "market.depth") {
         onUpdate({
           type: data.type,
@@ -321,3 +315,5 @@ export function subscribeOrderBook(
 
   return source;
 }
+
+export function getOrders() {}

@@ -19,6 +19,7 @@ import (
 	"github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
+	"github.com/victorinolavida/orders/internal/application/usecases/get_market_depth"
 	"github.com/victorinolavida/orders/internal/application/usecases/list_orders"
 	"github.com/victorinolavida/orders/internal/domain"
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
@@ -103,9 +104,10 @@ func main() {
 	cancelUC := cancel_order.New(orderRepo, eventPublisher)
 	activeUc := active_orders.New(orderRepo)
 	listUc := list_orders.New(orderRepo)
+	getMarketDepthUC := get_market_depth.New(orderRepo)
 
 	grpcServer := grpcserver.NewGRPCServer(cfg.GRPC)
-	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC, activeUc, listUc)
+	handler := grpcAdapter.NewOrderGRPCHandler(createUC, cancelUC, activeUc, listUc, getMarketDepthUC)
 	orderpb.RegisterOrderServiceServer(grpcServer.Server(), handler)
 
 	reflection.Register(grpcServer.Server())

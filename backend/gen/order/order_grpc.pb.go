@@ -23,6 +23,7 @@ const (
 	OrderService_CancelOrder_FullMethodName     = "/order.OrderService/CancelOrder"
 	OrderService_ListOrders_FullMethodName      = "/order.OrderService/ListOrders"
 	OrderService_GetActiveOrders_FullMethodName = "/order.OrderService/GetActiveOrders"
+	OrderService_GetMarketDepth_FullMethodName  = "/order.OrderService/GetMarketDepth"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -33,6 +34,7 @@ type OrderServiceClient interface {
 	CancelOrder(ctx context.Context, in *CancelOrderRequest, opts ...grpc.CallOption) (*OrderResponse, error)
 	ListOrders(ctx context.Context, in *ListOrdersRequest, opts ...grpc.CallOption) (*ListOrdersResponse, error)
 	GetActiveOrders(ctx context.Context, in *GetActiveOrdersRequest, opts ...grpc.CallOption) (*GetActiveOrdersResponse, error)
+	GetMarketDepth(ctx context.Context, in *GetMarketDepthRequest, opts ...grpc.CallOption) (*GetMarketDepthResponse, error)
 }
 
 type orderServiceClient struct {
@@ -83,6 +85,16 @@ func (c *orderServiceClient) GetActiveOrders(ctx context.Context, in *GetActiveO
 	return out, nil
 }
 
+func (c *orderServiceClient) GetMarketDepth(ctx context.Context, in *GetMarketDepthRequest, opts ...grpc.CallOption) (*GetMarketDepthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMarketDepthResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetMarketDepth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type OrderServiceServer interface {
 	CancelOrder(context.Context, *CancelOrderRequest) (*OrderResponse, error)
 	ListOrders(context.Context, *ListOrdersRequest) (*ListOrdersResponse, error)
 	GetActiveOrders(context.Context, *GetActiveOrdersRequest) (*GetActiveOrdersResponse, error)
+	GetMarketDepth(context.Context, *GetMarketDepthRequest) (*GetMarketDepthResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedOrderServiceServer) ListOrders(context.Context, *ListOrdersRe
 }
 func (UnimplementedOrderServiceServer) GetActiveOrders(context.Context, *GetActiveOrdersRequest) (*GetActiveOrdersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetActiveOrders not implemented")
+}
+func (UnimplementedOrderServiceServer) GetMarketDepth(context.Context, *GetMarketDepthRequest) (*GetMarketDepthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMarketDepth not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -206,6 +222,24 @@ func _OrderService_GetActiveOrders_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_GetMarketDepth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMarketDepthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetMarketDepth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetMarketDepth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetMarketDepth(ctx, req.(*GetMarketDepthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetActiveOrders",
 			Handler:    _OrderService_GetActiveOrders_Handler,
+		},
+		{
+			MethodName: "GetMarketDepth",
+			Handler:    _OrderService_GetMarketDepth_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

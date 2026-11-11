@@ -186,6 +186,8 @@ func (h *OrdersHandler) GetActiveOrders(w http.ResponseWriter, r *http.Request) 
 
 // StreamOrderBook subscribes to the order book events of a security from the
 // orders event broker and forwards them to the client as server sent events.
+// It first sends the current market depth snapshot as the initial event before
+// streaming subsequent book updates.
 func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) {
 	securityID := chi.URLParam(r, "securityId")
 	if _, err := uuid.Parse(securityID); err != nil {
@@ -204,6 +206,14 @@ func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	ctx := r.Context()
+
+	initialDepth, err := h.ordersService.GetMarketDepth(ctx, dtos.GetMarketDepthRequest{SecurityID: securityID})
+	if err != nil {
+		response.RenderGRPCError(w, r, err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -211,7 +221,17 @@ func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	ctx := r.Context()
+	initialUpdate := initialOrderBookUpdate(securityID, initialDepth)
+	initialData, err := json.Marshal(initialUpdate)
+	if err != nil {
+		slog.Error("orders: marshal initial order book update", slog.Any("error", err))
+		return
+	}
+	if _, err := fmt.Fprintf(w, "data: %s\n\n", initialData); err != nil {
+		return
+	}
+	flusher.Flush()
+
 	routingKey := fmt.Sprintf("%s.%s", orderBookEventType, securityID)
 	exchange := h.conf.Publisher.Exchange
 	if exchange == "" {
@@ -349,6 +369,36 @@ func toBookLevel(side *OrderBookLevel) *bookLevel {
 		OrderCounts:  side.OrderCounts,
 		Direction:    side.Direction,
 	}
+}
+
+func initialOrderBookUpdate(securityID string, depth dtos.MarketDepthResponse) orderBookUpdate {
+	update := orderBookUpdate{
+		Type:       orderBookEventType,
+		SecurityID: securityID,
+		Sequence:   0,
+		Payload: bookSnapshot{
+			Bids: toBookLevels(depth.Bids),
+			Asks: toBookLevels(depth.Asks),
+		},
+	}
+	return update
+}
+
+func toBookLevels(levels []*dtos.MarketDepthLevel) []*bookLevel {
+	converted := make([]*bookLevel, 0, len(levels))
+	for _, level := range levels {
+		if level == nil {
+			continue
+		}
+		converted = append(converted, &bookLevel{
+			Price:        level.Price,
+			NominalValue: level.NominalValue,
+			Quantity:     level.Quantity,
+			OrderCounts:  level.OrderCounts,
+			Direction:    level.Direction,
+		})
+	}
+	return converted
 }
 
 func (h *OrdersHandler) BasePath() string {

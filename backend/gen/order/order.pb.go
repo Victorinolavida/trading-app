@@ -538,6 +538,222 @@ func (x *GetActiveOrdersResponse) GetOrders() []*OrderResponse {
 	return nil
 }
 
+type MarketDepthLevel struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Price         string                 `protobuf:"bytes,1,opt,name=price,proto3" json:"price,omitempty"`
+	NominalValue  string                 `protobuf:"bytes,2,opt,name=nominal_value,json=nominalValue,proto3" json:"nominal_value,omitempty"`
+	Quantity      int64                  `protobuf:"varint,3,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	OrderCounts   int64                  `protobuf:"varint,4,opt,name=order_counts,json=orderCounts,proto3" json:"order_counts,omitempty"`
+	Direction     string                 `protobuf:"bytes,5,opt,name=direction,proto3" json:"direction,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarketDepthLevel) Reset() {
+	*x = MarketDepthLevel{}
+	mi := &file_order_order_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarketDepthLevel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarketDepthLevel) ProtoMessage() {}
+
+func (x *MarketDepthLevel) ProtoReflect() protoreflect.Message {
+	mi := &file_order_order_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarketDepthLevel.ProtoReflect.Descriptor instead.
+func (*MarketDepthLevel) Descriptor() ([]byte, []int) {
+	return file_order_order_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MarketDepthLevel) GetPrice() string {
+	if x != nil {
+		return x.Price
+	}
+	return ""
+}
+
+func (x *MarketDepthLevel) GetNominalValue() string {
+	if x != nil {
+		return x.NominalValue
+	}
+	return ""
+}
+
+func (x *MarketDepthLevel) GetQuantity() int64 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *MarketDepthLevel) GetOrderCounts() int64 {
+	if x != nil {
+		return x.OrderCounts
+	}
+	return 0
+}
+
+func (x *MarketDepthLevel) GetDirection() string {
+	if x != nil {
+		return x.Direction
+	}
+	return ""
+}
+
+type MarketDepth struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bids          []*MarketDepthLevel    `protobuf:"bytes,1,rep,name=bids,proto3" json:"bids,omitempty"`
+	Asks          []*MarketDepthLevel    `protobuf:"bytes,2,rep,name=asks,proto3" json:"asks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MarketDepth) Reset() {
+	*x = MarketDepth{}
+	mi := &file_order_order_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MarketDepth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MarketDepth) ProtoMessage() {}
+
+func (x *MarketDepth) ProtoReflect() protoreflect.Message {
+	mi := &file_order_order_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MarketDepth.ProtoReflect.Descriptor instead.
+func (*MarketDepth) Descriptor() ([]byte, []int) {
+	return file_order_order_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MarketDepth) GetBids() []*MarketDepthLevel {
+	if x != nil {
+		return x.Bids
+	}
+	return nil
+}
+
+func (x *MarketDepth) GetAsks() []*MarketDepthLevel {
+	if x != nil {
+		return x.Asks
+	}
+	return nil
+}
+
+type GetMarketDepthRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SecurityId    string                 `protobuf:"bytes,1,opt,name=security_id,json=securityId,proto3" json:"security_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMarketDepthRequest) Reset() {
+	*x = GetMarketDepthRequest{}
+	mi := &file_order_order_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMarketDepthRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMarketDepthRequest) ProtoMessage() {}
+
+func (x *GetMarketDepthRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_order_order_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMarketDepthRequest.ProtoReflect.Descriptor instead.
+func (*GetMarketDepthRequest) Descriptor() ([]byte, []int) {
+	return file_order_order_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetMarketDepthRequest) GetSecurityId() string {
+	if x != nil {
+		return x.SecurityId
+	}
+	return ""
+}
+
+type GetMarketDepthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MarketDepth   *MarketDepth           `protobuf:"bytes,1,opt,name=market_depth,json=marketDepth,proto3" json:"market_depth,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMarketDepthResponse) Reset() {
+	*x = GetMarketDepthResponse{}
+	mi := &file_order_order_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMarketDepthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMarketDepthResponse) ProtoMessage() {}
+
+func (x *GetMarketDepthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_order_order_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMarketDepthResponse.ProtoReflect.Descriptor instead.
+func (*GetMarketDepthResponse) Descriptor() ([]byte, []int) {
+	return file_order_order_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetMarketDepthResponse) GetMarketDepth() *MarketDepth {
+	if x != nil {
+		return x.MarketDepth
+	}
+	return nil
+}
+
 var File_order_order_proto protoreflect.FileDescriptor
 
 const file_order_order_proto_rawDesc = "" +
@@ -590,13 +806,28 @@ const file_order_order_proto_rawDesc = "" +
 	"securityId\x12\x1c\n" +
 	"\tdirection\x18\x03 \x01(\tR\tdirection\"G\n" +
 	"\x17GetActiveOrdersResponse\x12,\n" +
-	"\x06orders\x18\x01 \x03(\v2\x14.order.OrderResponseR\x06orders2\xab\x02\n" +
+	"\x06orders\x18\x01 \x03(\v2\x14.order.OrderResponseR\x06orders\"\xaa\x01\n" +
+	"\x10MarketDepthLevel\x12\x14\n" +
+	"\x05price\x18\x01 \x01(\tR\x05price\x12#\n" +
+	"\rnominal_value\x18\x02 \x01(\tR\fnominalValue\x12\x1a\n" +
+	"\bquantity\x18\x03 \x01(\x03R\bquantity\x12!\n" +
+	"\forder_counts\x18\x04 \x01(\x03R\vorderCounts\x12\x1c\n" +
+	"\tdirection\x18\x05 \x01(\tR\tdirection\"g\n" +
+	"\vMarketDepth\x12+\n" +
+	"\x04bids\x18\x01 \x03(\v2\x17.order.MarketDepthLevelR\x04bids\x12+\n" +
+	"\x04asks\x18\x02 \x03(\v2\x17.order.MarketDepthLevelR\x04asks\"8\n" +
+	"\x15GetMarketDepthRequest\x12\x1f\n" +
+	"\vsecurity_id\x18\x01 \x01(\tR\n" +
+	"securityId\"O\n" +
+	"\x16GetMarketDepthResponse\x125\n" +
+	"\fmarket_depth\x18\x01 \x01(\v2\x12.order.MarketDepthR\vmarketDepth2\xfc\x02\n" +
 	"\fOrderService\x12@\n" +
 	"\vCreateOrder\x12\x19.order.CreateOrderRequest\x1a\x14.order.OrderResponse\"\x00\x12@\n" +
 	"\vCancelOrder\x12\x19.order.CancelOrderRequest\x1a\x14.order.OrderResponse\"\x00\x12C\n" +
 	"\n" +
 	"ListOrders\x12\x18.order.ListOrdersRequest\x1a\x19.order.ListOrdersResponse\"\x00\x12R\n" +
-	"\x0fGetActiveOrders\x12\x1d.order.GetActiveOrdersRequest\x1a\x1e.order.GetActiveOrdersResponse\"\x00B(Z&github.com/victorinolavida/proto/orderb\x06proto3"
+	"\x0fGetActiveOrders\x12\x1d.order.GetActiveOrdersRequest\x1a\x1e.order.GetActiveOrdersResponse\"\x00\x12O\n" +
+	"\x0eGetMarketDepth\x12\x1c.order.GetMarketDepthRequest\x1a\x1d.order.GetMarketDepthResponse\"\x00B(Z&github.com/victorinolavida/proto/orderb\x06proto3"
 
 var (
 	file_order_order_proto_rawDescOnce sync.Once
@@ -610,7 +841,7 @@ func file_order_order_proto_rawDescGZIP() []byte {
 	return file_order_order_proto_rawDescData
 }
 
-var file_order_order_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_order_order_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_order_order_proto_goTypes = []any{
 	(*OrderResponse)(nil),           // 0: order.OrderResponse
 	(*CreateOrderRequest)(nil),      // 1: order.CreateOrderRequest
@@ -619,26 +850,35 @@ var file_order_order_proto_goTypes = []any{
 	(*ListOrdersResponse)(nil),      // 4: order.ListOrdersResponse
 	(*GetActiveOrdersRequest)(nil),  // 5: order.GetActiveOrdersRequest
 	(*GetActiveOrdersResponse)(nil), // 6: order.GetActiveOrdersResponse
-	(*timestamppb.Timestamp)(nil),   // 7: google.protobuf.Timestamp
+	(*MarketDepthLevel)(nil),        // 7: order.MarketDepthLevel
+	(*MarketDepth)(nil),             // 8: order.MarketDepth
+	(*GetMarketDepthRequest)(nil),   // 9: order.GetMarketDepthRequest
+	(*GetMarketDepthResponse)(nil),  // 10: order.GetMarketDepthResponse
+	(*timestamppb.Timestamp)(nil),   // 11: google.protobuf.Timestamp
 }
 var file_order_order_proto_depIdxs = []int32{
-	7, // 0: order.OrderResponse.created_at:type_name -> google.protobuf.Timestamp
-	7, // 1: order.OrderResponse.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 2: order.ListOrdersResponse.orders:type_name -> order.OrderResponse
-	0, // 3: order.GetActiveOrdersResponse.orders:type_name -> order.OrderResponse
-	1, // 4: order.OrderService.CreateOrder:input_type -> order.CreateOrderRequest
-	2, // 5: order.OrderService.CancelOrder:input_type -> order.CancelOrderRequest
-	3, // 6: order.OrderService.ListOrders:input_type -> order.ListOrdersRequest
-	5, // 7: order.OrderService.GetActiveOrders:input_type -> order.GetActiveOrdersRequest
-	0, // 8: order.OrderService.CreateOrder:output_type -> order.OrderResponse
-	0, // 9: order.OrderService.CancelOrder:output_type -> order.OrderResponse
-	4, // 10: order.OrderService.ListOrders:output_type -> order.ListOrdersResponse
-	6, // 11: order.OrderService.GetActiveOrders:output_type -> order.GetActiveOrdersResponse
-	8, // [8:12] is the sub-list for method output_type
-	4, // [4:8] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	11, // 0: order.OrderResponse.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: order.OrderResponse.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: order.ListOrdersResponse.orders:type_name -> order.OrderResponse
+	0,  // 3: order.GetActiveOrdersResponse.orders:type_name -> order.OrderResponse
+	7,  // 4: order.MarketDepth.bids:type_name -> order.MarketDepthLevel
+	7,  // 5: order.MarketDepth.asks:type_name -> order.MarketDepthLevel
+	8,  // 6: order.GetMarketDepthResponse.market_depth:type_name -> order.MarketDepth
+	1,  // 7: order.OrderService.CreateOrder:input_type -> order.CreateOrderRequest
+	2,  // 8: order.OrderService.CancelOrder:input_type -> order.CancelOrderRequest
+	3,  // 9: order.OrderService.ListOrders:input_type -> order.ListOrdersRequest
+	5,  // 10: order.OrderService.GetActiveOrders:input_type -> order.GetActiveOrdersRequest
+	9,  // 11: order.OrderService.GetMarketDepth:input_type -> order.GetMarketDepthRequest
+	0,  // 12: order.OrderService.CreateOrder:output_type -> order.OrderResponse
+	0,  // 13: order.OrderService.CancelOrder:output_type -> order.OrderResponse
+	4,  // 14: order.OrderService.ListOrders:output_type -> order.ListOrdersResponse
+	6,  // 15: order.OrderService.GetActiveOrders:output_type -> order.GetActiveOrdersResponse
+	10, // 16: order.OrderService.GetMarketDepth:output_type -> order.GetMarketDepthResponse
+	12, // [12:17] is the sub-list for method output_type
+	7,  // [7:12] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_order_order_proto_init() }
@@ -652,7 +892,7 @@ func file_order_order_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_order_order_proto_rawDesc), len(file_order_order_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

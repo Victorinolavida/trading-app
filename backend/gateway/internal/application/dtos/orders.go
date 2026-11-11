@@ -59,3 +59,20 @@ type CancelOrderResponse = OrderResponse
 type GetActiveOrdersResponse struct {
 	Orders []OrderResponse `json:"orders"`
 }
+
+type MarketDepthLevel struct {
+	Price        string `json:"price"`
+	NominalValue string `json:"nominal_value"`
+	Quantity     int64  `json:"quantity"`
+	OrderCounts  int64  `json:"order_counts"`
+	Direction    string `json:"direction"`
+}
+
+type MarketDepthResponse struct {
+	Bids []*MarketDepthLevel `json:"bids"`
+	Asks []*MarketDepthLevel `json:"asks"`
+}
+
+type GetMarketDepthRequest struct {
+	SecurityID string `json:"security_id" validate:"required"`
+}

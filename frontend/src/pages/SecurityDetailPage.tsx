@@ -199,29 +199,48 @@ export function SecurityDetailPage({ securityId }: { securityId: string }) {
                 {createMsg && <p className="mt-2 text-sm text-gray-300">{createMsg}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <h2 className="mb-3 text-lg font-semibold">Bids (Bid)</h2>
-                  <div className="space-y-1">
-                    {book.bids.map((b: any) => (
-                      <div key={b.price} className="flex justify-between text-sm">
-                        <span className="text-green-400">{Number(b.price).toFixed(2)}</span>
-                        <span className="text-gray-400">{b.quantity}</span>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+                <h2 className="mb-3 text-lg font-semibold">Order Book</h2>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-green-400">Bids</h3>
+                    <div className="space-y-1">
+                      <div className="mb-1 flex justify-between text-xs text-gray-400">
+                        <span>Level</span>
+                        <span title="Bid price">Price</span>
+                        <span title="Bid quantity">Quantity</span>
+                        <span title="Bid nominal value">Nominal Value</span>
                       </div>
-                    ))}
-                    {book.bids.length === 0 && <p className="text-sm text-gray-400">No bids</p>}
+                      {book.bids.slice(0, 5).map((b: any, i: number) => (
+                        <div key={b.price} className="flex justify-between text-sm">
+                          <span className="text-gray-400">{i + 1}</span>
+                          <span className="text-green-400">{Number(b.price).toFixed(2)}</span>
+                          <span className="text-gray-400">{b.quantity}</span>
+                          <span className="text-gray-400">{b.nominal_value}</span>
+                        </div>
+                      ))}
+                      {book.bids.length === 0 && <p className="text-sm text-gray-400">No bids</p>}
+                    </div>
                   </div>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                  <h2 className="mb-3 text-lg font-semibold">Asks (Ask)</h2>
-                  <div className="space-y-1">
-                    {book.asks.map((a: any) => (
-                      <div key={a.price} className="flex justify-between text-sm">
-                        <span className="text-red-400">{Number(a.price).toFixed(2)}</span>
-                        <span className="text-gray-400">{a.quantity}</span>
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-red-400">Asks</h3>
+                    <div className="space-y-1">
+                      <div className="mb-1 flex justify-between text-xs text-gray-400">
+                        <span>Level</span>
+                        <span title="Ask price">Price</span>
+                        <span title="Ask quantity">Quantity</span>
+                        <span title="Ask nominal value">Nominal Value</span>
                       </div>
-                    ))}
-                    {book.asks.length === 0 && <p className="text-sm text-gray-400">No asks</p>}
+                      {book.asks.slice(0, 5).map((a: any, i: number) => (
+                        <div key={a.price} className="flex justify-between text-sm">
+                          <span className="text-gray-400">{i + 1}</span>
+                          <span className="text-red-400">{Number(a.price).toFixed(2)}</span>
+                          <span className="text-gray-400">{a.quantity}</span>
+                          <span className="text-gray-400">{a.nominal_value}</span>
+                        </div>
+                      ))}
+                      {book.asks.length === 0 && <p className="text-sm text-gray-400">No asks</p>}
+                    </div>
                   </div>
                 </div>
               </div>

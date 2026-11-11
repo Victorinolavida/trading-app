@@ -125,3 +125,43 @@ func (s *OrdersService) GetActiveOrders(ctx context.Context, req dtos.GetActiveO
 	}
 	return dtos.GetActiveOrdersResponse{Orders: orders}, nil
 }
+
+func (s *OrdersService) GetMarketDepth(ctx context.Context, req dtos.GetMarketDepthRequest) (dtos.MarketDepthResponse, error) {
+	res, err := s.client.GetMarketDepth(ctx, &orderpb.GetMarketDepthRequest{
+		SecurityId: req.SecurityID,
+	})
+	if err != nil {
+		return dtos.MarketDepthResponse{}, err
+	}
+
+	depth := dtos.MarketDepthResponse{}
+	if res.GetMarketDepth() != nil {
+		depth.Bids = make([]*dtos.MarketDepthLevel, 0, len(res.GetMarketDepth().GetBids()))
+		for _, bid := range res.GetMarketDepth().GetBids() {
+			if bid != nil {
+				depth.Bids = append(depth.Bids, toMarketDepthLevel(bid))
+			}
+		}
+		depth.Asks = make([]*dtos.MarketDepthLevel, 0, len(res.GetMarketDepth().GetAsks()))
+		for _, ask := range res.GetMarketDepth().GetAsks() {
+			if ask != nil {
+				depth.Asks = append(depth.Asks, toMarketDepthLevel(ask))
+			}
+		}
+	}
+
+	return depth, nil
+}
+
+func toMarketDepthLevel(level *orderpb.MarketDepthLevel) *dtos.MarketDepthLevel {
+	if level == nil {
+		return nil
+	}
+	return &dtos.MarketDepthLevel{
+		Price:        level.GetPrice(),
+		NominalValue: level.GetNominalValue(),
+		Quantity:     level.GetQuantity(),
+		OrderCounts:  level.GetOrderCounts(),
+		Direction:    level.GetDirection(),
+	}
+}
