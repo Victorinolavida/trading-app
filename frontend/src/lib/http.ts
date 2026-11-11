@@ -52,7 +52,6 @@ export class ApiClient {
       (res) => res,
       (err:unknown) => {
         const apiErr = this.toApiError(err)
-        console.error({apiErr})
         return Promise.reject(apiErr)
       }
     )

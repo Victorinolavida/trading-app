@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "../components/PasswordInput";
 import { useRegister } from "../features/auth/hooks";
-import { getErrorMessage } from "../lib/apiError";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -35,7 +34,6 @@ export function RegisterPage({ onSwitch }: { onSwitch: () => void }) {
   );
 
   const onSubmit = (values: RegisterValues) => registerMutation.mutate(values);
-  const serverError = getErrorMessage(registerMutation.error)
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
@@ -78,8 +76,6 @@ export function RegisterPage({ onSwitch }: { onSwitch: () => void }) {
           registration={register("password", { required: "Password is required" })}
         />
         {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>}
-
-        {serverError && <p className="mt-1 text-sm text-red-400">{serverError}</p>}
 
         <button
           className="mt-4 cursor-pointer rounded-md bg-blue-600 px-4 py-2.5 text-base text-white disabled:cursor-default disabled:opacity-60"

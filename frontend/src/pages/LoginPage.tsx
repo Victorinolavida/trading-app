@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "../components/PasswordInput";
 import { useLogin } from "../features/auth/hooks";
-import { getErrorMessage } from "../lib/apiError";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -25,8 +24,6 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
   });
 
   const onSubmit = (values: LoginValues) => login.mutate(values);
-
-  const serverError = getErrorMessage(login.error);
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
@@ -62,12 +59,6 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
         />
         {errors.password && (
           <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
-        )}
-
-        <br/>
-
-        {serverError && (
-          <p className="mt-1 text-sm text-red-400">{serverError}</p>
         )}
 
         <button
