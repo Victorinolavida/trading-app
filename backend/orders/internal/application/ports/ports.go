@@ -45,3 +45,7 @@ type MatchingEngine interface {
 type EventPublisher interface {
 	Publish(ctx context.Context, events ...domain.Event) error
 }
+
+type MemoryPort interface {
+	Incr(context.Context, string) (int64, error)
+}

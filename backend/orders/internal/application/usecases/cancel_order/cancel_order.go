@@ -12,11 +12,13 @@ import (
 
 type Usecase struct {
 	orderRepo ports.OrderRepository
+	publisher ports.EventPublisher
 }
 
-func New(orderRepo ports.OrderRepository) *Usecase {
+func New(orderRepo ports.OrderRepository, publisher ports.EventPublisher) *Usecase {
 	return &Usecase{
 		orderRepo: orderRepo,
+		publisher: publisher,
 	}
 }
 
@@ -24,7 +26,7 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	if cmd.OrderID == uuid.Nil {
 		return Result{}, domainerrors.ErrInvalidOrderId
 	}
-	// Then cancel orders
+
 	order, err := u.orderRepo.GetByPublicID(ctx, cmd.OrderID)
 	if err != nil {
 		return Result{}, err
@@ -40,9 +42,19 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, err
 	}
 
-	err = u.orderRepo.Update(ctx, order)
-	if err != nil {
+	if err := u.orderRepo.Update(ctx, order); err != nil {
 		return Result{}, err
+	}
+
+	if u.publisher != nil {
+		depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
+		if err != nil {
+			return Result{}, err
+		}
+		event := domain.NewMarketDepthEvent(order.SecurityID().String(), depth)
+		if err := u.publisher.Publish(ctx, event); err != nil {
+			return Result{}, err
+		}
 	}
 
 	return orderToResult(order), nil

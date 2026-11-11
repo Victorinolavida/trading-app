@@ -58,3 +58,11 @@ func (m *MockOrderRepo) ListOrders(ctx context.Context, filter ports.ListOrdersF
 	args := m.Called(ctx, filter)
 	return args.Get(0).([]*domain.Order), args.Error(1)
 }
+
+func (m *MockOrderRepo) GetMarketDepth(ctx context.Context, securityID uuid.UUID) (*domain.MarketDepth, error) {
+	args := m.Called(ctx, securityID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.MarketDepth), args.Error(1)
+}

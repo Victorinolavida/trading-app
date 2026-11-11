@@ -6,22 +6,27 @@ import (
 	"log/slog"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/victorinolavida/orders/config"
 	grpcAdapter "github.com/victorinolavida/orders/internal/adapters/in/grpc"
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/securities"
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/users"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
+	orderproducer "github.com/victorinolavida/orders/internal/adapters/out/producer/rabbitmq"
+	redisadapter "github.com/victorinolavida/orders/internal/adapters/out/redis"
 	matchingengine "github.com/victorinolavida/orders/internal/application/services/matching-engine"
 	"github.com/victorinolavida/orders/internal/application/usecases/active_orders"
 	"github.com/victorinolavida/orders/internal/application/usecases/cancel_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/create_order"
 	"github.com/victorinolavida/orders/internal/application/usecases/list_orders"
 	"github.com/victorinolavida/orders/internal/domain"
+	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
 	grpcserver "github.com/victorinolavida/pkg/grpc_server"
 	"github.com/victorinolavida/pkg/logger"
+	"github.com/victorinolavida/pkg/redis"
 	orderpb "github.com/victorinolavida/proto/order"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -39,6 +44,37 @@ func main() {
 	pool, err := database.NewPool(context.Background(), cfg.Database)
 	if err != nil {
 		logger.Fatal("error connecting to db", slog.Any("error", err))
+	}
+
+	redisClient, err := redis.NewClient(context.Background(), cfg.Redis)
+	if err != nil {
+		logger.Fatal("error with redis", slog.Any("error", err))
+	}
+	defer redisClient.Close()
+
+	memoryPort, err := redisadapter.New(context.Background(), cfg.Redis)
+	if err != nil {
+		logger.Fatal("error with redis memory adapter", slog.Any("error", err))
+	}
+
+	rabbitClient := rabbitmq.NewClientFromConfig(cfg.RabbitMQ)
+	defer rabbitClient.Close()
+
+	for i := 0; i < 30 && !rabbitClient.IsReady(); i++ {
+		time.Sleep(500 * time.Millisecond)
+	}
+	if !rabbitClient.IsReady() {
+		logger.Fatal("error connecting to rabbitmq", slog.String("host", cfg.RabbitMQ.Host), slog.Int("port", cfg.RabbitMQ.Port))
+	}
+
+	exchange := cfg.Publisher.Exchange
+	if exchange == "" {
+		logger.Fatal("publisher exchange is required")
+	}
+
+	eventPublisher, err := orderproducer.NewProducer(memoryPort, rabbitClient, exchange)
+	if err != nil {
+		logger.Fatal("error creating order event producer", slog.Any("error", err))
 	}
 
 	orderRepo := postgres.NewOrderRepository(pool)
@@ -63,8 +99,8 @@ func main() {
 	}
 
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
-	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager)
-	cancelUC := cancel_order.New(orderRepo)
+	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher)
+	cancelUC := cancel_order.New(orderRepo, eventPublisher)
 	activeUc := active_orders.New(orderRepo)
 	listUc := list_orders.New(orderRepo)
 

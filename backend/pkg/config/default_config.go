@@ -40,3 +40,29 @@ type CookieConfig struct {
 	TTL      time.Duration `koanf:"ttl"`
 	Secret   string        `koanf:"secret"`
 }
+
+type RedisConfig struct {
+	Host     string `koanf:"host"`
+	Port     string `koanf:"port"`
+	DB       int    `koanf:"database"`
+	Password string `koanf:"password"`
+	Username string `koanf:"username"`
+}
+
+type RabbitMQ struct {
+	Host     string `koanf:"host"`
+	Port     int    `koanf:"port"`
+	Username string `koanf:"username"`
+	Password string `koanf:"password"`
+	VHost    string `koanf:"vhost"`
+}
+
+type Consumer struct {
+	Exchange   string `koanf:"exchange"`
+	Queue      string `koanf:"queue"`
+	RoutingKey string `koanf:"routing_key"`
+}
+
+type Publisher struct {
+	Exchange string `koanf:"exchange"`
+}

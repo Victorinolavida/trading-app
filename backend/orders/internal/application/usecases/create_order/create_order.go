@@ -15,9 +15,10 @@ type Usecase struct {
 	userSvc        ports.UserService
 	matchingEngine ports.MatchingEngine
 	txManager      ports.TxManager
+	publisher      ports.EventPublisher
 }
 
-func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager) *Usecase {
+func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager, publisher ports.EventPublisher) *Usecase {
 	return &Usecase{
 		orderRepo:      orderRepo,
 		tradeRepo:      tradeRepo,
@@ -25,6 +26,7 @@ func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, secur
 		userSvc:        userSvc,
 		matchingEngine: me,
 		txManager:      tx,
+		publisher:      publisher,
 	}
 }
 
@@ -112,6 +114,17 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		return nil
 	}); err != nil {
 		return Result{}, err
+	}
+
+	// publish market depth event after tx commit
+	if u.publisher != nil {
+		depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
+		if err == nil {
+			event := domain.NewMarketDepthEvent(order.SecurityID().String(), depth)
+			if pubErr := u.publisher.Publish(ctx, event); pubErr != nil {
+				slog.Warn("failed to publish market depth event", slog.Any("error", pubErr))
+			}
+		}
 	}
 
 	return Result{

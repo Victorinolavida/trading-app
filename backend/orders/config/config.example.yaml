@@ -23,3 +23,13 @@ services:
   securities:
     host: localhost
     port: 3031
+
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+publisher:
+  exchange: orders.events
