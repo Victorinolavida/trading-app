@@ -7,7 +7,7 @@ database:
   password: postgres
   host: localhost
   port: 5432
-  name: trading
+  name: trading_users
   min_conns: 2
   max_conns: 2
 

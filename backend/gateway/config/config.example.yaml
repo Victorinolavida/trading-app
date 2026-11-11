@@ -50,6 +50,8 @@ rabbitmq:
   username: guest
   password: guest
   vhost: /
+  exchange: orders.events
 
 publisher:
   exchange: orders.events
+

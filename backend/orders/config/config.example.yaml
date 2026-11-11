@@ -13,7 +13,7 @@ database:
   port: 5432
   user: postgres
   password: postgres
-  name: trading
+  name: trading_orders
   sslmode: disable
 
 services:
@@ -23,6 +23,14 @@ services:
   securities:
     host: localhost
     port: 3031
+
+allow_internal_crossing: true
+
+redis:
+  host: localhost
+  port: 6379
+  password: guest
+  # username: guest
 
 rabbitmq:
   host: localhost
