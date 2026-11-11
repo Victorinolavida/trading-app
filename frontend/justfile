@@ -39,6 +39,14 @@ build:
 preview:
     pnpm preview
 
+# Format the source code with Prettier.
+format:
+    pnpm format
+
+# Lint the source code with ESLint.
+lint:
+    pnpm lint
+
 # =============================================================================
 # Cleanup
 # =============================================================================
