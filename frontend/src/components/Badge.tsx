@@ -11,7 +11,13 @@ const tones: Record<BadgeTone, string> = {
   zinc: "border-zinc-500/30 bg-zinc-500/15 text-zinc-300",
 };
 
-export function Badge({ tone = "zinc", children }: { tone?: BadgeTone; children: ReactNode }) {
+export function Badge({
+  tone = "zinc",
+  children,
+}: {
+  tone?: BadgeTone;
+  children: ReactNode;
+}) {
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${tones[tone]}`}
@@ -51,5 +57,9 @@ export function OrderTypeBadge({ orderType }: { orderType?: string }) {
 
 export function StatusBadge({ status }: { status?: string }) {
   const value = (status ?? "-").toLowerCase();
-  return <Badge tone={statusTones[value] ?? "zinc"}>{value.replace(/_/g, " ")}</Badge>;
+  return (
+    <Badge tone={statusTones[value] ?? "zinc"}>
+      {value.replace(/_/g, " ")}
+    </Badge>
+  );
 }

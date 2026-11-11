@@ -50,11 +50,11 @@ export class ApiClient {
 
     this.http.interceptors.response.use(
       (res) => res,
-      (err:unknown) => {
-        const apiErr = this.toApiError(err)
-        return Promise.reject(apiErr)
-      }
-    )
+      (err: unknown) => {
+        const apiErr = this.toApiError(err);
+        return Promise.reject(apiErr);
+      },
+    );
   }
 
   get<T>(path: string, config?: AxiosRequestConfig) {
@@ -93,15 +93,15 @@ export class ApiClient {
       if (res.status === 204) return undefined as T;
       return res.data;
     } catch (err) {
-      throw err
+      throw err;
     }
   }
 
   private toApiError(err: unknown): unknown {
     if (axios.isCancel(err)) return err; // let aborts pass through untouched
     if (!(err instanceof AxiosError)) {
-      return err
-    };
+      return err;
+    }
 
     if (!err.response) {
       return new ApiError(

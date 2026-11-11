@@ -4,7 +4,7 @@ import { OrderBookUpdate, ExecutedTrade, subscribeOrderBook } from "../lib/api";
 export function useOrderBookSSE(
   securityId: string,
   onUpdate: (update: OrderBookUpdate) => void,
-  onExecuted: (trade: ExecutedTrade) => void
+  onExecuted: (trade: ExecutedTrade) => void,
 ) {
   useEffect(() => {
     if (!securityId) return;
