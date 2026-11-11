@@ -1,14 +1,25 @@
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "../components/PasswordInput";
-import { useRegister } from "../hooks/useAuth";
-import { ApiError } from "../lib/api";
+import { useRegister } from "../features/auth/hooks";
+import { getErrorMessage } from "../lib/apiError";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface FormValues {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-}
+const registerSchema = z.object({
+  email: z.email("Invalid email"),
+  password: z.string().min(8, "At least 8 characters").max(23, "Password cannot exceed 23 characters."),
+  firstName: z
+  .string()
+  .min(3, "First name must be at least 3 characters long.")
+  .max(50, "First name cannot exceed 50 characters."),
+  lastName: z
+  .string()
+  .min(3, "First name must be at least 3 characters long.")
+  .max(50, "First name cannot exceed 50 characters.")
+});
+
+
+type RegisterValues = z.infer<typeof registerSchema>;
 
 export function RegisterPage({ onSwitch }: { onSwitch: () => void }) {
   const registerMutation = useRegister();
@@ -16,11 +27,15 @@ export function RegisterPage({ onSwitch }: { onSwitch: () => void }) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ defaultValues: { email: "", firstName: "", lastName: "", password: "" } });
+  } = useForm<RegisterValues>(
+    { 
+      defaultValues: { email: "", firstName: "", lastName: "", password: "" },
+      resolver: zodResolver(registerSchema)
+    }
+  );
 
-  const onSubmit = (values: FormValues) => registerMutation.mutate(values);
-
-  const serverError = registerMutation.error instanceof ApiError ? registerMutation.error.message : null;
+  const onSubmit = (values: RegisterValues) => registerMutation.mutate(values);
+  const serverError = getErrorMessage(registerMutation.error)
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
@@ -34,10 +49,6 @@ export function RegisterPage({ onSwitch }: { onSwitch: () => void }) {
           autoComplete="email"
           {...register("email", {
             required: "Email is required",
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Invalid email address",
-            },
           })}
         />
         {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>}

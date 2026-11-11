@@ -1,12 +1,17 @@
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "../components/PasswordInput";
-import { useLogin } from "../hooks/useAuth";
-import { ApiError } from "../lib/api";
+import { useLogin } from "../features/auth/hooks";
+import { getErrorMessage } from "../lib/apiError";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface FormValues {
-  email: string;
-  password: string;
-}
+const loginSchema = z.object({
+  email: z.email("Invalid email"),
+  password: z.string().min(8, "At least 8 characters").max(23, "Password cannot exceed 23 characters.")
+
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
   const login = useLogin();
@@ -14,12 +19,14 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
+  } = useForm<LoginValues>({
+    defaultValues: { email: "", password: "" },
+    resolver: zodResolver(loginSchema)
+  });
 
-  const onSubmit = (values: FormValues) => login.mutate(values);
+  const onSubmit = (values: LoginValues) => login.mutate(values);
 
-  const serverError =
-    login.error instanceof ApiError ? login.error.message : null;
+  const serverError = getErrorMessage(login.error);
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
@@ -56,6 +63,8 @@ export function LoginPage({ onSwitch }: { onSwitch: () => void }) {
         {errors.password && (
           <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
         )}
+
+        <br/>
 
         {serverError && (
           <p className="mt-1 text-sm text-red-400">{serverError}</p>
