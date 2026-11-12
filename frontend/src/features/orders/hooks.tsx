@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "./api";
-import { CreateOrderRequest } from "../../lib/api";
 import { toast } from "sonner";
 import { getErrorMessage } from "../../lib/apiError";
 import { orderKeys } from "./query";
+import { CreateOrderRequest } from "./types";
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
