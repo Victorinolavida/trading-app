@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardTitle } from "./ui/card";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCreateOrder } from "../features/orders/hooks";
 
 const optionalPositiveNumber = (message: string) =>
@@ -64,9 +64,13 @@ const EXPIRATION_UNIT_SUFFIX: Record<string, string> = {
 export function CreateOrderForm({ securityId }: { securityId: string }) {
   const [defaultExpiration, setDefaultExpiration] = useState<boolean>(true);
 
+  const previousUnit = useRef<CreateOrderFormInput["expirationUnit"] | null>(null);
+  const previousValue = useRef<CreateOrderFormInput["expirationValue"] | null>(null);
+
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     watch,
     formState: { isValid, errors },
@@ -99,6 +103,24 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
   });
 
   const orderType = watch("orderType");
+
+  useEffect(() => {
+
+    if (orderType == "market" ){
+      const currentUnit = watch("expirationUnit")
+      const currentVal = watch("expirationValue")
+      previousUnit.current = currentUnit;
+      previousValue.current = currentVal;
+      setValue("expirationUnit","second")
+      setValue("expirationValue",1)
+      return;
+    }
+    if(orderType == "limit" && previousUnit.current && previousValue.current){
+      setValue("expirationUnit",previousUnit.current)
+      setValue("expirationValue",previousValue.current)
+      return
+    }
+  },[orderType])
 
   return (
     <Card>
