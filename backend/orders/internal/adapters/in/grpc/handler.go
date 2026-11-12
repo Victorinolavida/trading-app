@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -11,11 +12,51 @@ import (
 	getmarketdepth "github.com/victorinolavida/orders/internal/application/usecases/get_market_depth"
 	listorders "github.com/victorinolavida/orders/internal/application/usecases/list_orders"
 	"github.com/victorinolavida/orders/internal/domain"
+	"github.com/victorinolavida/orders/internal/domainerrors"
 	orderpb "github.com/victorinolavida/proto/order"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func toGRPCError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch {
+	case errors.Is(err, domainerrors.ErrOrderNotFound),
+		errors.Is(err, domainerrors.ErrTradeNotFound):
+		return status.Error(codes.NotFound, err.Error())
+
+	case errors.Is(err, domainerrors.ErrOrderAlreadyCanceled),
+		errors.Is(err, domainerrors.ErrCannotCancelMarketOrder):
+		return status.Error(codes.FailedPrecondition, err.Error())
+
+	case errors.Is(err, domainerrors.ErrInvalidTraderID),
+		errors.Is(err, domainerrors.ErrInvalidSecurityID),
+		errors.Is(err, domainerrors.ErrInvalidPrice),
+		errors.Is(err, domainerrors.ErrInvalidYield),
+		errors.Is(err, domainerrors.ErrInvalidQuantity),
+		errors.Is(err, domainerrors.ErrInvalidNominalValue),
+		errors.Is(err, domainerrors.ErrPriceInMarketOrder),
+		errors.Is(err, domainerrors.ErrQtyTooLarge),
+		errors.Is(err, domainerrors.ErrYieldInMarketOrder),
+		errors.Is(err, domainerrors.ErrInvalidFX),
+		errors.Is(err, domainerrors.ErrInvalidDirection),
+		errors.Is(err, domainerrors.ErrInvalidOrderType),
+		errors.Is(err, domainerrors.ErrInvalidOrderStatus),
+		errors.Is(err, domainerrors.ErrInvalidOrderId),
+		errors.Is(err, domainerrors.ErrInvalidExpiration),
+		errors.Is(err, domainerrors.ErrMarketOrderExpiration),
+		errors.Is(err, domainerrors.ErrInvalidTakerID),
+		errors.Is(err, domainerrors.ErrInvalidMakerID):
+		return status.Error(codes.InvalidArgument, err.Error())
+
+	default:
+		return status.Error(codes.Internal, err.Error())
+	}
+}
 
 type OrderGRPCHandler struct {
 	orderpb.UnimplementedOrderServiceServer
@@ -92,7 +133,7 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 
 	res, err := h.createOrder.Execute(ctx, cmd)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, toGRPCError(err)
 	}
 
 	return &orderpb.OrderResponse{
@@ -136,7 +177,7 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 
 	res, err := h.cancelOrder.Execute(ctx, cmd)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, toGRPCError(err)
 	}
 
 	return &orderpb.OrderResponse{
@@ -187,7 +228,7 @@ func (h *OrderGRPCHandler) GetActiveOrders(ctx context.Context, req *orderpb.Get
 
 	res, err := h.activeorders.Execute(ctx, cmd)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, toGRPCError(err)
 	}
 
 	orders := make([]*orderpb.OrderResponse, len(res.Orders))
@@ -234,7 +275,7 @@ func (h *OrderGRPCHandler) GetMarketDepth(ctx context.Context, req *orderpb.GetM
 
 	res, err := h.getMarketDepth.Execute(ctx, cmd)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, toGRPCError(err)
 	}
 
 	if res.MarketDepth == nil {
@@ -311,7 +352,7 @@ func (h *OrderGRPCHandler) ListOrders(ctx context.Context, req *orderpb.ListOrde
 
 	res, err := h.listorders.Execute(ctx, cmd)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, toGRPCError(err)
 	}
 
 	orders := make([]*orderpb.OrderResponse, len(res.Orders))
