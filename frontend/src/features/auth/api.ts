@@ -1,6 +1,5 @@
-import { AuthUser } from "../../lib/api";
 import { ApiClient } from "../../lib/http";
-import { User } from "./types";
+import { AuthUser, User } from "./types";
 
 const api = new ApiClient();
 

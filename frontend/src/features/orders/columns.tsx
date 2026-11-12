@@ -24,10 +24,11 @@ import {
   StatusBadge,
 } from "../../components/Badge";
 import { cn } from "../../components/ui/card";
+import { useCancelOrder } from "./hooks";
 import type { AllocationStatus, Order } from "./types";
 import { formatDuration, useNow } from "./useNow";
 
-export const blotterFeatures = tableFeatures({
+export const orderTableFeatures = tableFeatures({
   rowSortingFeature,
   columnFilteringFeature,
   globalFilteringFeature,
@@ -39,7 +40,7 @@ export const blotterFeatures = tableFeatures({
   columnMeta: {} as { align?: "left" | "right" },
 });
 
-const helper = createColumnHelper<typeof blotterFeatures, Order>();
+const helper = createColumnHelper<typeof orderTableFeatures, Order>();
 
 const numericSort = constructSortFn({
   sort: (left, right) => {
@@ -52,7 +53,7 @@ const numericSort = constructSortFn({
   },
 });
 
-const orderSearchFilter = constructFilterFn<typeof blotterFeatures, Order>({
+const orderSearchFilter = constructFilterFn<typeof orderTableFeatures, Order>({
   filter: (_value, filterValue, row) => {
     const query = String(filterValue ?? "")
       .trim()
@@ -174,18 +175,17 @@ function NumericCell({
 }
 
 function CancelOrderButton({ orderId }: { orderId: string }) {
+  const cancelOrder = useCancelOrder();
+
   return (
     <button
       type="button"
       aria-label={`Cancel order ${orderId}`}
-      onClick={() =>
-        toast.info("Cancel order is not implemented yet", {
-          description: `Order ${orderId}`,
-        })
-      }
-      className="rounded border border-red-900/70 bg-red-950/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-red-300 hover:border-red-700 hover:bg-red-900/50"
+      disabled={cancelOrder.isPending}
+      onClick={() => cancelOrder.mutate(orderId)}
+      className="rounded border border-red-900/70 bg-red-950/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-red-300 hover:border-red-700 hover:bg-red-900/50 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      Cancel
+      {cancelOrder.isPending ? "Cancelling..." : "Cancel"}
     </button>
   );
 }

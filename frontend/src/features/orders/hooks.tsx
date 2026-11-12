@@ -20,3 +20,18 @@ export const useCreateOrder = () => {
     },
   });
 };
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => ordersApi.cancelOrder(orderId),
+    onError: (error) =>
+      toast.error(getErrorMessage(error) ?? "Could not cancel order"),
+    onSuccess: (order) => {
+      toast.success("Order cancelled successfully", {
+        description: order.id ? `Order ${order.id}` : undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+    },
+  });
+};
