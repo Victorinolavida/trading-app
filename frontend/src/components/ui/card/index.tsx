@@ -1,0 +1,103 @@
+import type { ComponentProps, ReactNode } from "react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+
+export function Card({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "mb-6 rounded-lg border border-zinc-800 bg-zinc-900 p-6",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function CardTitle({ className, ...props }: ComponentProps<"h1">) {
+  return (
+    <h1 className={cn("mb-2 text-2xl font-semibold", className)} {...props} />
+  );
+}
+
+export function CardSubtitle({ className, ...props }: ComponentProps<"p">) {
+  return <p className={cn("mb-4 text-gray-400", className)} {...props} />;
+}
+
+export function DetailList({ className, ...props }: ComponentProps<"dl">) {
+  return (
+    <dl
+      className={cn("grid grid-cols-2 gap-4 text-sm", className)}
+      {...props}
+    />
+  );
+}
+
+export function Section({
+  title,
+  className,
+  children,
+}: {
+  title: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={cn(
+        "border-t border-zinc-800 pt-5 mt-5 first:border-t-0 first:pt-0 first:mt-0",
+        className,
+      )}
+    >
+      <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
+        {title}
+      </h2>
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+        {children}
+      </dl>
+    </section>
+  );
+}
+
+export function DetailItem({
+  label,
+  children,
+  mono,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  mono?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <dt className="text-xs text-zinc-400">{label}</dt>
+      <dd
+        className={cn(
+          "mt-0.5 text-sm text-zinc-100 break-all",
+          mono && "font-mono",
+        )}
+      >
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+export function Badge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        active
+          ? "bg-emerald-500/10 text-emerald-400"
+          : "bg-zinc-700/40 text-zinc-400",
+      )}
+    >
+      {active ? "Enabled" : "Disabled"}
+    </span>
+  );
+}

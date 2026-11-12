@@ -1,4 +1,4 @@
-import { useLogout } from "../hooks/useAuth";
+import { useLogout } from "../features/auth/hooks";
 
 export function Sidebar() {
   const logout = useLogout();

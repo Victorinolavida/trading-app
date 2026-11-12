@@ -1,46 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ApiError,
-  login,
-  logout,
-  register,
-  whoami,
-  type AuthUser,
-  type User,
-} from "../lib/api";
+import { authApi } from "./api";
+import { AuthUser } from "./types";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../lib/apiError";
+import { useNavigate } from "react-router";
+import { authQueries } from "./queries";
 
-export const userKey = ["user"];
+export const authKeys = Object.freeze({
+  user: ["auth", "user"],
+});
 
-export function useSession() {
-  return useQuery<User | null>({
-    queryKey: userKey,
-    queryFn: async () => {
-      try {
-        return await whoami();
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 401) return null;
-        throw error;
-      }
-    },
-    staleTime: 30_000,
-    retry: (failureCount, error) =>
-      !(error instanceof ApiError && error.status === 401) && failureCount < 2,
-  });
-}
+export const useWhoami = () => useQuery(authQueries.whoami);
 
 export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
-      login(email, password),
+      authApi.login(email, password),
     onSuccess: (user: AuthUser) => {
-      queryClient.setQueryData(userKey, {
+      queryClient.setQueryData(authKeys.user, {
         user_id: user.user_id,
         first_name: user.first_name,
         last_name: user.last_name,
         email: "",
       });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 
@@ -57,25 +42,29 @@ export function useRegister() {
       firstName: string;
       lastName: string;
       password: string;
-    }) => register(email, firstName, lastName, password),
+    }) => authApi.register(email, firstName, lastName, password),
     onSuccess: (user: AuthUser) => {
-      queryClient.setQueryData(userKey, {
+      queryClient.setQueryData(authKeys.user, {
         user_id: user.user_id,
         first_name: user.first_name,
         last_name: user.last_name,
         email: "",
       });
     },
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   return useMutation({
-    mutationFn: () => logout(),
-    onSettled: () => {
+    mutationFn: () => authApi.logout(),
+    onSettled: async () => {
+      await queryClient.cancelQueries();
+      queryClient.setQueryData(authKeys.user, null);
+      await navigate("/login", { replace: true });
       queryClient.clear();
-      queryClient.setQueryData(userKey, null);
     },
   });
 }

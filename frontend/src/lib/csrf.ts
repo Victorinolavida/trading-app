@@ -1,4 +1,5 @@
-const CSRF_COOKIE_NAME = import.meta.env.VITE_CSRF_COOKIE_NAME ?? "csrf_token";
+export const CSRF_COOKIE_NAME =
+  import.meta.env.VITE_CSRF_COOKIE_NAME ?? "csrf_token";
 
 const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 

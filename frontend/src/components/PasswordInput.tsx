@@ -10,7 +10,11 @@ interface PasswordInputProps {
   registration: UseFormRegisterReturn;
 }
 
-export function PasswordInput({ id, autoComplete, registration }: PasswordInputProps) {
+export function PasswordInput({
+  id,
+  autoComplete,
+  registration,
+}: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   const label = visible ? "Hide password" : "Show password";
 
