@@ -105,9 +105,26 @@ func (q *Queries) BidMarketDepth(ctx context.Context, securityID uuid.UUID) ([]B
 }
 
 const expireOrders = `-- name: ExpireOrders :many
+WITH securities AS MATERIALIZED (
+    SELECT DISTINCT security_id
+    FROM orders
+    WHERE status = 'active'
+      AND expires_at < now()
+    ORDER BY security_id
+),
+locks AS MATERIALIZED (
+    SELECT pg_advisory_xact_lock(
+        hashtextextended(security_id::text, 0)
+    )
+    FROM securities
+)
 UPDATE orders
-SET status = 'expired', updated_at = now()
-WHERE status = 'active' AND expires_at < now()
+SET
+    status = 'expired',
+    updated_at = now()
+WHERE status = 'active'
+  AND expires_at < now()
+  AND EXISTS (SELECT 1 FROM locks)
 RETURNING id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at
 `
 
@@ -482,6 +499,15 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockSecurity = `-- name: LockSecurity :exec
+SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))
+`
+
+func (q *Queries) LockSecurity(ctx context.Context, securityID string) error {
+	_, err := q.db.Exec(ctx, lockSecurity, securityID)
+	return err
 }
 
 const saveOrder = `-- name: SaveOrder :exec

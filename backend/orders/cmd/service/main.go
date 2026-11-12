@@ -97,7 +97,7 @@ func main() {
 
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
 	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher)
-	cancelUC := cancel_order.New(orderRepo, eventPublisher)
+	cancelUC := cancel_order.New(orderRepo, eventPublisher, txManager)
 	activeUc := active_orders.New(orderRepo)
 	listUc := list_orders.New(orderRepo)
 	getMarketDepthUC := get_market_depth.New(orderRepo)

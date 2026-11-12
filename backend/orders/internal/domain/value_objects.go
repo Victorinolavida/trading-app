@@ -151,6 +151,15 @@ func NewDecimal(val int64) (Decimal, error) {
 	return Decimal(val), nil
 }
 
+// FormatDecimal returns the string representation of d, or "" when d is nil.
+// Market orders have no price/yield, so their decimal fields are nil.
+func FormatDecimal(d *Decimal) string {
+	if d == nil {
+		return ""
+	}
+	return d.String()
+}
+
 func (d Decimal) String() string {
 	v := int64(d)
 	neg := v < 0

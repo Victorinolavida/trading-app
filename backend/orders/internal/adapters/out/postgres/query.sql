@@ -139,7 +139,27 @@ group by price
 order by price desc;
 
 -- name: ExpireOrders :many
+WITH securities AS MATERIALIZED (
+    SELECT DISTINCT security_id
+    FROM orders
+    WHERE status = 'active'
+      AND expires_at < now()
+    ORDER BY security_id
+),
+locks AS MATERIALIZED (
+    SELECT pg_advisory_xact_lock(
+        hashtextextended(security_id::text, 0)
+    )
+    FROM securities
+)
 UPDATE orders
-SET status = 'expired', updated_at = now()
-WHERE status = 'active' AND expires_at < now()
+SET
+    status = 'expired',
+    updated_at = now()
+WHERE status = 'active'
+  AND expires_at < now()
+  AND EXISTS (SELECT 1 FROM locks)
 RETURNING *;
+
+-- name: LockSecurity :exec
+SELECT pg_advisory_xact_lock(hashtextextended(sqlc.arg(security_id)::text, 0));

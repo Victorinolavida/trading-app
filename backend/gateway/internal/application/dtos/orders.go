@@ -11,8 +11,8 @@ type CreateOrderRequest struct {
 	SecurityID string            `json:"security_id"`
 	Direction  string            `json:"direction" validate:"required,oneof=bid ask"`
 	OrderType  string            `json:"order_type" validate:"required,oneof=limit market"`
-	Price      string            `json:"price"`
-	Yield      string            `json:"yield"`
+	Price      *string           `json:"price,omitempty"`
+	Yield      *string           `json:"yield,omitempty"`
 	Quantity   int64             `json:"quantity" validate:"required"`
 	Expiration response.Duration `json:"expiration"`
 }
@@ -44,8 +44,8 @@ type OrderResponse struct {
 	SecurityID        string    `json:"security_id"`
 	Direction         string    `json:"direction"`
 	OrderType         string    `json:"order_type"`
-	Price             string    `json:"price"`
-	Yield             string    `json:"yield"`
+	Price             *string   `json:"price,omitempty"`
+	Yield             *string   `json:"yield,omitempty"`
 	Quantity          int64     `json:"quantity"`
 	NominalValue      string    `json:"nominal_value"`
 	AllocatedQuantity int64     `json:"allocated_quantity"`

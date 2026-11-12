@@ -37,6 +37,20 @@ func (s *OrdersService) Close() error {
 	return s.grpc.Close()
 }
 
+func optionalString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
+}
+
+func stringValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
 func toOrderResponse(res *orderpb.OrderResponse) dtos.OrderResponse {
 	if res == nil {
 		return dtos.OrderResponse{}
@@ -56,8 +70,8 @@ func toOrderResponse(res *orderpb.OrderResponse) dtos.OrderResponse {
 		SecurityID:        res.SecurityId,
 		Direction:         res.Direction,
 		OrderType:         res.OrderType,
-		Price:             res.Price,
-		Yield:             res.Yield,
+		Price:             optionalString(res.Price),
+		Yield:             optionalString(res.Yield),
 		Quantity:          res.Quantity,
 		NominalValue:      res.NominalValue,
 		AllocatedQuantity: res.AllocatedQuantity,
@@ -77,8 +91,8 @@ func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderReq
 		SecurityId: req.SecurityID,
 		Direction:  req.Direction,
 		OrderType:  req.OrderType,
-		Price:      req.Price,
-		Yield:      req.Yield,
+		Price:      stringValue(req.Price),
+		Yield:      stringValue(req.Yield),
 		Quantity:   req.Quantity,
 		ExpiresAt:  durationpb.New(req.Expiration.Value()),
 	})

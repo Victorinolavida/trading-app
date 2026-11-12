@@ -71,6 +71,10 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	if err := u.txManager.WithTx(ctx, func(ctx context.Context) error {
+		if err := u.txManager.Lock(ctx, order.SecurityID().String()); err != nil {
+			return err
+		}
+
 		if err := u.orderRepo.Save(ctx, order); err != nil {
 			return err
 		}
@@ -124,8 +128,8 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		SecurityId:        order.SecurityID().String(),
 		Direction:         order.Direction().String(),
 		OrderType:         order.OrderType().String(),
-		Price:             order.Price().String(),
-		Yield:             order.Yield().String(),
+		Price:             domain.FormatDecimal(order.Price()),
+		Yield:             domain.FormatDecimal(order.Yield()),
 		Quantity:          order.Quantity().Value(),
 		NominalValue:      order.NominalValue().String(),
 		AllocatedQuantity: order.AllocationQty().Value(),

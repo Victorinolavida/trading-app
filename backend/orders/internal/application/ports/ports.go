@@ -31,6 +31,7 @@ type OrderRepository interface {
 
 type TxManager interface {
 	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
+	Lock(ctx context.Context, securityID string) error
 }
 
 type TradeRepository interface {
