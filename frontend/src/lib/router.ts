@@ -7,6 +7,7 @@ import HomePage from "../pages/HomePage";
 import { redirectIfAuthed, requireAuth } from "../features/auth/guards";
 import NotFoundPage from "../pages/NotFound";
 import SecurityDetailPage from "../pages/SecurityDetailPage";
+import BlotterRoute from "../pages/blotter";
 import { toast } from "sonner";
 import { queryClient } from "./queryClient";
 import { securityQueries } from "../features/securities/queries";
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: HomePage,
+      },
+      {
+        path: "/blotter",
+        Component: BlotterRoute,
       },
       {
         Component: SecurityDetailPage,

@@ -261,12 +261,19 @@ export interface ExecutedTrade {
 export type SseEventType = "market.depth" | "orders.executed";
 
 // SSE message format
-export interface SseMessage {
-  type: SseEventType;
-  security_id: string;
-  sequence: number;
-  payload?: any;
-}
+export type SseMessage =
+  | {
+      type: "market.depth";
+      security_id: string;
+      sequence: number;
+      payload: OrderBookUpdate["payload"];
+    }
+  | {
+      type: "orders.executed";
+      security_id: string;
+      sequence: number;
+      payload: ExecutedTrade["payload"];
+    };
 
 export function subscribeOrderBook(
   securityId: string,

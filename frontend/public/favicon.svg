@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Trading logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- candle 1 -->
+  <line x1="18" y1="26" x2="18" y2="50" stroke="#fff" stroke-opacity="0.65" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="13" y="32" width="10" height="12" rx="2" fill="#fff" fill-opacity="0.65"/>
+  <!-- candle 2 -->
+  <line x1="32" y1="16" x2="32" y2="46" stroke="#fff" stroke-opacity="0.85" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="27" y="22" width="10" height="16" rx="2" fill="#fff" fill-opacity="0.85"/>
+  <!-- candle 3 -->
+  <line x1="46" y1="8" x2="46" y2="38" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="41" y="13" width="10" height="16" rx="2" fill="#fff"/>
+</svg>
