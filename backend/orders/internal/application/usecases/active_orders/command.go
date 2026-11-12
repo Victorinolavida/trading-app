@@ -27,6 +27,7 @@ type Order struct {
 	Status            string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	ExpiresAt         time.Time
 }
 
 type Result struct {

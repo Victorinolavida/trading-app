@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	defaultTimeout = 15 * time.Second
+	defaultTimeout = 30 * time.Second
 	apiPrefix      = "/api/v0"
 )
 
@@ -76,15 +76,11 @@ func main() {
 		logger.Fatal("error creating security handler", slog.Any("error", err))
 	}
 
-	rabbitClient := rabbitmq.NewClientFromConfig(conf.RabbitMQ)
+	rabbitClient, err := rabbitmq.NewClientFromConfig(conf.RabbitMQ)
+	if err != nil {
+		logger.Fatal("error with rabbitmq adapter", slog.Any("error", err))
+	}
 	defer rabbitClient.Close()
-
-	for i := 0; i < 30 && !rabbitClient.IsReady(); i++ {
-		time.Sleep(500 * time.Millisecond)
-	}
-	if !rabbitClient.IsReady() {
-		logger.Fatal("error connecting to rabbitmq", slog.String("host", conf.RabbitMQ.Host), slog.Int("port", conf.RabbitMQ.Port))
-	}
 
 	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient)
 	if err != nil {

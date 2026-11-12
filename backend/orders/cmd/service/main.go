@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/victorinolavida/orders/config"
 	grpcAdapter "github.com/victorinolavida/orders/internal/adapters/in/grpc"
@@ -58,15 +57,12 @@ func main() {
 		logger.Fatal("error with redis memory adapter", slog.Any("error", err))
 	}
 
-	rabbitClient := rabbitmq.NewClientFromConfig(cfg.RabbitMQ)
-	defer rabbitClient.Close()
+	rabbitClient, err := rabbitmq.NewClientFromConfig(cfg.RabbitMQ)
+	if err != nil {
+		logger.Fatal("error with rabbitmq adapter", slog.Any("error", err))
+	}
 
-	for i := 0; i < 30 && !rabbitClient.IsReady(); i++ {
-		time.Sleep(500 * time.Millisecond)
-	}
-	if !rabbitClient.IsReady() {
-		logger.Fatal("error connecting to rabbitmq", slog.String("host", cfg.RabbitMQ.Host), slog.Int("port", cfg.RabbitMQ.Port))
-	}
+	defer rabbitClient.Close()
 
 	exchange := cfg.Publisher.Exchange
 	if exchange == "" {

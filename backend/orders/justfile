@@ -27,8 +27,12 @@ schema_file := "internal/adapters/out/postgres/schema.sql"
 # =============================================================================
 
 # Run the orders service.
-run:
-    go run ./cmd
+run-service:
+    go run ./cmd/service
+
+# Run the orders worker.
+run-worker:
+    go run ./cmd/worker
 
 # Build the orders binary into ./bin/orders.
 build:

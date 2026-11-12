@@ -14,6 +14,7 @@ type Command struct {
 	Price      int64
 	Yield      int64
 	Quantity   int64
+	ExpiresAt  time.Duration
 }
 
 type Result struct {
@@ -32,4 +33,5 @@ type Result struct {
 	Status            string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	ExpiresAt         time.Time
 }

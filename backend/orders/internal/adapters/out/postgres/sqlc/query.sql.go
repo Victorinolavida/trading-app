@@ -104,8 +104,53 @@ func (q *Queries) BidMarketDepth(ctx context.Context, securityID uuid.UUID) ([]B
 	return items, nil
 }
 
+const expireOrders = `-- name: ExpireOrders :many
+UPDATE orders
+SET status = 'expired', updated_at = now()
+WHERE status = 'active' AND expires_at < now()
+RETURNING id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at
+`
+
+func (q *Queries) ExpireOrders(ctx context.Context) ([]Order, error) {
+	rows, err := q.db.Query(ctx, expireOrders)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.TraderID,
+			&i.SecurityID,
+			&i.Direction,
+			&i.OrderType,
+			&i.Price,
+			&i.Yield,
+			&i.Quantity,
+			&i.AllocationQty,
+			&i.AllocationStatus,
+			&i.NominalValue,
+			&i.Fx,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getActiveOrders = `-- name: GetActiveOrders :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE 
     security_id = $1
     AND trader_id = $2
@@ -149,6 +194,7 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}
@@ -161,7 +207,7 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 }
 
 const getAsksToTrade = `-- name: GetAsksToTrade :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE direction = 'ask'
   AND status = 'active'
   AND security_id = $1
@@ -194,6 +240,7 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}
@@ -206,7 +253,7 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 }
 
 const getBidsToTrade = `-- name: GetBidsToTrade :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE direction = 'bid'
   AND status = 'active'
   AND security_id = $1
@@ -239,6 +286,7 @@ func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}
@@ -251,7 +299,7 @@ func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 }
 
 const getOrderByID = `-- name: GetOrderByID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE id = $1
 `
 
@@ -275,12 +323,13 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (Order, error)
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
 
 const getOrderByPublicID = `-- name: GetOrderByPublicID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE public_id = $1
 `
 
@@ -304,6 +353,7 @@ func (q *Queries) GetOrderByPublicID(ctx context.Context, publicID uuid.UUID) (O
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
@@ -365,7 +415,7 @@ func (q *Queries) GetTradesByOrderID(ctx context.Context, makerOrderID uuid.UUID
 }
 
 const listOrders = `-- name: ListOrders :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
 WHERE
     trader_id = $1
     AND (
@@ -422,6 +472,7 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}
@@ -438,12 +489,12 @@ INSERT INTO orders (
     id, public_id, trader_id, security_id,
     direction, order_type, price, yield, quantity,
     allocation_qty, allocation_status,
-    nominal_value, fx, status, created_at, updated_at
+    nominal_value, fx, status, created_at, updated_at, expires_at
 ) VALUES (
     $1, $2, $3, $4,
     $5, $6, $7, $8, $9,
     $10, $11,
-    $12, $13, $14, $15, $16
+    $12, $13, $14, $15, $16, $17
 )
 `
 
@@ -464,6 +515,7 @@ type SaveOrderParams struct {
 	Status           string
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
+	ExpiresAt        pgtype.Timestamptz
 }
 
 func (q *Queries) SaveOrder(ctx context.Context, arg SaveOrderParams) error {
@@ -484,6 +536,7 @@ func (q *Queries) SaveOrder(ctx context.Context, arg SaveOrderParams) error {
 		arg.Status,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.ExpiresAt,
 	)
 	return err
 }

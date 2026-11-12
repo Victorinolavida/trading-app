@@ -87,6 +87,7 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		Price:      price,
 		Yield:      yieldVal,
 		Quantity:   req.Quantity,
+		ExpiresAt:  req.ExpiresAt.AsDuration(),
 	}
 
 	res, err := h.createOrder.Execute(ctx, cmd)
@@ -110,6 +111,7 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		Status:            res.Status,
 		CreatedAt:         timestamppb.New(res.CreatedAt),
 		UpdatedAt:         timestamppb.New(res.UpdatedAt),
+		ExpiresAt:         timestamppb.New(res.ExpiresAt),
 	}, nil
 }
 
@@ -153,6 +155,7 @@ func (h *OrderGRPCHandler) CancelOrder(ctx context.Context, req *orderpb.CancelO
 		Status:            res.Status,
 		CreatedAt:         timestamppb.New(res.CreatedAt),
 		UpdatedAt:         timestamppb.New(res.UpdatedAt),
+		ExpiresAt:         timestamppb.New(res.ExpiresAt),
 	}, nil
 }
 
@@ -205,6 +208,7 @@ func (h *OrderGRPCHandler) GetActiveOrders(ctx context.Context, req *orderpb.Get
 			Status:            order.Status,
 			CreatedAt:         timestamppb.New(order.CreatedAt),
 			UpdatedAt:         timestamppb.New(order.UpdatedAt),
+			ExpiresAt:         timestamppb.New(order.ExpiresAt),
 		}
 		orders[i] = ord
 	}
@@ -327,6 +331,7 @@ func (h *OrderGRPCHandler) ListOrders(ctx context.Context, req *orderpb.ListOrde
 			Fx:                order.Fx,
 			Status:            order.Status,
 			CreatedAt:         timestamppb.New(order.CreatedAt),
+			ExpiresAt:         timestamppb.New(order.ExpiresAt),
 			UpdatedAt:         timestamppb.New(order.UpdatedAt),
 		}
 	}

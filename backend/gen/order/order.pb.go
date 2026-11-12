@@ -9,6 +9,7 @@ package order
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -39,6 +40,7 @@ type OrderResponse struct {
 	Status            string                 `protobuf:"bytes,13,opt,name=status,proto3" json:"status,omitempty"`
 	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	ExpiresAt         *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -178,6 +180,13 @@ func (x *OrderResponse) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
 type CreateOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TraderId      string                 `protobuf:"bytes,1,opt,name=trader_id,json=traderId,proto3" json:"trader_id,omitempty"`
@@ -187,6 +196,7 @@ type CreateOrderRequest struct {
 	Price         string                 `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Yield         string                 `protobuf:"bytes,6,opt,name=yield,proto3" json:"yield,omitempty"`
 	Quantity      int64                  `protobuf:"varint,7,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	ExpiresAt     *durationpb.Duration   `protobuf:"bytes,8,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -268,6 +278,13 @@ func (x *CreateOrderRequest) GetQuantity() int64 {
 		return x.Quantity
 	}
 	return 0
+}
+
+func (x *CreateOrderRequest) GetExpiresAt() *durationpb.Duration {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
 }
 
 type CancelOrderRequest struct {
@@ -758,7 +775,7 @@ var File_order_order_proto protoreflect.FileDescriptor
 
 const file_order_order_proto_rawDesc = "" +
 	"\n" +
-	"\x11order/order.proto\x12\x05order\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x04\n" +
+	"\x11order/order.proto\x12\x05order\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\"\xc6\x04\n" +
 	"\rOrderResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
 	"\vsecurity_id\x18\x02 \x01(\tR\n" +
@@ -779,7 +796,9 @@ const file_order_order_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd7\x01\n" +
+	"updated_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x129\n" +
+	"\n" +
+	"expires_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x91\x02\n" +
 	"\x12CreateOrderRequest\x12\x1b\n" +
 	"\ttrader_id\x18\x01 \x01(\tR\btraderId\x12\x1f\n" +
 	"\vsecurity_id\x18\x02 \x01(\tR\n" +
@@ -789,7 +808,9 @@ const file_order_order_proto_rawDesc = "" +
 	"order_type\x18\x04 \x01(\tR\torderType\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\tR\x05price\x12\x14\n" +
 	"\x05yield\x18\x06 \x01(\tR\x05yield\x12\x1a\n" +
-	"\bquantity\x18\a \x01(\x03R\bquantity\"L\n" +
+	"\bquantity\x18\a \x01(\x03R\bquantity\x128\n" +
+	"\n" +
+	"expires_at\x18\b \x01(\v2\x19.google.protobuf.DurationR\texpiresAt\"L\n" +
 	"\x12CancelOrderRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1b\n" +
 	"\ttrader_id\x18\x02 \x01(\tR\btraderId\"\x83\x01\n" +
@@ -855,30 +876,33 @@ var file_order_order_proto_goTypes = []any{
 	(*GetMarketDepthRequest)(nil),   // 9: order.GetMarketDepthRequest
 	(*GetMarketDepthResponse)(nil),  // 10: order.GetMarketDepthResponse
 	(*timestamppb.Timestamp)(nil),   // 11: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),     // 12: google.protobuf.Duration
 }
 var file_order_order_proto_depIdxs = []int32{
 	11, // 0: order.OrderResponse.created_at:type_name -> google.protobuf.Timestamp
 	11, // 1: order.OrderResponse.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: order.ListOrdersResponse.orders:type_name -> order.OrderResponse
-	0,  // 3: order.GetActiveOrdersResponse.orders:type_name -> order.OrderResponse
-	7,  // 4: order.MarketDepth.bids:type_name -> order.MarketDepthLevel
-	7,  // 5: order.MarketDepth.asks:type_name -> order.MarketDepthLevel
-	8,  // 6: order.GetMarketDepthResponse.market_depth:type_name -> order.MarketDepth
-	1,  // 7: order.OrderService.CreateOrder:input_type -> order.CreateOrderRequest
-	2,  // 8: order.OrderService.CancelOrder:input_type -> order.CancelOrderRequest
-	3,  // 9: order.OrderService.ListOrders:input_type -> order.ListOrdersRequest
-	5,  // 10: order.OrderService.GetActiveOrders:input_type -> order.GetActiveOrdersRequest
-	9,  // 11: order.OrderService.GetMarketDepth:input_type -> order.GetMarketDepthRequest
-	0,  // 12: order.OrderService.CreateOrder:output_type -> order.OrderResponse
-	0,  // 13: order.OrderService.CancelOrder:output_type -> order.OrderResponse
-	4,  // 14: order.OrderService.ListOrders:output_type -> order.ListOrdersResponse
-	6,  // 15: order.OrderService.GetActiveOrders:output_type -> order.GetActiveOrdersResponse
-	10, // 16: order.OrderService.GetMarketDepth:output_type -> order.GetMarketDepthResponse
-	12, // [12:17] is the sub-list for method output_type
-	7,  // [7:12] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	11, // 2: order.OrderResponse.expires_at:type_name -> google.protobuf.Timestamp
+	12, // 3: order.CreateOrderRequest.expires_at:type_name -> google.protobuf.Duration
+	0,  // 4: order.ListOrdersResponse.orders:type_name -> order.OrderResponse
+	0,  // 5: order.GetActiveOrdersResponse.orders:type_name -> order.OrderResponse
+	7,  // 6: order.MarketDepth.bids:type_name -> order.MarketDepthLevel
+	7,  // 7: order.MarketDepth.asks:type_name -> order.MarketDepthLevel
+	8,  // 8: order.GetMarketDepthResponse.market_depth:type_name -> order.MarketDepth
+	1,  // 9: order.OrderService.CreateOrder:input_type -> order.CreateOrderRequest
+	2,  // 10: order.OrderService.CancelOrder:input_type -> order.CancelOrderRequest
+	3,  // 11: order.OrderService.ListOrders:input_type -> order.ListOrdersRequest
+	5,  // 12: order.OrderService.GetActiveOrders:input_type -> order.GetActiveOrdersRequest
+	9,  // 13: order.OrderService.GetMarketDepth:input_type -> order.GetMarketDepthRequest
+	0,  // 14: order.OrderService.CreateOrder:output_type -> order.OrderResponse
+	0,  // 15: order.OrderService.CancelOrder:output_type -> order.OrderResponse
+	4,  // 16: order.OrderService.ListOrders:output_type -> order.ListOrdersResponse
+	6,  // 17: order.OrderService.GetActiveOrders:output_type -> order.GetActiveOrdersResponse
+	10, // 18: order.OrderService.GetMarketDepth:output_type -> order.GetMarketDepthResponse
+	14, // [14:19] is the sub-list for method output_type
+	9,  // [9:14] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_order_order_proto_init() }

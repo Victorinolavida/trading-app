@@ -36,6 +36,7 @@ func orderToResult(order *domain.Order) Order {
 		Status:            string(order.Status()),
 		CreatedAt:         order.CreatedAt(),
 		UpdatedAt:         order.UpdatedAt(),
+		ExpiresAt:         order.ExpiresAt(),
 	}
 }
 

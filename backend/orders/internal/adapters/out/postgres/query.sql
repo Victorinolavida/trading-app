@@ -3,12 +3,12 @@ INSERT INTO orders (
     id, public_id, trader_id, security_id,
     direction, order_type, price, yield, quantity,
     allocation_qty, allocation_status,
-    nominal_value, fx, status, created_at, updated_at
+    nominal_value, fx, status, created_at, updated_at, expires_at
 ) VALUES (
     $1, $2, $3, $4,
     $5, $6, $7, $8, $9,
     $10, $11,
-    $12, $13, $14, $15, $16
+    $12, $13, $14, $15, $16, $17
 );
 
 -- name: GetOrderByID :one
@@ -137,3 +137,9 @@ where status = 'active'
   and direction  = 'bid'
 group by price
 order by price desc;
+
+-- name: ExpireOrders :many
+UPDATE orders
+SET status = 'expired', updated_at = now()
+WHERE status = 'active' AND expires_at < now()
+RETURNING *;

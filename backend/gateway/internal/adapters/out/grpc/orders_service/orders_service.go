@@ -9,6 +9,7 @@ import (
 	pkgconfig "github.com/victorinolavida/pkg/config"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	orderpb "github.com/victorinolavida/proto/order"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type OrdersService struct {
@@ -40,12 +41,15 @@ func toOrderResponse(res *orderpb.OrderResponse) dtos.OrderResponse {
 	if res == nil {
 		return dtos.OrderResponse{}
 	}
-	var createdAt, updatedAt time.Time
+	var createdAt, updatedAt, expiresAt time.Time
 	if res.CreatedAt != nil {
 		createdAt = res.CreatedAt.AsTime()
 	}
 	if res.UpdatedAt != nil {
 		updatedAt = res.UpdatedAt.AsTime()
+	}
+	if res.ExpiresAt != nil {
+		expiresAt = res.ExpiresAt.AsTime()
 	}
 	return dtos.OrderResponse{
 		ID:                res.Id,
@@ -63,6 +67,7 @@ func toOrderResponse(res *orderpb.OrderResponse) dtos.OrderResponse {
 		Status:            res.Status,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
+		ExpiresAt:         expiresAt,
 	}
 }
 
@@ -75,6 +80,7 @@ func (s *OrdersService) CreateOrder(ctx context.Context, req dtos.CreateOrderReq
 		Price:      req.Price,
 		Yield:      req.Yield,
 		Quantity:   req.Quantity,
+		ExpiresAt:  durationpb.New(req.Expiration.Value()),
 	})
 	if err != nil {
 		return dtos.OrderResponse{}, err

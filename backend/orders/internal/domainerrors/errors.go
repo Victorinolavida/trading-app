@@ -21,6 +21,8 @@ var (
 	ErrOrderAlreadyCanceled    = errors.New("order group already canceled")
 	ErrCannotCancelMarketOrder = errors.New("cannot cancel market order")
 	ErrInvalidOrderId          = errors.New("order id is required")
+	ErrInvalidExpiration       = errors.New("error invalid expiration value")
+	ErrMarketOrderExpiration   = errors.New("market orders can not have expiration")
 
 	ErrInvalidTakerID = errors.New("invalid taker id")
 	ErrInvalidMakerID = errors.New("invalid maker id")

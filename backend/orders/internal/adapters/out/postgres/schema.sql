@@ -43,6 +43,7 @@ CREATE TABLE public.orders (
     status text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT orders_alloc_consistency_check CHECK ((((allocation_status = 'none'::text) AND (allocation_qty = 0)) OR ((allocation_status = 'partial'::text) AND (allocation_qty > 0) AND (allocation_qty < quantity)) OR ((allocation_status = 'allocated'::text) AND (allocation_qty = quantity)))),
     CONSTRAINT orders_alloc_qty_check CHECK (((allocation_qty >= 0) AND (allocation_qty <= quantity))),
     CONSTRAINT orders_alloc_status_check CHECK ((allocation_status = ANY (ARRAY['none'::text, 'partial'::text, 'allocated'::text]))),

@@ -63,6 +63,7 @@ func (repo *OrderRepository) Save(ctx context.Context, order *domain.Order) erro
 		Status:           order.Status().String(),
 		CreatedAt:        pgtype.Timestamptz{Time: order.CreatedAt(), Valid: true},
 		UpdatedAt:        pgtype.Timestamptz{Time: order.UpdatedAt(), Valid: true},
+		ExpiresAt:        pgtype.Timestamptz{Time: order.ExpiresAt(), Valid: true},
 	})
 }
 
@@ -259,6 +260,25 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 	}, nil
 }
 
+func (repo *OrderRepository) ExpireOrders(ctx context.Context) ([]*domain.Order, error) {
+	row, err := repo.queriesFor(ctx).ExpireOrders(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*domain.Order, 0, len(row))
+	for _, ord := range row {
+		o, err := toDomainOrder(ord)
+		if err != nil {
+			return nil, err
+		}
+		o.Expire()
+		result = append(result, o)
+	}
+
+	return result, nil
+}
+
 func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 	return domain.ReconstructOrder(
 		o.ID,
@@ -277,6 +297,7 @@ func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 		domain.Decimal(o.Fx),
 		o.CreatedAt.Time,
 		o.UpdatedAt.Time,
+		o.ExpiresAt.Time,
 	)
 }
 

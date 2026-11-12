@@ -26,6 +26,7 @@ type OrderRepository interface {
 	GetActiveOrders(context.Context, uuid.UUID, uuid.UUID, string) ([]*domain.Order, error)
 	ListOrders(context.Context, ListOrdersFilter) ([]*domain.Order, error)
 	GetMarketDepth(context.Context, uuid.UUID) (*domain.MarketDepth, error)
+	ExpireOrders(ctx context.Context) ([]*domain.Order, error)
 }
 
 type TxManager interface {

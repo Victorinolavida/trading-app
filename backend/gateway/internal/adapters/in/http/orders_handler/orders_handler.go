@@ -24,8 +24,10 @@ import (
 
 var ErrMissingValidator = errors.New("orders handler: validator is required")
 
-const orderBookEventType = "market.depth"
-const defaultOrdersExchange = "orders.events"
+const (
+	orderBookEventType    = "market.depth"
+	defaultOrdersExchange = "orders.events"
+)
 
 type OrdersHandler struct {
 	conf          *config.Config
