@@ -122,6 +122,7 @@ from orders
 where status = 'active'
   and security_id =  $1
   and direction  = 'ask'
+  and price is not null
 group by price
 order by price asc;
 
@@ -135,6 +136,7 @@ from orders
 where status = 'active'
   and security_id =  $1
   and direction  = 'bid'
+  and price is not null
 group by price
 order by price desc;
 

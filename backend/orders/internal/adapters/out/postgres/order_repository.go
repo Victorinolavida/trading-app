@@ -211,10 +211,14 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		return nil, err
 	}
 
-	bid := make([]*domain.MarketDepthSide, len(bidRows))
-	ask := make([]*domain.MarketDepthSide, len(askRows))
+	bid := make([]*domain.MarketDepthSide, 0, len(bidRows))
+	ask := make([]*domain.MarketDepthSide, 0, len(askRows))
 
-	for i, row := range askRows {
+	for _, row := range askRows {
+		price := int8ToDecimalPtr(row.Price)
+		if price == nil {
+			continue
+		}
 
 		aggNomVal, err := numericToDecimal(row.AggNominalValue)
 		if err != nil {
@@ -224,17 +228,20 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		if err != nil {
 			return nil, err
 		}
-		ask[i] = domain.ReconstructMarketDepth(
-			*int8ToDecimalPtr(row.Price),
+		ask = append(ask, domain.ReconstructMarketDepth(
+			*price,
 			aggNomVal,
 			domain.Quantity(aggQty),
 			domain.DirectionAsk,
 			row.OrderCount,
-		)
-
+		))
 	}
 
-	for i, row := range bidRows {
+	for _, row := range bidRows {
+		price := int8ToDecimalPtr(row.Price)
+		if price == nil {
+			continue
+		}
 
 		aggNomVal, err := numericToDecimal(row.AggNominalValue)
 		if err != nil {
@@ -244,14 +251,13 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		if err != nil {
 			return nil, err
 		}
-		bid[i] = domain.ReconstructMarketDepth(
-			*int8ToDecimalPtr(row.Price),
+		bid = append(bid, domain.ReconstructMarketDepth(
+			*price,
 			aggNomVal,
 			domain.Quantity(aggQty),
 			domain.DirectionBid,
 			row.OrderCount,
-		)
-
+		))
 	}
 
 	return &domain.MarketDepth{
