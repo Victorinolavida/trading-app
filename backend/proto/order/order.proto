@@ -2,6 +2,8 @@ syntax = "proto3";
 package order;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
 
 option go_package = "github.com/victorinolavida/proto/order";
 
@@ -21,6 +23,7 @@ message OrderResponse {
   string status = 13;
   google.protobuf.Timestamp created_at = 14;
   google.protobuf.Timestamp updated_at = 15;
+  google.protobuf.Timestamp expires_at = 16;
 }
 
 message CreateOrderRequest {
@@ -31,6 +34,7 @@ message CreateOrderRequest {
   string price = 5;
   string yield = 6;
   int64 quantity = 7;
+  google.protobuf.Duration expires_at = 8;
 }
 
 message CancelOrderRequest {

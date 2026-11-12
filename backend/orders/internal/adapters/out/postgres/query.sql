@@ -3,12 +3,12 @@ INSERT INTO orders (
     id, public_id, trader_id, security_id,
     direction, order_type, price, yield, quantity,
     allocation_qty, allocation_status,
-    nominal_value, fx, status, created_at, updated_at
+    nominal_value, fx, status, created_at, updated_at, expires_at
 ) VALUES (
     $1, $2, $3, $4,
     $5, $6, $7, $8, $9,
     $10, $11,
-    $12, $13, $14, $15, $16
+    $12, $13, $14, $15, $16, $17
 );
 
 -- name: GetOrderByID :one
@@ -122,6 +122,7 @@ from orders
 where status = 'active'
   and security_id =  $1
   and direction  = 'ask'
+  and price is not null
 group by price
 order by price asc;
 
@@ -135,5 +136,32 @@ from orders
 where status = 'active'
   and security_id =  $1
   and direction  = 'bid'
+  and price is not null
 group by price
 order by price desc;
+
+-- name: ExpireOrders :many
+WITH securities AS MATERIALIZED (
+    SELECT DISTINCT security_id
+    FROM orders
+    WHERE status = 'active'
+      AND expires_at < now()
+    ORDER BY security_id
+),
+locks AS MATERIALIZED (
+    SELECT pg_advisory_xact_lock(
+        hashtextextended(security_id::text, 0)
+    )
+    FROM securities
+)
+UPDATE orders
+SET
+    status = 'expired',
+    updated_at = now()
+WHERE status = 'active'
+  AND expires_at < now()
+  AND EXISTS (SELECT 1 FROM locks)
+RETURNING *;
+
+-- name: LockSecurity :exec
+SELECT pg_advisory_xact_lock(hashtextextended(sqlc.arg(security_id)::text, 0));

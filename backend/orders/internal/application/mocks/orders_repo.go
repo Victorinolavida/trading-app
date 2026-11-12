@@ -66,3 +66,8 @@ func (m *MockOrderRepo) GetMarketDepth(ctx context.Context, securityID uuid.UUID
 	}
 	return args.Get(0).(*domain.MarketDepth), args.Error(1)
 }
+
+func (m *MockOrderRepo) ExpireOrders(ctx context.Context) ([]*domain.Order, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]*domain.Order), args.Error(1)
+}

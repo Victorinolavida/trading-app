@@ -63,6 +63,7 @@ func (repo *OrderRepository) Save(ctx context.Context, order *domain.Order) erro
 		Status:           order.Status().String(),
 		CreatedAt:        pgtype.Timestamptz{Time: order.CreatedAt(), Valid: true},
 		UpdatedAt:        pgtype.Timestamptz{Time: order.UpdatedAt(), Valid: true},
+		ExpiresAt:        pgtype.Timestamptz{Time: order.ExpiresAt(), Valid: true},
 	})
 }
 
@@ -210,10 +211,14 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		return nil, err
 	}
 
-	bid := make([]*domain.MarketDepthSide, len(bidRows))
-	ask := make([]*domain.MarketDepthSide, len(askRows))
+	bid := make([]*domain.MarketDepthSide, 0, len(bidRows))
+	ask := make([]*domain.MarketDepthSide, 0, len(askRows))
 
-	for i, row := range askRows {
+	for _, row := range askRows {
+		price := int8ToDecimalPtr(row.Price)
+		if price == nil {
+			continue
+		}
 
 		aggNomVal, err := numericToDecimal(row.AggNominalValue)
 		if err != nil {
@@ -223,17 +228,20 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		if err != nil {
 			return nil, err
 		}
-		ask[i] = domain.ReconstructMarketDepth(
-			*int8ToDecimalPtr(row.Price),
+		ask = append(ask, domain.ReconstructMarketDepth(
+			*price,
 			aggNomVal,
 			domain.Quantity(aggQty),
 			domain.DirectionAsk,
 			row.OrderCount,
-		)
-
+		))
 	}
 
-	for i, row := range bidRows {
+	for _, row := range bidRows {
+		price := int8ToDecimalPtr(row.Price)
+		if price == nil {
+			continue
+		}
 
 		aggNomVal, err := numericToDecimal(row.AggNominalValue)
 		if err != nil {
@@ -243,20 +251,38 @@ func (repo *OrderRepository) GetMarketDepth(ctx context.Context, securityID uuid
 		if err != nil {
 			return nil, err
 		}
-		bid[i] = domain.ReconstructMarketDepth(
-			*int8ToDecimalPtr(row.Price),
+		bid = append(bid, domain.ReconstructMarketDepth(
+			*price,
 			aggNomVal,
 			domain.Quantity(aggQty),
 			domain.DirectionBid,
 			row.OrderCount,
-		)
-
+		))
 	}
 
 	return &domain.MarketDepth{
 		Ask: ask,
 		Bid: bid,
 	}, nil
+}
+
+func (repo *OrderRepository) ExpireOrders(ctx context.Context) ([]*domain.Order, error) {
+	row, err := repo.queriesFor(ctx).ExpireOrders(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*domain.Order, 0, len(row))
+	for _, ord := range row {
+		o, err := toDomainOrder(ord)
+		if err != nil {
+			return nil, err
+		}
+		o.Expire()
+		result = append(result, o)
+	}
+
+	return result, nil
 }
 
 func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
@@ -277,6 +303,7 @@ func toDomainOrder(o sqlc.Order) (*domain.Order, error) {
 		domain.Decimal(o.Fx),
 		o.CreatedAt.Time,
 		o.UpdatedAt.Time,
+		o.ExpiresAt.Time,
 	)
 }
 

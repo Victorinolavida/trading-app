@@ -22,6 +22,7 @@ type Order struct {
 	nominalValue     Decimal
 	fx               Decimal
 	status           OrderStatus
+	expiresAt        time.Time
 	createdAt        time.Time
 	updatedAt        time.Time
 }
@@ -42,6 +43,7 @@ func (o *Order) Fx() Decimal                        { return o.fx }
 func (o *Order) Status() OrderStatus                { return o.status }
 func (o *Order) CreatedAt() time.Time               { return o.createdAt }
 func (o *Order) UpdatedAt() time.Time               { return o.updatedAt }
+func (o *Order) ExpiresAt() time.Time               { return o.expiresAt }
 func (o *Order) touch()                             { o.updatedAt = time.Now() }
 func (o *Order) AllocationPtc() Decimal {
 	if o.quantity <= 0 || o.allocationQty <= 0 {
@@ -65,6 +67,7 @@ func NewOrder(
 	traderID, securityID uuid.UUID,
 	directionStr, orderTypeStr string, quantity int,
 	price, yield int64, nominalValue, fx Decimal,
+	expiration time.Duration,
 ) (*Order, error) {
 	if traderID == uuid.Nil {
 		return nil, domainerrors.ErrInvalidTraderID
@@ -131,6 +134,17 @@ func NewOrder(
 	}
 	publicID := uuid.New()
 
+	var expiresAt time.Time
+	// market orders are killed after the matching engine, so the expiration is the same as the order creation
+	if orderType == OrderTypeMarket {
+		expiresAt = now
+	} else {
+		if expiration <= 0 {
+			return nil, domainerrors.ErrInvalidExpiration
+		}
+		expiresAt = getExpiration(now.Add(expiration), now)
+	}
+
 	return &Order{
 		id:               id,
 		publicID:         publicID,
@@ -148,6 +162,7 @@ func NewOrder(
 		status:           OrderStatusActive,
 		createdAt:        now,
 		updatedAt:        now,
+		expiresAt:        expiresAt,
 	}, nil
 }
 
@@ -182,7 +197,7 @@ func ReconstructOrder(
 	direction, orderType, status, allocationStatus string,
 	quantity, allocationQty Quantity,
 	price, yield *Decimal, nominalValue, fx Decimal,
-	createdAt, updatedAt time.Time,
+	createdAt, updatedAt, expiresAt time.Time,
 ) (*Order, error) {
 	dir, err := NewDirection(direction)
 	if err != nil {
@@ -224,6 +239,7 @@ func ReconstructOrder(
 		status:           st,
 		createdAt:        createdAt,
 		updatedAt:        updatedAt,
+		expiresAt:        expiresAt,
 	}, nil
 }
 
@@ -313,4 +329,22 @@ func (o *Order) MatchWith(maker *Order) (Execution, bool) {
 	o.execute(execution)
 	maker.execute(execution)
 	return execution, true
+}
+
+func getEndOfDay(day time.Time) time.Time {
+	return time.Date(
+		day.Year(),
+		day.Month(),
+		day.Day(),
+		23, 59, 59, 999999999,
+		day.Location(),
+	)
+}
+
+func getExpiration(expiration, now time.Time) time.Time {
+	endOfDay := getEndOfDay(now)
+	if expiration.After(endOfDay) {
+		return endOfDay
+	}
+	return expiration
 }

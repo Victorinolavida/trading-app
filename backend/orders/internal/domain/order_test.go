@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/victorinolavida/orders/internal/domain"
 	"github.com/victorinolavida/orders/internal/domainerrors"
@@ -18,6 +19,8 @@ const (
 	testQuantity = 10
 )
 
+var expiration = time.Duration(1 * time.Hour)
+
 func newTestOrder(t *testing.T, direction, orderType string, quantity int, price, yield int64) *domain.Order {
 	t.Helper()
 	order, err := domain.NewOrder(
@@ -25,6 +28,7 @@ func newTestOrder(t *testing.T, direction, orderType string, quantity int, price
 		direction, orderType, quantity,
 		price, yield,
 		domain.Decimal(testNominal), domain.Decimal(testFx),
+		expiration,
 	)
 	require.NoError(t, err)
 	return order
@@ -90,7 +94,7 @@ func TestNewOrder_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := domain.NewOrder(tt.traderID, tt.security, tt.direction, tt.orderType, tt.quantity, tt.price, tt.yield, tt.nominal, tt.fx)
+			_, err := domain.NewOrder(tt.traderID, tt.security, tt.direction, tt.orderType, tt.quantity, tt.price, tt.yield, tt.nominal, tt.fx, expiration)
 			require.ErrorIs(t, err, tt.wantErr)
 		})
 	}
@@ -209,6 +213,7 @@ func TestOrder_AllocationPtc(t *testing.T) {
 			&price, &yield,
 			domain.Decimal(testNominal), domain.Decimal(testFx),
 			time.Now(), time.Now(),
+			time.Now().Add(expiration),
 		)
 		require.NoError(t, err)
 		return order
@@ -251,6 +256,7 @@ func TestReconstructOrder(t *testing.T) {
 		&price, &yield,
 		domain.Decimal(testNominal), domain.Decimal(testFx),
 		time.Now(), time.Now(),
+		time.Now().Add(expiration),
 	)
 	require.NoError(t, err)
 	require.Equal(t, domain.DirectionBid, order.Direction())
@@ -265,6 +271,7 @@ func TestReconstructOrder(t *testing.T) {
 		&price, &yield,
 		domain.Decimal(testNominal), domain.Decimal(testFx),
 		time.Now(), time.Now(),
+		time.Now().Add(expiration),
 	)
 	require.ErrorIs(t, err, domainerrors.ErrInvalidOrderStatus)
 
@@ -275,6 +282,23 @@ func TestReconstructOrder(t *testing.T) {
 		&price, &yield,
 		domain.Decimal(testNominal), domain.Decimal(testFx),
 		time.Now(), time.Now(),
+		time.Now().Add(expiration),
 	)
 	require.ErrorIs(t, err, domain.ErrInvalidNumericNumber)
+}
+
+func Test_OrderLimitExpiration(t *testing.T) {
+	exp := time.Duration(0)
+	_, err := domain.NewOrder(
+		uuid.New(), uuid.New(),
+		"ask",
+		"limit",
+		10,
+		100,
+		10,
+		domain.Decimal(testNominal), domain.Decimal(testFx),
+		exp,
+	)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, domainerrors.ErrInvalidExpiration)
 }

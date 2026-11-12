@@ -1,15 +1,20 @@
 package dtos
 
-import "time"
+import (
+	"time"
+
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+)
 
 type CreateOrderRequest struct {
-	TraderID   string `json:"trader_id"`
-	SecurityID string `json:"security_id"`
-	Direction  string `json:"direction" validate:"required,oneof=bid ask"`
-	OrderType  string `json:"order_type" validate:"required,oneof=limit market"`
-	Price      string `json:"price"`
-	Yield      string `json:"yield"`
-	Quantity   int64  `json:"quantity" validate:"required"`
+	TraderID   string            `json:"trader_id"`
+	SecurityID string            `json:"security_id"`
+	Direction  string            `json:"direction" validate:"required,oneof=bid ask"`
+	OrderType  string            `json:"order_type" validate:"required,oneof=limit market"`
+	Price      *string           `json:"price,omitempty"`
+	Yield      *string           `json:"yield,omitempty"`
+	Quantity   int64             `json:"quantity" validate:"required"`
+	Expiration response.Duration `json:"expiration"`
 }
 
 type CancelOrderRequest struct {
@@ -39,8 +44,8 @@ type OrderResponse struct {
 	SecurityID        string    `json:"security_id"`
 	Direction         string    `json:"direction"`
 	OrderType         string    `json:"order_type"`
-	Price             string    `json:"price"`
-	Yield             string    `json:"yield"`
+	Price             *string   `json:"price,omitempty"`
+	Yield             *string   `json:"yield,omitempty"`
 	Quantity          int64     `json:"quantity"`
 	NominalValue      string    `json:"nominal_value"`
 	AllocatedQuantity int64     `json:"allocated_quantity"`
@@ -50,6 +55,7 @@ type OrderResponse struct {
 	Status            string    `json:"status"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
+	ExpiresAt         time.Time `json:"expires_at"`
 }
 
 type CreateOrderResponse = OrderResponse

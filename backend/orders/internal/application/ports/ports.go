@@ -26,10 +26,12 @@ type OrderRepository interface {
 	GetActiveOrders(context.Context, uuid.UUID, uuid.UUID, string) ([]*domain.Order, error)
 	ListOrders(context.Context, ListOrdersFilter) ([]*domain.Order, error)
 	GetMarketDepth(context.Context, uuid.UUID) (*domain.MarketDepth, error)
+	ExpireOrders(ctx context.Context) ([]*domain.Order, error)
 }
 
 type TxManager interface {
 	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
+	Lock(ctx context.Context, securityID string) error
 }
 
 type TradeRepository interface {

@@ -20,6 +20,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 		maker := &taker // clone order
@@ -39,6 +40,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 
@@ -52,6 +54,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 
@@ -70,6 +73,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 
@@ -83,6 +87,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 
@@ -101,6 +106,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			0,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 
@@ -114,6 +120,7 @@ func Test_canExecuteFunction(t *testing.T) {
 			10,
 			domain.Decimal(100),
 			domain.Decimal(1),
+			expiration,
 		)
 		assert.NoError(t, err, "no error build order")
 

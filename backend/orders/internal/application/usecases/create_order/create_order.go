@@ -64,13 +64,17 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		cmd.Direction, cmd.OrderType,
 		int(cmd.Quantity),
 		cmd.Price, cmd.Yield,
-		nominalValue, sec.Fx,
+		nominalValue, sec.Fx, cmd.ExpiresAt,
 	)
 	if err != nil {
 		return Result{}, err
 	}
 
 	if err := u.txManager.WithTx(ctx, func(ctx context.Context) error {
+		if err := u.txManager.Lock(ctx, order.SecurityID().String()); err != nil {
+			return err
+		}
+
 		if err := u.orderRepo.Save(ctx, order); err != nil {
 			return err
 		}
@@ -103,14 +107,6 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 			}
 		}
 
-		// update market event
-		marketSnaptshot, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
-		if err != nil {
-			return err
-		}
-
-		slog.Debug("market price pa", slog.Any("data", marketSnaptshot))
-
 		return nil
 	}); err != nil {
 		return Result{}, err
@@ -132,8 +128,8 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		SecurityId:        order.SecurityID().String(),
 		Direction:         order.Direction().String(),
 		OrderType:         order.OrderType().String(),
-		Price:             order.Price().String(),
-		Yield:             order.Yield().String(),
+		Price:             domain.FormatDecimal(order.Price()),
+		Yield:             domain.FormatDecimal(order.Yield()),
 		Quantity:          order.Quantity().Value(),
 		NominalValue:      order.NominalValue().String(),
 		AllocatedQuantity: order.AllocationQty().Value(),
@@ -143,5 +139,6 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		Status:            order.Status().String(),
 		CreatedAt:         order.CreatedAt(),
 		UpdatedAt:         order.UpdatedAt(),
+		ExpiresAt:         order.ExpiresAt(),
 	}, nil
 }

@@ -26,6 +26,7 @@ type Order struct {
 	Status           string
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
+	ExpiresAt        pgtype.Timestamptz
 }
 
 type Trade struct {
