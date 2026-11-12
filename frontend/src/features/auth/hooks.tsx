@@ -4,18 +4,13 @@ import { AuthUser } from "./types";
 import { toast } from "sonner";
 import { getErrorMessage } from "../../lib/apiError";
 import { useNavigate } from "react-router";
+import { authQueries } from "./queries";
 
 export const authKeys = Object.freeze({
   user: ["auth", "user"],
 });
 
-export const useWhoami = () =>
-  useQuery({
-    queryKey: authKeys.user,
-    queryFn: () => authApi.whoami(),
-    retry: false, // 401 means logged out, don't retry
-    staleTime: 5 * 60_000,
-  });
+export const useWhoami = () => useQuery(authQueries.whoami);
 
 export function useLogin() {
   const queryClient = useQueryClient();

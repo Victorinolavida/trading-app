@@ -1,16 +1,10 @@
 import { LoaderFunctionArgs, redirect } from "react-router";
 import { queryClient } from "../../lib/queryClient";
 import { ApiError } from "../../lib/http";
-import { authKeys } from "./hooks";
-import { authApi } from "./api";
+import { authQueries } from "./queries";
 
-export const whoamIQuery = {
-  queryKey: authKeys.user,
-  queryFn: authApi.whoami,
-  retry: false,
-};
-
-const whoami = () => queryClient.query({ ...whoamIQuery, staleTime: "static" });
+const whoami = () =>
+  queryClient.query({ ...authQueries.whoami, staleTime: "static" });
 
 export async function requireAuth({ request }: LoaderFunctionArgs) {
   try {
