@@ -1,12 +1,14 @@
 import { ChangeEvent, useCallback, useState } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
-import { useSearchSecuritiesByTerm } from "../features/securities/hooks";
+import { useSearchSecuritiesByParams } from "../features/securities/hooks";
 import { useNavigate } from "react-router";
 
 export function SecuritySearch() {
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebounce(term, 500);
-  const { isLoading, data } = useSearchSecuritiesByTerm(debouncedTerm);
+  const { isLoading, data } = useSearchSecuritiesByParams({
+    query: debouncedTerm,
+  });
 
   const navigate = useNavigate();
   const handleOnChange = useCallback(
