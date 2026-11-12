@@ -3,7 +3,6 @@ import { SearchParams, SecuritiesResponse, Security } from "./types";
 
 const api = new ApiClient();
 
-
 const SEARCH_KEYS = ["id", "isin", "serie", "security_type", "name"] as const;
 
 function buildSearchQuery(params: SearchParams): string {

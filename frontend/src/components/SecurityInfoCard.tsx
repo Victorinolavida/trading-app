@@ -16,8 +16,8 @@ export function SecurityInfoCard({ security }: { security: Security }) {
               `Mexico Government Bond (${security.security_type})`}
           </CardTitle>
           <p className="text-sm text-zinc-400">
-            {typeLabel[security.security_type] ?? security.security_type}{" "}
-            · {security.currency}
+            {typeLabel[security.security_type] ?? security.security_type} ·{" "}
+            {security.currency}
           </p>
         </div>
         <Badge active={security.enable} />
@@ -36,9 +36,7 @@ export function SecurityInfoCard({ security }: { security: Security }) {
       </Section>
 
       <Section title="Terms">
-        <DetailItem label="Nominal value">
-          {security.nominal_value}
-        </DetailItem>
+        <DetailItem label="Nominal value">{security.nominal_value}</DetailItem>
         <DetailItem label="Currency">{security.currency}</DetailItem>
         <DetailItem label="FX">{security.fx}</DetailItem>
       </Section>

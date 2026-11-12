@@ -30,16 +30,11 @@ export function LoginPage() {
 
   const onSubmit = (values: LoginValues) =>
     login.mutate(values, { onSuccess: () => goToRedirect() });
-  console.log("render");
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
       <h1 className="mb-5 text-2xl font-semibold">Sign in</h1>
-      <form
-        className="flex flex-col gap-1.5"
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-      >
+      <form className="flex flex-col gap-1.5" onSubmit={handleSubmit(onSubmit)}>
         <label className="mt-2 text-sm text-gray-400" htmlFor="email">
           Email
         </label>
