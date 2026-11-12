@@ -110,3 +110,5 @@ export class ApiClient {
     return new ApiError(status, message);
   }
 }
+
+export type RequestOptions = { signal?: AbortSignal };

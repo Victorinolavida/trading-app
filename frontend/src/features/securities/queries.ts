@@ -46,8 +46,7 @@ export const securityQueries = {
     const clean = normalizeParams(params);
     return queryOptions({
       queryKey: securityKeys.detail(clean),
-      queryFn: ({ signal }) =>
-        securitiesApi.getSecurityByParams(clean, { signal }),
+      queryFn: async ({ signal }) =>  securitiesApi.getSecurityByParams(clean, { signal }),
       enabled: Object.entries(clean).length > 0,
       staleTime: 60_000,
     });

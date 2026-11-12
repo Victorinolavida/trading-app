@@ -1,9 +1,8 @@
-import { ApiClient } from "../../lib/http";
+import { ApiClient, RequestOptions } from "../../lib/http";
 import { SearchParams, SecuritiesResponse, Security } from "./types";
 
 const api = new ApiClient();
 
-type RequestOptions = { signal?: AbortSignal };
 
 const SEARCH_KEYS = ["id", "isin", "serie", "security_type", "name"] as const;
 
