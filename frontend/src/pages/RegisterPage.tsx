@@ -35,8 +35,9 @@ export function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const {goToRedirect} = useRedirectTo()
-  const onSubmit = (values: RegisterValues) => registerMutation.mutate(values,{onSuccess:() => goToRedirect()});
+  const { goToRedirect } = useRedirectTo();
+  const onSubmit = (values: RegisterValues) =>
+    registerMutation.mutate(values, { onSuccess: () => goToRedirect() });
 
   return (
     <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">

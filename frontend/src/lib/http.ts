@@ -88,13 +88,10 @@ export class ApiClient {
   }
 
   private async request<T>(config: AxiosRequestConfig): Promise<T> {
-    try {
-      const res = await this.http.request<T>(config);
+    return this.http.request<T>(config).then((res) => {
       if (res.status === 204) return undefined as T;
       return res.data;
-    } catch (err) {
-      throw err;
-    }
+    });
   }
 
   private toApiError(err: unknown): unknown {
