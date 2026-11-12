@@ -18,18 +18,15 @@ export class ApiError extends Error {
 }
 
 export interface ApiClientOptions {
-  getCsrfToken: () => string | null | undefined;
-  needsCsrfHeader: (method: string) => boolean;
   adapter?: AxiosAdapter; // injectable for tests
   timeoutMs?: number;
-  // csrfCookieName?: string;
   csrfHeaderName?: string;
 }
 
 export class ApiClient {
   private readonly http: AxiosInstance;
 
-  constructor(private readonly opts: ApiClientOptions) {
+  constructor(opts: ApiClientOptions = {}) {
     this.http = axios.create({
       baseURL: "/api",
       withCredentials: true, // send the httpOnly session cookie
@@ -39,15 +36,9 @@ export class ApiClient {
       xsrfHeaderName: opts.csrfHeaderName ?? "X-CSRF-Token",
     });
 
-    this.http.interceptors.request.use((config) => {
-      const method = (config.method ?? "get").toUpperCase();
-      if (opts.needsCsrfHeader(method)) {
-        const token = opts.getCsrfToken();
-        if (token) config.headers.set("X-CSRF-Token", token);
-      }
-      return config;
-    });
-
+    // axios's built-in xsrf handling echoes the csrf cookie back in the
+    // X-CSRF-Token header on same-origin requests; the cookie is not HttpOnly
+    // on purpose so it can be read here.
     this.http.interceptors.response.use(
       (res) => res,
       (err: unknown) => {

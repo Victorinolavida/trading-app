@@ -15,8 +15,6 @@ const whoami = () => queryClient.query({ ...whoamIQuery, staleTime: "static" });
 export async function requireAuth({ request }: LoaderFunctionArgs) {
   try {
     const user = await whoami();
-    console.log("requireAuth user:", user);
-
     if (user) return user;
   } catch (e) {
     if (!(e instanceof ApiError && e.status === 401)) throw e;
@@ -27,7 +25,6 @@ export async function requireAuth({ request }: LoaderFunctionArgs) {
 
 export async function redirectIfAuthed() {
   const user = await whoami().catch(() => null);
-  console.log("redirectIfAuthed user:", user);
   if (user) throw redirect("/");
   return null;
 }

@@ -1,15 +1,8 @@
 import { AuthUser } from "../../lib/api";
-import { getCsrfToken, needsCsrfHeader } from "../../lib/csrf";
-import { ApiClient, ApiClientOptions } from "../../lib/http";
+import { ApiClient } from "../../lib/http";
 import { User } from "./types";
 
-const baseUrl = "api/v0";
-
-const api = new ApiClient({
-  baseUrl: baseUrl,
-  getCsrfToken: getCsrfToken,
-  needsCsrfHeader: needsCsrfHeader,
-} as ApiClientOptions);
+const api = new ApiClient();
 
 export const authApi = {
   whoami: () => api.get<User>("/v0/auth/whoami"),
