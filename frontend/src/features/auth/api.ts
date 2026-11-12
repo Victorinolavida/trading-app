@@ -27,4 +27,5 @@ export const authApi = {
       last_name: lastName,
       password,
     }),
+  logout: () => api.post<void>("/v0/auth/logout"),
 };

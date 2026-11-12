@@ -5,7 +5,7 @@ import { authKeys } from "./hooks";
 import { authApi } from "./api";
 
 export const whoamIQuery = {
-  queryKey: authKeys.whoami,
+  queryKey: authKeys.user,
   queryFn: authApi.whoami,
   retry: false,
 };
@@ -14,23 +14,20 @@ const whoami = () => queryClient.query({ ...whoamIQuery, staleTime: "static" });
 
 export async function requireAuth({ request }: LoaderFunctionArgs) {
   try {
-    return await whoami();
+    const user = await whoami();
+    console.log("requireAuth user:", user);
+
+    if (user) return user;
   } catch (e) {
-    if (e instanceof ApiError && e.status === 401) {
-      const { pathname, search } = new URL(request.url);
-      throw redirect(
-        `/login?redirectTo=${encodeURIComponent(pathname + search)}`,
-      );
-    }
-    throw e;
+    if (!(e instanceof ApiError && e.status === 401)) throw e;
   }
+  const { pathname, search } = new URL(request.url);
+  throw redirect(`/login?redirectTo=${encodeURIComponent(pathname + search)}`);
 }
 
 export async function redirectIfAuthed() {
-  try {
-    await whoami();
-  } catch {
-    return null;
-  }
-  throw redirect("/");
+  const user = await whoami().catch(() => null);
+  console.log("redirectIfAuthed user:", user);
+  if (user) throw redirect("/");
+  return null;
 }

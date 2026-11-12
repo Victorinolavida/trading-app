@@ -3,15 +3,15 @@ import { authApi } from "./api";
 import { AuthUser } from "./types";
 import { toast } from "sonner";
 import { getErrorMessage } from "../../lib/apiError";
+import { useNavigate } from "react-router";
 
 export const authKeys = Object.freeze({
-  whoami: ["auth", "whoami"],
   user: ["auth", "user"],
 });
 
 export const useWhoami = () =>
   useQuery({
-    queryKey: authKeys.whoami,
+    queryKey: authKeys.user,
     queryFn: () => authApi.whoami(),
     retry: false, // 401 means logged out, don't retry
     staleTime: 5 * 60_000,
@@ -57,5 +57,19 @@ export function useRegister() {
       });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: () => authApi.logout(),
+    onSettled: async () => {
+      await queryClient.cancelQueries();
+      queryClient.setQueryData(authKeys.user, null);
+      await navigate("/login", { replace: true });
+      queryClient.clear();
+    },
   });
 }
