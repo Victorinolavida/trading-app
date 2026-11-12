@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 export type BadgeTone = "green" | "red" | "blue" | "purple" | "amber" | "zinc";
 
 const tones: Record<BadgeTone, string> = {
-  green: "border-green-500/30 bg-green-500/15 text-green-400",
-  red: "border-red-500/30 bg-red-500/15 text-red-400",
-  blue: "border-blue-500/30 bg-blue-500/15 text-blue-400",
-  purple: "border-purple-500/30 bg-purple-500/15 text-purple-400",
-  amber: "border-amber-500/30 bg-amber-500/15 text-amber-400",
-  zinc: "border-zinc-500/30 bg-zinc-500/15 text-zinc-300",
+  green: "border-success/30 bg-success/15 text-success",
+  red: "border-danger/30 bg-danger/15 text-danger",
+  blue: "border-accent/30 bg-accent/15 text-accent-soft",
+  purple: "border-special/30 bg-special/15 text-special",
+  amber: "border-warning/30 bg-warning/15 text-warning",
+  zinc: "border-fg-muted/30 bg-fg-muted/15 text-fg-soft",
 };
 
 export function Badge({

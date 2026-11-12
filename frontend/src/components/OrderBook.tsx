@@ -11,11 +11,11 @@ type Side = "bid" | "ask";
 const SIDE = {
   bid: {
     title: "Bids",
-    color: "text-green-400",
+    color: "text-success",
     empty: "No bids",
     noun: "Bid",
   },
-  ask: { title: "Asks", color: "text-red-400", empty: "No asks", noun: "Ask" },
+  ask: { title: "Asks", color: "text-danger", empty: "No asks", noun: "Ask" },
 } as const;
 
 function BookSide({
@@ -35,7 +35,7 @@ function BookSide({
       <h3 className={cn("mb-2 text-sm font-semibold", s.color)}>{s.title}</h3>
 
       <table className="w-full tabular-nums">
-        <thead className="text-xs text-gray-400">
+        <thead className="text-xs text-fg-muted">
           <tr>
             <th scope="col" className="pb-1 text-left font-normal">
               Level
@@ -67,21 +67,21 @@ function BookSide({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={4} className="py-1 text-gray-400">
+              <td colSpan={4} className="py-1 text-fg-muted">
                 {s.empty}
               </td>
             </tr>
           ) : (
             rows.map((l, i) => (
               <tr key={l.price}>
-                <td className="py-0.5 text-left text-gray-400">{i + 1}</td>
+                <td className="py-0.5 text-left text-fg-muted">{i + 1}</td>
                 <td className={cn("py-0.5 text-right", s.color)}>
                   {Number(l.price).toFixed(2)}
                 </td>
-                <td className="py-0.5 text-right text-gray-400">
+                <td className="py-0.5 text-right text-fg-muted">
                   {l.quantity}
                 </td>
-                <td className="py-0.5 text-right text-gray-400">
+                <td className="py-0.5 text-right text-fg-muted">
                   {l.nominal_value}
                 </td>
               </tr>
@@ -99,7 +99,7 @@ export function OrderBook({
   book: { bids: BookLevel[]; asks: BookLevel[] };
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+    <div className="rounded-lg border border-border bg-surface-raised p-4">
       <h2 className="mb-3 text-lg font-semibold">Order Book</h2>
       <div className="space-y-4">
         <BookSide side="bid" levels={book.bids} />

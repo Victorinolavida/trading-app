@@ -93,14 +93,14 @@ export default function OrderDetailsPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <Link
         to="/blotter"
-        className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
+        className="text-sm text-accent-soft hover:text-accent-subtle hover:underline"
       >
         ← Back to blotter
       </Link>
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-100">
+          <h1 className="text-2xl font-semibold text-fg-strong">
             Order details
           </h1>
         </div>
@@ -110,7 +110,7 @@ export default function OrderDetailsPage() {
             type="button"
             disabled={cancelOrder.isPending}
             onClick={() => cancelOrder.mutate(order.id)}
-            className="rounded border border-red-900/70 bg-red-950/40 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-red-300 hover:border-red-700 hover:bg-red-900/50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border border-danger-border/70 bg-danger-surface/40 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-danger-soft hover:border-danger-strong hover:bg-danger-surface/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {cancelOrder.isPending ? "Cancelling..." : "Cancel order"}
           </button>
@@ -125,7 +125,7 @@ export default function OrderDetailsPage() {
           <DetailItem label="Security ID" mono>
             <Link
               to={`/securities/${order.security_id}`}
-              className="text-blue-400 hover:text-blue-300 hover:underline"
+              className="text-accent-soft hover:text-accent-subtle hover:underline"
             >
               {order.security_id}
             </Link>
@@ -198,11 +198,11 @@ function OrderMessage({ message }: { message: string }) {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <Link
         to="/blotter"
-        className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
+        className="text-sm text-accent-soft hover:text-accent-subtle hover:underline"
       >
         ← Back to blotter
       </Link>
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-6 text-sm text-zinc-500">
+      <div className="rounded-lg border border-border bg-surface-raised/70 p-6 text-sm text-fg-subtle">
         {message}
       </div>
     </div>

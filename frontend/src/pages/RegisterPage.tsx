@@ -24,6 +24,9 @@ const registerSchema = z.object({
 
 type RegisterValues = z.infer<typeof registerSchema>;
 
+const inputClass =
+  "rounded-md border border-border bg-surface px-3 py-2.5 text-base text-inherit focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
+
 export function RegisterPage() {
   const registerMutation = useRegister();
   const {
@@ -40,18 +43,18 @@ export function RegisterPage() {
     registerMutation.mutate(values, { onSuccess: () => goToRedirect() });
 
   return (
-    <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-8">
+    <div className="w-full max-w-sm rounded-lg border border-border bg-surface-raised p-8">
       <h1 className="mb-5 text-2xl font-semibold">Create account</h1>
       <form
         className="flex flex-col gap-1.5"
         onSubmit={handleSubmit(onSubmit)}
         noValidate
       >
-        <label className="mt-2 text-sm text-gray-400" htmlFor="email">
+        <label className="mt-2 text-sm text-fg-muted" htmlFor="email">
           Email
         </label>
         <input
-          className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-base text-inherit focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+          className={inputClass}
           id="email"
           type="email"
           autoComplete="email"
@@ -60,38 +63,38 @@ export function RegisterPage() {
           })}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-danger">{errors.email.message}</p>
         )}
 
-        <label className="mt-2 text-sm text-gray-400" htmlFor="firstName">
+        <label className="mt-2 text-sm text-fg-muted" htmlFor="firstName">
           First name
         </label>
         <input
-          className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-base text-inherit focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+          className={inputClass}
           id="firstName"
           autoComplete="given-name"
           {...register("firstName", { required: "First name is required" })}
         />
         {errors.firstName && (
-          <p className="mt-1 text-sm text-red-400">
+          <p className="mt-1 text-sm text-danger">
             {errors.firstName.message}
           </p>
         )}
 
-        <label className="mt-2 text-sm text-gray-400" htmlFor="lastName">
+        <label className="mt-2 text-sm text-fg-muted" htmlFor="lastName">
           Last name
         </label>
         <input
-          className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-base text-inherit focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+          className={inputClass}
           id="lastName"
           autoComplete="family-name"
           {...register("lastName", { required: "Last name is required" })}
         />
         {errors.lastName && (
-          <p className="mt-1 text-sm text-red-400">{errors.lastName.message}</p>
+          <p className="mt-1 text-sm text-danger">{errors.lastName.message}</p>
         )}
 
-        <label className="mt-2 text-sm text-gray-400" htmlFor="password">
+        <label className="mt-2 text-sm text-fg-muted" htmlFor="password">
           Password
         </label>
         <PasswordInput
@@ -102,21 +105,21 @@ export function RegisterPage() {
           })}
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-danger">{errors.password.message}</p>
         )}
 
         <button
-          className="mt-4 cursor-pointer rounded-md bg-blue-600 px-4 py-2.5 text-base text-white disabled:cursor-default disabled:opacity-60"
+          className="mt-4 cursor-pointer rounded-md bg-accent-strong px-4 py-2.5 text-base text-fg-strong disabled:cursor-default disabled:opacity-60"
           type="submit"
           disabled={registerMutation.isPending}
         >
           {registerMutation.isPending ? "Creating..." : "Create account"}
         </button>
       </form>
-      <p className="mt-5 text-center text-sm text-gray-400">
+      <p className="mt-5 text-center text-sm text-fg-muted">
         Already registered?{" "}
         <Link
-          className="cursor-pointer text-blue-400"
+          className="cursor-pointer text-accent-soft"
           type="button"
           to="/login"
         >

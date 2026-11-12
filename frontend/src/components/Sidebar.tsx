@@ -31,14 +31,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         onClick={onClose}
         aria-hidden
         className={[
-          "fixed inset-0 z-40 bg-black/60 transition-opacity md:hidden",
+          "fixed inset-0 z-40 bg-overlay/60 transition-opacity md:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       />
 
       <aside
         className={[
-          "fixed left-0 top-0 z-50 flex h-dvh w-64 flex-col border-r border-zinc-800 bg-zinc-900 p-4",
+          "fixed left-0 top-0 z-50 flex h-dvh w-64 flex-col border-r border-border bg-surface-raised p-4",
           "transition-transform duration-200 ease-out",
           "md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
@@ -48,14 +48,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="flex items-center gap-3">
             <Link to="/" className="flex gap-x-2 items-center">
               <img src="/favicon.svg" alt="" className="h-8 w-8" />
-              <h2 className="text-lg font-semibold text-white">Trading</h2>
+              <h2 className="text-lg font-semibold text-fg-strong">Trading</h2>
             </Link>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white md:hidden"
+            className="rounded-md p-1.5 text-fg-muted hover:bg-surface-hover hover:text-fg-strong md:hidden"
           >
             <X className="h-5 w-5" />
           </button>
@@ -71,8 +71,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 [
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-zinc-800 text-white"
-                    : "text-zinc-400 hover:bg-zinc-800/60 hover:text-white",
+                    ? "bg-surface-hover text-fg-strong"
+                    : "text-fg-muted hover:bg-surface-hover/60 hover:text-fg-strong",
                 ].join(" ")
               }
             >
@@ -82,12 +82,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        <div className="border-t border-zinc-800 pt-4">
+        <div className="border-t border-border pt-4">
           <button
             type="button"
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-zinc-800 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-red-600 hover:text-white disabled:cursor-default disabled:opacity-60"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-surface-hover px-4 py-2 text-sm text-fg-soft transition-colors hover:bg-danger-strong hover:text-fg-strong disabled:cursor-default disabled:opacity-60"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             {logout.isPending ? "Signing out..." : "Logout"}

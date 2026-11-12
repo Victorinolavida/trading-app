@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { BookLevel } from "./OrderBook";
+import { chartColors } from "./ui/theme";
 
 type DepthPoint = {
   price: number;
@@ -120,8 +121,8 @@ export function DepthChart({
   if (data.length === 0) return null;
 
   return (
-    <div className="w-full bg-zinc-900 p-4 rounded-lg shadow-lg">
-      <h3 className="mb-2 text-sm font-semibold text-zinc-300">Order Depth</h3>
+    <div className="w-full bg-surface-raised p-4 rounded-lg shadow-lg">
+      <h3 className="mb-2 text-sm font-semibold text-fg-soft">Order Depth</h3>
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart
           data={data}
@@ -137,8 +138,8 @@ export function DepthChart({
             type="number"
             domain={["dataMin", "dataMax"]}
             tickFormatter={(v) => Number(v).toFixed(2)}
-            tick={{ fill: "#9ca3af", fontSize: 11 }}
-            stroke="#3f3f46"
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
+            stroke={chartColors.grid}
             allowDataOverflow={false}
           />
 
@@ -146,18 +147,18 @@ export function DepthChart({
             type="number"
             orientation="right"
             width={55}
-            tick={{ fill: "#9ca3af", fontSize: 11 }}
-            stroke="#3f3f46"
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
+            stroke={chartColors.grid}
             tickFormatter={(v) => Number(v).toLocaleString()}
           />
 
           <Tooltip
             contentStyle={{
-              background: "#18181b",
-              border: "1px solid #3f3f46",
+              background: chartColors.tooltipSurface,
+              border: `1px solid ${chartColors.tooltipBorder}`,
               borderRadius: 8,
             }}
-            labelStyle={{ color: "#fff" }}
+            labelStyle={{ color: chartColors.tooltipText }}
             labelFormatter={(label) => `Price: ${Number(label).toString()}`}
             formatter={(value, name) => {
               const key = String(name);
@@ -173,8 +174,8 @@ export function DepthChart({
             type="stepAfter"
             dataKey="bid"
             name="bid"
-            stroke="#4ade80"
-            fill="#4ade80"
+            stroke={chartColors.bid}
+            fill={chartColors.bid}
             fillOpacity={0.2}
             strokeWidth={2}
             isAnimationActive={false}
@@ -185,8 +186,8 @@ export function DepthChart({
             type="stepBefore"
             dataKey="ask"
             name="ask"
-            stroke="#f87171"
-            fill="#f87171"
+            stroke={chartColors.ask}
+            fill={chartColors.ask}
             fillOpacity={0.2}
             strokeWidth={2}
             isAnimationActive={false}
@@ -196,11 +197,11 @@ export function DepthChart({
           {mid !== undefined && (
             <ReferenceLine
               x={mid}
-              stroke="#a1a1aa"
+              stroke={chartColors.mid}
               strokeDasharray="4 4"
               label={{
                 value: `Mid ${mid}`,
-                fill: "#a1a1aa",
+                fill: chartColors.mid,
                 fontSize: 10,
                 position: "insideTop",
               }}

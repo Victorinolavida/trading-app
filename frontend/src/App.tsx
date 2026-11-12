@@ -21,20 +21,20 @@ export default function App() {
   }, [open]);
 
   return (
-    <div className="min-h-dvh bg-zinc-950 text-zinc-100">
+    <div className="min-h-dvh bg-surface text-fg-strong">
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 py-3 md:hidden">
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface-raised px-4 py-3 md:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
-          className="rounded-md p-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+          className="rounded-md p-1.5 text-fg-soft hover:bg-surface-hover hover:text-fg-strong"
         >
           <Menu className="h-5 w-5" />
         </button>
         <img src="/favicon.svg" alt="" className="h-6 w-6" />
-        <span className="font-semibold text-white">Trading</span>
+        <span className="font-semibold text-fg-strong">Trading</span>
       </header>
 
       <Sidebar open={open} onClose={() => setOpen(false)} />
