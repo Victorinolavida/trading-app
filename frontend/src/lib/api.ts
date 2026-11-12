@@ -168,6 +168,7 @@ export interface CreateOrderRequest {
   price?: string;
   yield?: string;
   quantity: number;
+  expiration?: string;
 }
 
 export interface CreateOrderResponse {
