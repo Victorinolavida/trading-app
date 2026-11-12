@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Link } from "react-router";
 import {
   columnFilteringFeature,
   columnVisibilityFeature,
@@ -23,10 +24,11 @@ import {
   StatusBadge,
 } from "../../components/Badge";
 import { cn } from "../../components/ui/card";
+import { useCancelOrder } from "./hooks";
 import type { AllocationStatus, Order } from "./types";
 import { formatDuration, useNow } from "./useNow";
 
-export const blotterFeatures = tableFeatures({
+export const orderTableFeatures = tableFeatures({
   rowSortingFeature,
   columnFilteringFeature,
   globalFilteringFeature,
@@ -38,7 +40,7 @@ export const blotterFeatures = tableFeatures({
   columnMeta: {} as { align?: "left" | "right" },
 });
 
-const helper = createColumnHelper<typeof blotterFeatures, Order>();
+const helper = createColumnHelper<typeof orderTableFeatures, Order>();
 
 const numericSort = constructSortFn({
   sort: (left, right) => {
@@ -51,7 +53,7 @@ const numericSort = constructSortFn({
   },
 });
 
-const orderSearchFilter = constructFilterFn<typeof blotterFeatures, Order>({
+const orderSearchFilter = constructFilterFn<typeof orderTableFeatures, Order>({
   filter: (_value, filterValue, row) => {
     const query = String(filterValue ?? "")
       .trim()
@@ -103,12 +105,6 @@ const allocationStatusClasses: Record<AllocationStatus, string> = {
   none: "text-zinc-500",
   partial: "text-amber-400",
   allocated: "text-green-400",
-};
-
-const allocationBarClasses: Record<AllocationStatus, string> = {
-  none: "bg-zinc-600",
-  partial: "bg-amber-500",
-  allocated: "bg-green-500",
 };
 
 function formatDecimal(
@@ -178,6 +174,55 @@ function NumericCell({
   );
 }
 
+function CancelOrderButton({ orderId }: { orderId: string }) {
+  const cancelOrder = useCancelOrder();
+
+  return (
+    <button
+      type="button"
+      aria-label={`Cancel order ${orderId}`}
+      disabled={cancelOrder.isPending}
+      onClick={() => cancelOrder.mutate(orderId)}
+      className="rounded border border-red-900/70 bg-red-950/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-red-300 hover:border-red-700 hover:bg-red-900/50 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {cancelOrder.isPending ? "Cancelling..." : "Cancel"}
+    </button>
+  );
+}
+
+function OrderActionsCell({
+  order,
+  canCancel,
+}: {
+  order: Order;
+  canCancel: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <Link
+        to={`/orders/${order.id}`}
+        className="rounded border border-zinc-700 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-300 hover:border-zinc-500 hover:text-white"
+      >
+        View
+      </Link>
+      {canCancel && <CancelOrderButton orderId={order.id} />}
+    </div>
+  );
+}
+
+function actionsColumn(canCancel: boolean) {
+  return helper.display({
+    id: "actions",
+    header: "Actions",
+    meta: { align: "right" },
+    cell: ({ row }) => (
+      <OrderActionsCell order={row.original} canCancel={canCancel} />
+    ),
+    enableSorting: false,
+    enableGlobalFilter: false,
+  });
+}
+
 function AllocationCell({ order }: { order: Order }) {
   const percentage = Math.min(
     100,
@@ -185,34 +230,15 @@ function AllocationCell({ order }: { order: Order }) {
   );
 
   return (
-    <div className="flex min-w-36 flex-col gap-1">
-      <div className="flex items-center justify-between gap-2 text-xs tabular-nums">
-        <span className="text-zinc-200">
-          {quantityFormatter.format(order.allocated_quantity)} /{" "}
-          {quantityFormatter.format(order.quantity)}
-        </span>
-        <span className="text-zinc-400">
-          {percentFormatter.format(percentage)}%
-        </span>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-        <div
-          className={cn(
-            "h-full rounded-full transition-[width] duration-300",
-            allocationBarClasses[order.allocation_status],
-          )}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <span
-        className={cn(
-          "text-[9px] uppercase tracking-wider",
-          allocationStatusClasses[order.allocation_status],
-        )}
-      >
-        {order.allocation_status}
-      </span>
-    </div>
+    <span
+      className={cn(
+        "tabular-nums",
+        allocationStatusClasses[order.allocation_status],
+      )}
+      title={`${quantityFormatter.format(order.allocated_quantity)} / ${quantityFormatter.format(order.quantity)} allocated`}
+    >
+      {percentFormatter.format(percentage)}%
+    </span>
   );
 }
 
@@ -362,6 +388,7 @@ export const activeColumns = [
     sortFn: sortFn_datetime,
     enableGlobalFilter: false,
   }),
+  actionsColumn(true),
 ];
 
 export const historyColumns = [
@@ -373,6 +400,7 @@ export const historyColumns = [
     sortFn: sortFn_datetime,
     enableGlobalFilter: false,
   }),
+  actionsColumn(false),
 ];
 
 export const orderGlobalFilter = orderSearchFilter;

@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
 import { cn } from "../components/ui/card";
-import { activeColumns, historyColumns } from "../features/blotter/columns";
-import { HISTORY_PAGE_SIZE } from "../features/blotter/constants";
-import { OrdersTable } from "../features/blotter/OrdersTable";
-import { blotterKeys, blotterQueries } from "../features/blotter/queries";
-import type { Order } from "../features/blotter/types";
-import { useOrdersStream } from "../features/blotter/useOrdersStream";
+import { activeColumns, historyColumns } from "../features/orders/columns";
+import { HISTORY_PAGE_SIZE } from "../features/orders/constants";
+import { OrdersTable } from "../features/orders/OrdersTable";
+import { orderKeys, OrderQueries } from "../features/orders/query";
+import type { Order } from "../features/orders/types";
+import { useOrdersStream } from "../features/orders/useOrdersStream";
 
 const DEFAULT_SORTING: SortingState = [{ id: "created_at", desc: true }];
 const EMPTY_ORDERS: Order[] = [];
@@ -16,12 +16,12 @@ type BlotterTab = "active" | "history";
 
 export default function BlotterRoute() {
   const queryClient = useQueryClient();
-  const ordersQuery = useQuery(blotterQueries.list());
+  const ordersQuery = useQuery(OrderQueries.list());
   const [tab, setTab] = useState<BlotterTab>("active");
 
   const upsertOrder = useCallback(
     (incoming: Order) => {
-      queryClient.setQueryData<Order[]>(blotterKeys.list(), (current) => {
+      queryClient.setQueryData<Order[]>(orderKeys.list(), (current) => {
         const orders = current ?? EMPTY_ORDERS;
         const index = orders.findIndex((order) => order.id === incoming.id);
         if (index === -1) return [incoming, ...orders];
@@ -36,7 +36,7 @@ export default function BlotterRoute() {
 
   const replaceOrders = useCallback(
     (orders: Order[]) => {
-      queryClient.setQueryData<Order[]>(blotterKeys.list(), orders);
+      queryClient.setQueryData<Order[]>(orderKeys.list(), orders);
     },
     [queryClient],
   );

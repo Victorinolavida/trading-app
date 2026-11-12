@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "./api";
-import { CreateOrderRequest } from "../../lib/api";
 import { toast } from "sonner";
 import { getErrorMessage } from "../../lib/apiError";
 import { orderKeys } from "./query";
+import { CreateOrderRequest } from "./types";
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
@@ -17,6 +17,21 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({
         queryKey: orderKeys.events(res.security_id),
       });
+    },
+  });
+};
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => ordersApi.cancelOrder(orderId),
+    onError: (error) =>
+      toast.error(getErrorMessage(error) ?? "Could not cancel order"),
+    onSuccess: (order) => {
+      toast.success("Order cancelled successfully", {
+        description: order.id ? `Order ${order.id}` : undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
     },
   });
 };

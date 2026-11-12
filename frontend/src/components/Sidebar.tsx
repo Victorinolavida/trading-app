@@ -1,6 +1,12 @@
 // components/Sidebar.tsx
 import { Link, NavLink } from "react-router";
-import { ClipboardList, LogOut, Search, X, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  LogOut,
+  Search,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { useLogout } from "../features/auth/hooks";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
@@ -41,8 +47,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="mb-6 flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex gap-x-2 items-center">
-            <img src="/favicon.svg" alt="" className="h-8 w-8" />
-            <h2 className="text-lg font-semibold text-white">Trading</h2>
+              <img src="/favicon.svg" alt="" className="h-8 w-8" />
+              <h2 className="text-lg font-semibold text-white">Trading</h2>
             </Link>
           </div>
           <button

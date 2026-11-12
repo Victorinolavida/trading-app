@@ -9,7 +9,7 @@ import {
   type ReactTable,
 } from "@tanstack/react-table";
 import { cn } from "../../components/ui/card";
-import { blotterFeatures, orderGlobalFilter } from "./columns";
+import { orderTableFeatures, orderGlobalFilter } from "./columns";
 import {
   HISTORY_PAGE_SIZE,
   HISTORY_STATUSES,
@@ -18,20 +18,20 @@ import {
 } from "./constants";
 import { useIsExpired } from "./useNow";
 
-type BlotterTable<TData extends RowData> = ReactTable<
-  typeof blotterFeatures,
+type OrdersTableInstance<TData extends RowData> = ReactTable<
+  typeof orderTableFeatures,
   TData
 >;
 
 // TanStack's column helper returns heterogeneous column defs (one TValue per
 // accessor). This alias preserves that exact contract without repeating it.
-type BlotterColumns<TData extends RowData> = ReturnType<
-  ColumnHelper<typeof blotterFeatures, TData>["columns"]
+type OrdersTableColumns<TData extends RowData> = ReturnType<
+  ColumnHelper<typeof orderTableFeatures, TData>["columns"]
 >;
 
 interface OrdersTableProps<TData extends RowData> {
   data: readonly TData[];
-  columns: BlotterColumns<TData>;
+  columns: OrdersTableColumns<TData>;
   isLoading?: boolean;
   emptyMessage?: string;
   initialSorting?: SortingState;
@@ -47,7 +47,7 @@ interface OrdersTableProps<TData extends RowData> {
 }
 
 function readColumnFilter<TData extends RowData>(
-  table: BlotterTable<TData>,
+  table: OrdersTableInstance<TData>,
   columnId: string,
 ): string {
   const value = table.getColumn(columnId)?.getFilterValue();
@@ -55,7 +55,7 @@ function readColumnFilter<TData extends RowData>(
 }
 
 function writeColumnFilter<TData extends RowData>(
-  table: BlotterTable<TData>,
+  table: OrdersTableInstance<TData>,
   columnId: string,
   value: string,
 ) {
@@ -67,7 +67,7 @@ function alignClass(align: "left" | "right" | undefined): string {
 }
 
 function columnLabel<TData extends RowData>(
-  column: Column<typeof blotterFeatures, TData, unknown>,
+  column: Column<typeof orderTableFeatures, TData, unknown>,
 ): string {
   const header = column.columnDef.header;
   return typeof header === "string" ? header : column.id;
@@ -106,7 +106,7 @@ function FilterSelect({
 function ColumnVisibilityMenu<TData extends RowData>({
   table,
 }: {
-  table: BlotterTable<TData>;
+  table: OrdersTableInstance<TData>;
 }) {
   return (
     <details className="relative">
@@ -149,7 +149,7 @@ function TableToolbar<TData extends RowData>({
   showStatusFilter,
   showColumnVisibility,
 }: {
-  table: BlotterTable<TData>;
+  table: OrdersTableInstance<TData>;
   showSearch: boolean;
   showDirectionFilter: boolean;
   showTypeFilter: boolean;
@@ -208,7 +208,7 @@ function TableToolbar<TData extends RowData>({
 function Pagination<TData extends RowData>({
   table,
 }: {
-  table: BlotterTable<TData>;
+  table: OrdersTableInstance<TData>;
 }) {
   const { pageIndex, pageSize } = table.state.pagination;
   const pageCount = Math.max(1, table.getPageCount());
@@ -261,11 +261,11 @@ function Pagination<TData extends RowData>({
   );
 }
 
-function BlotterRow<TData extends RowData>({
+function OrdersTableRow<TData extends RowData>({
   row,
   getRowExpiry,
 }: {
-  row: Row<typeof blotterFeatures, TData>;
+  row: Row<typeof orderTableFeatures, TData>;
   getRowExpiry?: (row: TData) => string | null | undefined;
 }) {
   const stale = useIsExpired(getRowExpiry?.(row.original));
@@ -313,7 +313,7 @@ export function OrdersTable<TData extends RowData>({
   getRowExpiry,
 }: OrdersTableProps<TData>) {
   const table = useTable({
-    features: blotterFeatures,
+    features: orderTableFeatures,
     columns,
     data,
     getRowId,
@@ -420,7 +420,7 @@ export function OrdersTable<TData extends RowData>({
               </tr>
             ) : (
               rows.map((row) => (
-                <BlotterRow
+                <OrdersTableRow
                   key={row.id}
                   row={row}
                   getRowExpiry={getRowExpiry}

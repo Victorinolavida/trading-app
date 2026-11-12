@@ -64,8 +64,12 @@ const EXPIRATION_UNIT_SUFFIX: Record<string, string> = {
 export function CreateOrderForm({ securityId }: { securityId: string }) {
   const [defaultExpiration, setDefaultExpiration] = useState<boolean>(true);
 
-  const previousUnit = useRef<CreateOrderFormInput["expirationUnit"] | null>(null);
-  const previousValue = useRef<CreateOrderFormInput["expirationValue"] | null>(null);
+  const previousUnit = useRef<CreateOrderFormInput["expirationUnit"] | null>(
+    null,
+  );
+  const previousValue = useRef<CreateOrderFormInput["expirationValue"] | null>(
+    null,
+  );
 
   const {
     register,
@@ -84,7 +88,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
     mode: "onChange",
   });
 
-  const createOrderMutation = useCreateOrder()
+  const createOrderMutation = useCreateOrder();
 
   const handleCreateOrder = handleSubmit((values) => {
     const expiration = `${values.expirationValue}${EXPIRATION_UNIT_SUFFIX[values.expirationUnit] ?? "24h"}`;
@@ -97,7 +101,6 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
       yield: values.yield != null ? String(values.yield) : undefined,
       quantity: values.quantity,
       expiration,
-      
     });
     reset();
   });
@@ -105,22 +108,21 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
   const orderType = watch("orderType");
 
   useEffect(() => {
-
-    if (orderType == "market" ){
-      const currentUnit = watch("expirationUnit")
-      const currentVal = watch("expirationValue")
+    if (orderType == "market") {
+      const currentUnit = watch("expirationUnit");
+      const currentVal = watch("expirationValue");
       previousUnit.current = currentUnit;
       previousValue.current = currentVal;
-      setValue("expirationUnit","second")
-      setValue("expirationValue",1)
+      setValue("expirationUnit", "second");
+      setValue("expirationValue", 1);
       return;
     }
-    if(orderType == "limit" && previousUnit.current && previousValue.current){
-      setValue("expirationUnit",previousUnit.current)
-      setValue("expirationValue",previousValue.current)
-      return
+    if (orderType == "limit" && previousUnit.current && previousValue.current) {
+      setValue("expirationUnit", previousUnit.current);
+      setValue("expirationValue", previousValue.current);
+      return;
     }
-  },[orderType])
+  }, [orderType]);
 
   return (
     <Card>
