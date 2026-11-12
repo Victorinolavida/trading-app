@@ -5,6 +5,7 @@ import { RegisterPage } from "../pages/RegisterPage";
 import App from "../App";
 import HomePage from "../pages/HomePage";
 import { redirectIfAuthed, requireAuth } from "../features/auth/guards";
+import NotFoundPage from "../pages/NotFound";
 
 export function navigate(path: string) {
   window.history.pushState({}, "", path);
@@ -38,4 +39,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  { path: "*", Component: NotFoundPage },
 ]);
