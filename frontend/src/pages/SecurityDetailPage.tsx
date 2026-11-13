@@ -33,12 +33,12 @@ export default function SecurityDetailPage() {
       <div className="flex min-h-screen overflow-x-hidden">
         <main className="flex-1 min-h-screen overflow-x-hidden p-8">
           <button
-            className="mb-4 cursor-pointer text-sm text-blue-400"
+            className="mb-4 cursor-pointer text-sm text-accent-soft"
             onClick={handleGoBack}
           >
             ← Back
           </button>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-fg-muted">Loading...</p>
         </main>
       </div>
     );
@@ -49,12 +49,12 @@ export default function SecurityDetailPage() {
       <div className="flex min-h-screen overflow-x-hidden">
         <main className="flex-1 min-h-screen overflow-x-hidden p-8">
           <button
-            className="mb-4 cursor-pointer text-sm text-blue-400"
+            className="mb-4 cursor-pointer text-sm text-accent-soft"
             onClick={handleGoBack}
           >
             ← Back
           </button>
-          <p className="text-gray-400">Security not found.</p>
+          <p className="text-fg-muted">Security not found.</p>
         </main>
       </div>
     );
@@ -67,7 +67,7 @@ export default function SecurityDetailPage() {
     <div className="flex min-h-screen overflow-x-hidden">
       <main className="flex-1 min-h-screen overflow-x-hidden p-8">
         <button
-          className="mb-4 cursor-pointer text-sm text-blue-400"
+          className="mb-4 cursor-pointer text-sm text-accent-soft"
           onClick={handleGoBack}
         >
           ← Back

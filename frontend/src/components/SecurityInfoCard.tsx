@@ -15,7 +15,7 @@ export function SecurityInfoCard({ security }: { security: Security }) {
             {security.name ||
               `Mexico Government Bond (${security.security_type})`}
           </CardTitle>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-fg-muted">
             {typeLabel[security.security_type] ?? security.security_type} ·{" "}
             {security.currency}
           </p>

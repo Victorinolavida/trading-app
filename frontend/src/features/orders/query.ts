@@ -6,6 +6,8 @@ export const orderKeys = {
   events: (securityID: string) =>
     [...orderKeys.all, "order-book", securityID] as const,
   list: () => [...orderKeys.all, "list"] as const,
+  detail: (orderID: string) =>
+    [...orderKeys.all, "detail", orderID] as const,
 };
 
 export const OrderQueries = {
@@ -22,5 +24,13 @@ export const OrderQueries = {
       queryFn: async ({ signal }) => ordersApi.listOrders({ signal }),
       staleTime: 5_000,
       refetchInterval: 5_000,
+    }),
+  detail: (orderID: string) =>
+    queryOptions({
+      queryKey: orderKeys.detail(orderID),
+      queryFn: async ({ signal }) => ordersApi.getOrder(orderID, { signal }),
+      enabled: orderID.trim().length > 0,
+      retry: false,
+      staleTime: 5_000,
     }),
 };

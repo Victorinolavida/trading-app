@@ -61,6 +61,10 @@ const EXPIRATION_UNIT_SUFFIX: Record<string, string> = {
   hour: "h",
 };
 
+const labelClass = "mb-1 block text-xs text-fg-muted";
+const inputClass = "w-full rounded bg-surface-hover p-2 text-sm";
+const errorClass = "mt-1 text-sm text-danger";
+
 export function CreateOrderForm({ securityId }: { securityId: string }) {
   const [defaultExpiration, setDefaultExpiration] = useState<boolean>(true);
 
@@ -133,49 +137,41 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         noValidate
       >
         <div>
-          <label className="mb-1 block text-xs text-gray-400" htmlFor="side">
+          <label className={labelClass} htmlFor="side">
             Side
           </label>
           <select
             id="side"
-            className="w-full rounded bg-zinc-800 p-2 text-sm"
+            className={inputClass}
             {...register("side")}
           >
             <option value="bid">Bid</option>
             <option value="ask">Ask</option>
           </select>
           {errors.side && (
-            <p className="mt-1 text-sm text-red-400">{errors.side.message}</p>
+            <p className={errorClass}>{errors.side.message}</p>
           )}
         </div>
         <div>
-          <label
-            className="mb-1 block text-xs text-gray-400"
-            htmlFor="orderType"
-          >
+          <label className={labelClass} htmlFor="orderType">
             Type
           </label>
           <select
             id="orderType"
-            className="w-full rounded bg-zinc-800 p-2 text-sm"
+            className={inputClass}
             {...register("orderType")}
           >
             <option value="limit">Limit</option>
             <option value="market">Market</option>
           </select>
           {errors.orderType && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.orderType.message}
-            </p>
+            <p className={errorClass}>{errors.orderType.message}</p>
           )}
         </div>
         {orderType == "limit" && (
           <>
             <div>
-              <label
-                className="mb-1 block text-xs text-gray-400"
-                htmlFor="price"
-              >
+              <label className={labelClass} htmlFor="price">
                 Price
               </label>
               <input
@@ -183,20 +179,15 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                 type="number"
                 step="any"
                 min="0"
-                className="w-full rounded bg-zinc-800 p-2 text-sm"
+                className={inputClass}
                 {...register("price")}
               />
               {errors.price && (
-                <p className="mt-1 text-sm text-red-400">
-                  {errors.price.message}
-                </p>
+                <p className={errorClass}>{errors.price.message}</p>
               )}
             </div>
             <div>
-              <label
-                className="mb-1 block text-xs text-gray-400"
-                htmlFor="yield"
-              >
+              <label className={labelClass} htmlFor="yield">
                 Yield
               </label>
               <input
@@ -204,23 +195,18 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                 type="number"
                 step="any"
                 min="0"
-                className="w-full rounded bg-zinc-800 p-2 text-sm"
+                className={inputClass}
                 {...register("yield")}
               />
               {errors.yield && (
-                <p className="mt-1 text-sm text-red-400">
-                  {errors.yield.message}
-                </p>
+                <p className={errorClass}>{errors.yield.message}</p>
               )}
             </div>
           </>
         )}
 
         <div>
-          <label
-            className="mb-1 block text-xs text-gray-400"
-            htmlFor="quantity"
-          >
+          <label className={labelClass} htmlFor="quantity">
             Quantity
           </label>
           <input
@@ -228,13 +214,11 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
             type="number"
             min="1"
             step="1"
-            className="w-full rounded bg-zinc-800 p-2 text-sm"
+            className={inputClass}
             {...register("quantity")}
           />
           {errors.quantity && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.quantity.message}
-            </p>
+            <p className={errorClass}>{errors.quantity.message}</p>
           )}
         </div>
         {orderType == "limit" && (
@@ -244,12 +228,12 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                 <input
                   id="expirationEnabled"
                   type="checkbox"
-                  className="h-5 w-5 cursor-pointer rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-2 focus:ring-blue-600"
+                  className="h-5 w-5 cursor-pointer rounded border-border-strong bg-surface-hover text-accent-strong focus:ring-2 focus:ring-accent-strong"
                   onChange={(e) => setDefaultExpiration(e.target.checked)}
                   checked={defaultExpiration}
                 />
                 <label
-                  className="text-sm text-gray-400"
+                  className="text-sm text-fg-muted"
                   htmlFor="expirationEnabled"
                 >
                   day expiration
@@ -258,10 +242,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
             </div>
             <div className="col-span-2 grid grid-cols-2 gap-3">
               <div>
-                <label
-                  className="mb-1 block text-xs text-gray-400"
-                  htmlFor="expirationValue"
-                >
+                <label className={labelClass} htmlFor="expirationValue">
                   Expires in
                 </label>
                 <input
@@ -270,25 +251,22 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                   min="1"
                   step="1"
                   disabled={defaultExpiration}
-                  className="w-full rounded bg-zinc-800 p-2 text-sm disabled:opacity-60"
+                  className={`${inputClass} disabled:opacity-60`}
                   {...register("expirationValue")}
                 />
                 {errors.expirationValue && (
-                  <p className="mt-1 text-sm text-red-400">
+                  <p className={errorClass}>
                     {errors.expirationValue.message}
                   </p>
                 )}
               </div>
               <div>
-                <label
-                  className="mb-1 block text-xs text-gray-400"
-                  htmlFor="expirationUnit"
-                >
+                <label className={labelClass} htmlFor="expirationUnit">
                   Unit
                 </label>
                 <select
                   id="expirationUnit"
-                  className="w-full rounded bg-zinc-800 p-2 text-sm disabled:opacity-60"
+                  className={`${inputClass} disabled:opacity-60`}
                   {...register("expirationUnit")}
                   disabled={defaultExpiration}
                 >
@@ -303,7 +281,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
 
         <div className="col-span-2">
           <button
-            className="w-full cursor-pointer rounded-md bg-blue-600 px-4 py-2.5 text-base text-white disabled:opacity-60"
+            className="w-full cursor-pointer rounded-md bg-accent-strong px-4 py-2.5 text-base text-fg-strong disabled:opacity-60"
             type="submit"
             disabled={createOrderMutation.isPending || !isValid}
           >
