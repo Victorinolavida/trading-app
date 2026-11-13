@@ -5,10 +5,11 @@ import { securityQueries } from "../features/securities/queries";
 import { OrderBook } from "../components/OrderBook";
 import { SecurityInfoCard } from "../components/SecurityInfoCard";
 import { useOrdersStream } from "../features/orders/stream";
-import { DepthChart } from "../components/DepthChart";
 import { toast } from "sonner";
 import { getErrorMessage } from "../lib/apiError";
 import { CreateOrderForm } from "../components/CreateOrderForm";
+import { DepthChart } from "../components/DepthChart";
+
 
 export default function SecurityDetailPage() {
   const { securityId } = useParams();
@@ -77,9 +78,7 @@ export default function SecurityDetailPage() {
           <SecurityInfoCard security={security} />
 
           <CreateOrderForm securityId={security.id} />
-
           <DepthChart asks={asks} bids={bids} height={300} />
-
           <OrderBook book={{ asks, bids }} />
         </div>
       </main>
