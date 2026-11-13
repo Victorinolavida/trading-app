@@ -142,102 +142,102 @@ export function DepthChart({
     [bids, asks, maxLevels],
   );
 
-  if (data.length === 0) return null;
-
   return (
-    <div className="w-full bg-surface-raised p-4 rounded-lg shadow-lg">
+    <div className="flex h-full w-full flex-col bg-surface-raised p-4 rounded-lg shadow-lg">
       <h3 className="mb-2 text-sm font-semibold text-fg-soft">
         Order Book Depth
       </h3>
-      <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          data={data}
-          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-        >
-          <XAxis
-            dataKey="price"
-            type="number"
-            domain={domain}
-            allowDataOverflow
-            tickFormatter={(v) => Number(v).toFixed(2)}
-            tick={{ fill: chartColors.axis, fontSize: 11 }}
-            stroke={chartColors.grid}
-          />
-          <YAxis
-            type="number"
-            orientation="right"
-            width={55}
-            tick={{ fill: chartColors.axis, fontSize: 11 }}
-            stroke={chartColors.grid}
-            tickFormatter={(v) => Number(v).toLocaleString()}
-          />
+      <div className="flex-1" style={{ minHeight: height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={data}
+            margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+          >
+            <XAxis
+              dataKey="price"
+              type="number"
+              domain={domain}
+              allowDataOverflow
+              tickFormatter={(v) => Number(v).toFixed(2)}
+              tick={{ fill: chartColors.axis, fontSize: 11 }}
+              stroke={chartColors.grid}
+            />
+            <YAxis
+              type="number"
+              orientation="right"
+              width={55}
+              tick={{ fill: chartColors.axis, fontSize: 11 }}
+              stroke={chartColors.grid}
+              tickFormatter={(v) => Number(v).toLocaleString()}
+            />
 
-          <Tooltip
-            contentStyle={{
-              background: chartColors.tooltipSurface,
-              border: `1px solid ${chartColors.tooltipBorder}`,
-              borderRadius: 8,
-            }}
-            labelStyle={{ color: chartColors.tooltipText }}
-            labelFormatter={(label) => `Price: ${Number(label)}`}
-            formatter={(value, name) => {
-              const key = String(name);
-              return [
-                Number(value ?? 0).toLocaleString(),
-                isSeriesKey(key) ? `${SERIES_LABEL[key]} (acum.)` : key,
-              ];
-            }}
-          />
-
-          <Legend
-            verticalAlign="top"
-            align="right"
-            iconType="plainline"
-            wrapperStyle={{ paddingBottom: 16 }}
-            formatter={(v) => (isSeriesKey(v) ? SERIES_LABEL[v] : v)}
-          />
-
-          <Area
-            type="stepAfter"
-            dataKey="bid"
-            name="bid"
-            stroke={chartColors.bid}
-            fill={chartColors.bid}
-            fillOpacity={0.2}
-            strokeWidth={2}
-            isAnimationActive={false}
-            connectNulls={false}
-          />
-
-          <Area
-            type="stepBefore"
-            dataKey="ask"
-            name="ask"
-            stroke={chartColors.ask}
-            fill={chartColors.ask}
-            fillOpacity={0.2}
-            strokeWidth={2}
-            isAnimationActive={false}
-            connectNulls={false}
-          />
-
-          {mid !== undefined && (
-            <ReferenceLine
-              x={mid}
-              stroke={chartColors.mid}
-              strokeDasharray="4 4"
-              strokeWidth={1.5}
-              label={{
-                value: `Mid ${mid.toFixed(2)}`,
-                fill: chartColors.mid,
-                fontSize: 11,
-                position: "insideTop",
-                offset: 8,
+            <Tooltip
+              contentStyle={{
+                background: chartColors.tooltipSurface,
+                border: `1px solid ${chartColors.tooltipBorder}`,
+                borderRadius: 8,
+              }}
+              labelStyle={{ color: chartColors.tooltipText }}
+              labelFormatter={(label) => `Price: ${Number(label)}`}
+              formatter={(value, name) => {
+                const key = String(name);
+                return [
+                  Number(value ?? 0).toLocaleString(),
+                  isSeriesKey(key) ? `${SERIES_LABEL[key]} (acum.)` : key,
+                ];
               }}
             />
-          )}
-        </AreaChart>
-      </ResponsiveContainer>
+
+            <Legend
+              verticalAlign="top"
+              align="right"
+              iconType="plainline"
+              wrapperStyle={{ paddingBottom: 16 }}
+              formatter={(v) => (isSeriesKey(v) ? SERIES_LABEL[v] : v)}
+            />
+
+            <Area
+              type="stepAfter"
+              dataKey="bid"
+              name="bid"
+              stroke={chartColors.bid}
+              fill={chartColors.bid}
+              fillOpacity={0.2}
+              strokeWidth={2}
+              isAnimationActive={false}
+              connectNulls={false}
+            />
+
+            <Area
+              type="stepBefore"
+              dataKey="ask"
+              name="ask"
+              stroke={chartColors.ask}
+              fill={chartColors.ask}
+              fillOpacity={0.2}
+              strokeWidth={2}
+              isAnimationActive={false}
+              connectNulls={false}
+            />
+
+            {mid !== undefined && (
+              <ReferenceLine
+                x={mid}
+                stroke={chartColors.mid}
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
+                label={{
+                  value: `Mid ${mid.toFixed(2)}`,
+                  fill: chartColors.mid,
+                  fontSize: 11,
+                  position: "insideTop",
+                  offset: 8,
+                }}
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
