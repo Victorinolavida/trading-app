@@ -5,10 +5,13 @@ Monorepo with a Go backend (`backend/`) and a React frontend (`frontend/`).
 ## Getting started
 
 ```sh
-just backend setup           # copy config.example.yaml -> config.yaml for gateway + users
+just backend setup           # copy config.example.yaml -> config.yaml for gateway + users + orders + securities
 just infra-up                # start Postgres (docker compose)
 just backend migrate users   # apply migrations (dbmate)
 just backend run users       # run the users service (gRPC, :3030)
+just backend orders migrate     # apply orders migrations (dbmate)
+just backend orders run-service # run the orders service (gRPC)
+just backend orders run-worker  # run the orders expiration worker
 just backend run gateway     # run the gateway (HTTP, :3001)
 just web                     # run the frontend (Vite, :8000)
 ```
@@ -43,7 +46,9 @@ the same pattern with `frontend/.env.example` → `frontend/.env`.
 
 Notable Go libraries: [chi](https://github.com/go-chi/chi) (gateway router), [pgx](https://github.com/jackc/pgx) (Postgres driver), [grpc](https://google.golang.org/grpc) + [protobuf](https://github.com/protocolbuffers/protobuf) (users service), [jwt/v5](https://github.com/golang-jwt/jwt), [koanf](https://github.com/knadh/koanf) (config), [testify](https://github.com/stretchr/testify) (tests).
 
-Gateway: request-id propagation (HTTP headers + gRPC metadata), auth middleware (dual auth: Bearer + HttpOnly cookie with signed double-submit CSRF on unsafe cookie requests), `/api/v0/auth/login`, `/api/v0/auth/register`, `/api/v0/auth/logout`, `/api/v0/auth/whoami`, validation + gRPC error mapping, OpenAPI in `backend/gateway/api/openapi.yaml`. JWT lives in `pkg/jwt` (HS256, issuer/audience/expiry checks). Services pass client IP/user-agent/request-id via gRPC metadata.
+Gateway: request-id propagation (HTTP headers + gRPC metadata), auth middleware (dual auth: Bearer + HttpOnly cookie with signed double-submit CSRF on unsafe cookie requests), `/api/v0/auth/login`, `/api/v0/auth/register`, `/api/v0/auth/logout`, `/api/v0/auth/whoami`, orders routes (`POST /api/v0/orders`, `PATCH /api/v0/orders/{orderId}/cancel`, `GET /api/v0/orders/active`, `GET /api/v0/orders?order_ids=...`, `GET /api/v0/orders/securities/{securityId}/book` SSE), validation + gRPC error mapping, OpenAPI in `backend/gateway/api/openapi.yaml`. JWT lives in `pkg/jwt` (HS256, issuer/audience/expiry checks). Services pass client IP/user-agent/request-id via gRPC metadata.
+
+Orders: limit orders require an `expiration` (Go duration string, e.g. `"24h"`) and return an `expires_at` timestamp; market orders skip expiration and are killed once matched. The orders service runs an expiration worker that cancels due orders.
 
 Pending: add Prometheus metrics to gateway and users services.
 
