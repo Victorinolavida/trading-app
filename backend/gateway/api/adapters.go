@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	usersapi "github.com/victorinolavida/auth/api"
+	calculatorapi "github.com/victorinolavida/calculator/api"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
 	ordersapi "github.com/victorinolavida/orders/api"
@@ -83,6 +84,38 @@ func mapUserError(err error) error {
 	default:
 		return status.Error(codes.Internal, "internal error")
 	}
+}
+
+// securitiesProviderAdapter implements the calculator's SecurityProvider interface
+// on top of the in-process securities module.
+type securitiesProviderAdapter struct {
+	module *securitiesapi.Module
+}
+
+var _ calculatorapi.SecurityProvider = securitiesProviderAdapter{}
+
+func (a securitiesProviderAdapter) GetByPublicID(ctx context.Context, publicID uuid.UUID) (calculatorapi.Security, error) {
+	sec, err := a.module.GetByPublicID(ctx, publicID)
+	if err != nil {
+		return calculatorapi.Security{}, err
+	}
+	maturityDate, err := time.Parse("2006-01-02", sec.MaturityDate)
+	if err != nil {
+		maturityDate = time.Time{}
+	}
+	return calculatorapi.Security{
+		ID:               sec.ID,
+		PublicID:         sec.ID,
+		ISIN:             sec.ISIN,
+		Name:             sec.Name,
+		SecurityType:     sec.SecurityType,
+		MaturityDate:     maturityDate,
+		NominalValue:     sec.NominalValue,
+		Currency:         sec.Currency,
+		CouponRate:       0,
+		CouponPeriodDays: 0,
+		DayCountBasis:    0,
+	}, nil
 }
 
 // securityAdapter implements the gateway securities port on top of the

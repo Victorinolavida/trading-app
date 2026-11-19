@@ -14,6 +14,8 @@ tags:
     description: Liveness endpoint
   - name: auth
     description: Authentication and registration
+  - name: calculator
+    description: Calculator use cases for fixed income securities
   - name: orders
     description: Order creation, cancellation and lookup
   - name: securities
@@ -34,6 +36,81 @@ paths:
                 $ref: "#/components/schemas/HealthResponse"
               example:
                 message: ok
+
+  /api/v0/calculator/price:
+    post:
+      tags: [calculator]
+      summary: Compute clean price, accrued interest and dirty price
+      operationId: calculatePrice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceRequest"
+            example:
+              security_id: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+              settlement_date: "2026-11-17T00:00:00Z"
+              yield: "3.5"
+      responses:
+        "200":
+          description: Price result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceResult"
+        "400":
+          description: Invalid request
+
+  /api/v0/calculator/yield:
+    post:
+      tags: [calculator]
+      summary: Solve yield from a clean price
+      operationId: calculateYield
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/YieldRequest"
+            example:
+              security_id: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+              settlement_date: "2026-11-17T00:00:00Z"
+              clean_price: "98.5"
+      responses:
+        "200":
+          description: Yield value
+          content:
+            application/json:
+              schema:
+                type: number
+        "400":
+          description: Invalid request
+
+  /api/v0/calculator/cashflows:
+    post:
+      tags: [calculator]
+      summary: Get coupon cash flow schedule
+      operationId: calculateCashflows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CashflowRequest"
+            example:
+              security_id: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+      responses:
+        "200":
+          description: Cash flow schedule
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CashFlow"
+        "400":
+          description: Invalid request
 
   /api/v0/auth/login:
     post:
@@ -662,6 +739,96 @@ paths:
 components:
   schemas:
     HealthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ok
+        required: [message]
+
+    PriceRequest:
+      type: object
+      properties:
+        security_id:
+          type: string
+          format: uuid
+          example: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+        settlement_date:
+          type: string
+          format: date-time
+          example: "2026-11-17T00:00:00Z"
+        yield:
+          type: string
+          example: "3.5"
+      required: [security_id, settlement_date, yield]
+
+    PriceResult:
+      type: object
+      properties:
+        clean_price:
+          type: string
+          example: "99.25"
+        accrued_interest:
+          type: string
+          example: "1.50"
+        dirty_price:
+          type: string
+          example: "100.75"
+        mxn_value:
+          type: string
+          example: "99.25"
+      required: [clean_price, accrued_interest, dirty_price, mxn_value]
+
+    YieldRequest:
+      type: object
+      properties:
+        security_id:
+          type: string
+          format: uuid
+          example: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+        settlement_date:
+          type: string
+          format: date-time
+          example: "2026-11-17T00:00:00Z"
+        clean_price:
+          type: string
+          example: "98.5"
+      required: [security_id, settlement_date, clean_price]
+
+    YieldResponse:
+      type: object
+      properties:
+        yield:
+          type: number
+          example: "3.5"
+
+    CashflowRequest:
+      type: object
+      properties:
+        security_id:
+          type: string
+          format: uuid
+          example: "9b2f1a0e-7c3d-4a51-8f2b-0d1e6c5a4b3f"
+      required: [security_id]
+
+    CashFlow:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2026-11-17"
+        type:
+          type: string
+          example: "coupon"
+        rate:
+          type: string
+          example: "5.0"
+
+    CashflowResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/CashFlow"
       type: object
       properties:
         message:
