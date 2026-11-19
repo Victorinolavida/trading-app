@@ -1,6 +1,7 @@
 package calculatorhandler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -20,6 +21,14 @@ type CalculatorHandler struct {
 	calculator calculatorapi.Module
 	validate   *validator.Validate
 	jwtService *jwt.TokenService
+}
+
+func (h *CalculatorHandler) CalculatePrice(ctx context.Context, req calculatorapi.PriceRequest) (calculatorapi.PriceResult, error) {
+	return h.calculator.Price(ctx, req)
+}
+
+func (h *CalculatorHandler) CalculateYield(ctx context.Context, req calculatorapi.YieldRequest) (float64, error) {
+	return h.calculator.Yield(ctx, req)
 }
 
 func NewCalculatorHandler(calc *calculatorapi.Module, validate *validator.Validate, jwtService *jwt.TokenService) *CalculatorHandler {

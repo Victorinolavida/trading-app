@@ -61,12 +61,6 @@ func New(
 		return nil, err
 	}
 
-	ordHandler, err := ordershandler.NewOrdersHandler(cfg, ordersAdapter{module: orders}, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal())
-	if err != nil {
-		rabbitClient.Close()
-		return nil, err
-	}
-
 	calcMod, err := calculatorapi.New(calculatorapi.Deps{
 		Security: securitiesProviderAdapter{module: securities},
 	})
@@ -82,6 +76,12 @@ func New(
 	}
 
 	calcHandler := calculatorhandler.NewCalculatorHandler(calcMod, response.NewValidator(), jwtSvc)
+
+	ordHandler, err := ordershandler.NewOrdersHandler(cfg, ordersAdapter{module: orders}, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal(), calcHandler)
+	if err != nil {
+		rabbitClient.Close()
+		return nil, err
+	}
 
 	modules := []module.Module{
 		authHandler,

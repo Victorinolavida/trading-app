@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -15,6 +17,8 @@ import (
 	authmiddleware "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	calculatorapi "github.com/victorinolavida/calculator/api"
+	calculatorhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/calculator_handler"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
 	broker "github.com/victorinolavida/pkg/broker"
@@ -36,9 +40,10 @@ type OrdersHandler struct {
 	jwtService    *jwt.TokenService
 	rabbitClient  *brokerrabbit.Client
 	shutdown      <-chan struct{}
+	calcHandler   *calculatorhandler.CalculatorHandler
 }
 
-func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate, rabbitClient *brokerrabbit.Client, shutdown <-chan struct{}) (*OrdersHandler, error) {
+func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate, rabbitClient *brokerrabbit.Client, shutdown <-chan struct{}, calcHandler *calculatorhandler.CalculatorHandler) (*OrdersHandler, error) {
 	if validate == nil {
 		return nil, ErrMissingValidator
 	}
@@ -53,6 +58,7 @@ func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, va
 		jwtService:    jwtService,
 		rabbitClient:  rabbitClient,
 		shutdown:      shutdown,
+		calcHandler:   calcHandler,
 	}, nil
 }
 
@@ -87,12 +93,64 @@ func (h *OrdersHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := h.ordersService.CreateOrder(r.Context(), req)
-	if err != nil {
-		response.RenderGRPCError(w, r, err)
+	// For limit orders, ensure price or yield is provided
+// If one is missing, compute it from the other using the calculator
+if req.OrderType == "limit" {
+	priceProvided := req.Price != nil && *req.Price != ""
+	yieldProvided := req.Yield != nil && *req.Yield != ""
+
+	if !priceProvided && !yieldProvided {
+		response.RenderBadRequest(w, "limit order must have price or yield")
 		return
 	}
-	response.RenderJson(w, res, http.StatusCreated)
+
+	// Get settlement date - use current date as fallback
+	settlementDate := time.Now()
+
+	if priceProvided && !yieldProvided {
+		// Call calculator.Yield() to compute yield from price
+		yieldReq := calculatorapi.YieldRequest{
+			SecurityID:     req.SecurityID,
+			SettlementDate: settlementDate,
+			CleanPrice:     *req.Price,
+		}
+		yieldResult, err := h.calcHandler.CalculateYield(r.Context(), yieldReq)
+		if err != nil {
+			response.RenderGRPCError(w, r, err)
+			return
+		}
+		yieldStr := fmt.Sprintf("%f", yieldResult)
+		req.Yield = &yieldStr
+	}
+
+	if !priceProvided && yieldProvided {
+		// Call calculator.Price() to compute price from yield
+		yieldF64, err := strconv.ParseFloat(*req.Yield, 64)
+		if err != nil {
+			response.RenderBadRequest(w, "invalid yield value")
+			return
+		}
+		priceReq := calculatorapi.PriceRequest{
+			SecurityID:     req.SecurityID,
+			SettlementDate: settlementDate,
+			Yield:          yieldF64,
+		}
+		priceResult, err := h.calcHandler.CalculatePrice(r.Context(), priceReq)
+		if err != nil {
+			response.RenderGRPCError(w, r, err)
+			return
+		}
+		priceStr := priceResult.CleanPrice
+		req.Price = &priceStr
+	}
+}
+
+res, err := h.ordersService.CreateOrder(r.Context(), req)
+if err != nil {
+	response.RenderGRPCError(w, r, err)
+	return
+}
+response.RenderJson(w, res, http.StatusCreated)
 }
 
 func (h *OrdersHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {

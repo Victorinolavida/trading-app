@@ -11,11 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	cfg "github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/jwt"
 	"github.com/victorinolavida/pkg/logger"
-
 	"github.com/victorinolavida/gateway/config"
 	authhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/auth_handler"
-	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
+	calculatorhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/calculator_handler"
+	calculatorapi "github.com/victorinolavida/calculator/api"
 	ordershandler "github.com/victorinolavida/gateway/internal/adapters/in/http/orders_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	securityhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/security_handler"
@@ -23,6 +24,7 @@ import (
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
 	ordersservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/orders_service"
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
+	module "github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 )
 
 const (
@@ -76,13 +78,27 @@ func main() {
 		logger.Fatal("error creating security handler", slog.Any("error", err))
 	}
 
+	calcMod, err := calculatorapi.New(calculatorapi.Deps{
+		Security: securitiesProviderAdapter{module: secService},
+	})
+	if err != nil {
+		logger.Fatal("error creating calculator module", slog.Any("error", err))
+	}
+
+	jwtSvc, err := jwt.NewService(conf.Token)
+	if err != nil {
+		logger.Fatal("error creating jwt service", slog.Any("error", err))
+	}
+
+	calcHandler := calculatorhandler.NewCalculatorHandler(calcMod, response.NewValidator(), jwtSvc)
+
 	rabbitClient, err := rabbitmq.NewClientFromConfig(conf.RabbitMQ)
 	if err != nil {
 		logger.Fatal("error with rabbitmq adapter", slog.Any("error", err))
 	}
 	defer rabbitClient.Close()
 
-	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal())
+	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal(), calcHandler)
 	if err != nil {
 		logger.Fatal("error creating orders handler", slog.Any("error", err))
 	}

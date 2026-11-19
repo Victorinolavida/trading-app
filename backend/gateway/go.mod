@@ -64,3 +64,5 @@ replace github.com/victorinolavida/pkg => ../pkg
 replace github.com/victorinolavida/proto => ../gen
 
 replace github.com/victorinolavida/securities => ../securities
+
+replace github.com/victorinolavida/calculator => ../calculator
