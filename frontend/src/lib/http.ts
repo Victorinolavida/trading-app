@@ -107,6 +107,13 @@ export class ApiClient {
         ? data.error
         : statusText || `request failed (${status})`;
 
+    if (status === 500) {
+      return new ApiError(
+        500,
+        "Internal server error. Please try again later or contact support.",
+      );
+    }
+
     return new ApiError(status, message);
   }
 }
