@@ -143,7 +143,7 @@ export function DepthChart({
   );
 
   return (
-    <div className="flex h-full w-full flex-col bg-surface-raised p-4 rounded-lg shadow-lg">
+    <div className="flex h-full w-full flex-col border border-t-0 border-border bg-surface-raised p-4 rounded-b-lg shadow-lg">
       <h3 className="mb-2 text-sm font-semibold text-fg-soft">
         Order Book Depth
       </h3>

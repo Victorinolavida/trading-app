@@ -76,10 +76,11 @@ export default function SecurityDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <SecurityInfoCard security={security} />
-
           <CreateOrderForm securityId={security.id} />
-          <DepthChart asks={asks} bids={bids} height={300} />
+          <div className="col-span-2">
           <OrderBook book={{ asks, bids }} />
+          <DepthChart asks={asks} bids={bids} height={4} />
+          </div>
         </div>
       </main>
     </div>

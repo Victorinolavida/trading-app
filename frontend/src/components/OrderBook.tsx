@@ -31,9 +31,8 @@ function BookSide({
   const rows = levels.slice(0, depth);
 
   return (
-    <section>
+    <section className="flex-1 m-4">
       <h3 className={cn("mb-2 text-sm font-semibold", s.color)}>{s.title}</h3>
-
       <table className="w-full tabular-nums">
         <thead className="text-xs text-fg-muted">
           <tr>
@@ -99,9 +98,9 @@ export function OrderBook({
   book: { bids: BookLevel[]; asks: BookLevel[] };
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-raised p-4">
-      <h2 className="mb-3 text-lg font-semibold">Order Book</h2>
-      <div className="space-y-4">
+    <div className="rounded-t-lg border border-b-0 border-border bg-surface-raised p-4">
+      <h2 className="text-lg font-semibold p-4">Order Book</h2>
+      <div className="gap-16 flex flex-row justify-evenly">
         <BookSide side="bid" levels={book.bids} />
         <BookSide side="ask" levels={book.asks} />
       </div>
