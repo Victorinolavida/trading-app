@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
 const inputClass =
-  "w-full rounded-md border border-zinc-800 bg-zinc-950 py-2.5 pl-3 pr-11 text-base text-inherit focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30";
+  "w-full rounded-md border border-border bg-surface py-2.5 pl-3 pr-11 text-base text-inherit focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
 
 interface PasswordInputProps {
   id: string;
@@ -29,7 +29,7 @@ export function PasswordInput({
       />
       <button
         type="button"
-        className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-gray-400 hover:text-gray-200"
+        className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-fg-muted hover:text-fg"
         onClick={() => setVisible((value) => !value)}
         aria-label={label}
         aria-pressed={visible}

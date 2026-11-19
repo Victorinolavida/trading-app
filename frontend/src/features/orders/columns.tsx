@@ -102,9 +102,9 @@ const percentFormatter = new Intl.NumberFormat("en-US", {
 });
 
 const allocationStatusClasses: Record<AllocationStatus, string> = {
-  none: "text-zinc-500",
-  partial: "text-amber-400",
-  allocated: "text-green-400",
+  none: "text-fg-subtle",
+  partial: "text-warning",
+  allocated: "text-success",
 };
 
 function formatDecimal(
@@ -124,7 +124,7 @@ function TimestampCell({ value }: { value: string }) {
     <time
       dateTime={value}
       title={value}
-      className="whitespace-nowrap text-zinc-300"
+      className="whitespace-nowrap text-fg-soft"
     >
       {dateTimeFormatter.format(date)}
     </time>
@@ -147,10 +147,10 @@ function CopyableCell({ value, label }: { value: string; label: string }) {
       title={value}
       aria-label={`Copy ${label} ${value}`}
       onClick={() => void copyText(value, label)}
-      className="group inline-flex items-center gap-1 rounded font-mono text-xs text-zinc-300 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+      className="group inline-flex items-center gap-1 rounded font-mono text-xs text-fg-soft hover:text-fg-strong focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <span>{value.slice(0, 8)}</span>
-      <span className="text-[9px] uppercase text-zinc-600 opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="text-[9px] uppercase text-fg-faint opacity-0 transition-opacity group-hover:opacity-100">
         copy
       </span>
     </button>
@@ -183,7 +183,7 @@ function CancelOrderButton({ orderId }: { orderId: string }) {
       aria-label={`Cancel order ${orderId}`}
       disabled={cancelOrder.isPending}
       onClick={() => cancelOrder.mutate(orderId)}
-      className="rounded border border-red-900/70 bg-red-950/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-red-300 hover:border-red-700 hover:bg-red-900/50 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded border border-danger-border/70 bg-danger-surface/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-danger-soft hover:border-danger-strong hover:bg-danger-surface/50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {cancelOrder.isPending ? "Cancelling..." : "Cancel"}
     </button>
@@ -201,7 +201,7 @@ function OrderActionsCell({
     <div className="flex items-center justify-end gap-1.5">
       <Link
         to={`/orders/${order.id}`}
-        className="rounded border border-zinc-700 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-300 hover:border-zinc-500 hover:text-white"
+        className="rounded border border-border-strong px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-fg-soft hover:border-fg-subtle hover:text-fg-strong"
       >
         View
       </Link>
@@ -255,14 +255,14 @@ const ExpiresInCell = memo(function ExpiresInCell({
   const remaining = expiresAtMs - now;
   if (remaining <= 0) {
     return (
-      <span className="font-medium text-red-400" title={expiresAt}>
+      <span className="font-medium text-danger" title={expiresAt}>
         Expired
       </span>
     );
   }
 
   return (
-    <span className="tabular-nums text-zinc-300" title={expiresAt}>
+    <span className="tabular-nums text-fg-soft" title={expiresAt}>
       {formatDuration(remaining)}
     </span>
   );

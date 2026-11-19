@@ -8,14 +8,14 @@ const typeLabel: Record<string, string> = {
 
 export function SecurityInfoCard({ security }: { security: Security }) {
   return (
-    <Card className="w-full">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <Card className="w-full p-4">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <CardTitle className="mb-1">
             {security.name ||
               `Mexico Government Bond (${security.security_type})`}
           </CardTitle>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-fg-muted">
             {typeLabel[security.security_type] ?? security.security_type} ·{" "}
             {security.currency}
           </p>

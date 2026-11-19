@@ -6,10 +6,10 @@ export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export function Table({ className, ...props }: ComponentProps<"table">) {
   return (
-    <div className="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default">
+    <div className="relative overflow-x-auto bg-surface-raised shadow-xs rounded-base border border-border">
       <table
         className={cn(
-          "w-full text-sm text-left rtl:text-right text-body",
+          "w-full text-sm text-left rtl:text-right text-fg",
           className,
         )}
         {...props}
@@ -25,7 +25,7 @@ export function TableCaption({
   return (
     <caption
       className={cn(
-        "p-5 text-lg font-medium text-left rtl:text-right text-heading",
+        "p-5 text-lg font-medium text-left rtl:text-right text-fg-strong",
         className,
       )}
       {...props}
@@ -37,7 +37,7 @@ export function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   return (
     <thead
       className={cn(
-        "text-sm text-body bg-neutral-secondary-medium border-y border-default-medium",
+        "text-sm text-fg bg-surface-hover border-y border-border-strong",
         className,
       )}
       {...props}
@@ -53,7 +53,7 @@ export function TableRow({ className, ...props }: ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "bg-neutral-primary-soft border-b border-default last:border-b-0",
+        "bg-surface-raised border-b border-border last:border-b-0",
         className,
       )}
       {...props}
@@ -78,7 +78,7 @@ export function TableRowHeader({ className, ...props }: ComponentProps<"th">) {
     <th
       scope="row"
       className={cn(
-        "px-6 py-4 font-medium text-heading whitespace-nowrap",
+        "px-6 py-4 font-medium text-fg-strong whitespace-nowrap",
         className,
       )}
       {...props}

@@ -85,12 +85,12 @@ function FilterSelect({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
+    <label className="inline-flex items-center gap-1.5 text-[11px] text-fg-subtle">
       <span>{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-7 rounded border border-zinc-700 bg-zinc-900 px-1.5 text-xs text-zinc-200 outline-none focus:border-blue-500"
+        className="h-7 rounded border border-border-strong bg-surface-raised px-1.5 text-xs text-fg outline-none focus:border-accent"
       >
         <option value="">All</option>
         {options.map((option) => (
@@ -110,11 +110,11 @@ function ColumnVisibilityMenu<TData extends RowData>({
 }) {
   return (
     <details className="relative">
-      <summary className="list-none cursor-pointer select-none rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800 [&::-webkit-details-marker]:hidden">
+      <summary className="list-none cursor-pointer select-none rounded border border-border-strong bg-surface-raised px-2 py-1 text-xs text-fg-soft hover:bg-surface-hover [&::-webkit-details-marker]:hidden">
         Columns
       </summary>
-      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto rounded-md border border-zinc-700 bg-zinc-900 p-2 shadow-xl">
-        <label className="flex items-center gap-2 border-b border-zinc-800 px-1 py-1.5 text-xs text-zinc-300">
+      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto rounded-md border border-border-strong bg-surface-raised p-2 shadow-xl">
+        <label className="flex items-center gap-2 border-b border-border px-1 py-1.5 text-xs text-fg-soft">
           <input
             type="checkbox"
             checked={table.getIsAllColumnsVisible()}
@@ -125,7 +125,7 @@ function ColumnVisibilityMenu<TData extends RowData>({
         {table.getAllLeafColumns().map((column) => (
           <label
             key={column.id}
-            className="flex items-center gap-2 px-1 py-1 text-xs text-zinc-300"
+            className="flex items-center gap-2 px-1 py-1 text-xs text-fg-soft"
           >
             <input
               type="checkbox"
@@ -169,7 +169,7 @@ function TableToolbar<TData extends RowData>({
           value={globalFilter}
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           placeholder="Search order ID or security ID"
-          className="h-7 min-w-56 flex-1 rounded border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-blue-500 sm:max-w-xs"
+          className="h-7 min-w-56 flex-1 rounded border border-border-strong bg-surface-raised px-2 text-xs text-fg placeholder:text-fg-faint outline-none focus:border-accent sm:max-w-xs"
         />
       )}
 
@@ -215,7 +215,7 @@ function Pagination<TData extends RowData>({
   const rowCount = table.getRowCount();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-fg-subtle">
       <span>
         {rowCount} {rowCount === 1 ? "row" : "rows"}
       </span>
@@ -224,7 +224,7 @@ function Pagination<TData extends RowData>({
           type="button"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
-          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           First
         </button>
@@ -232,18 +232,18 @@ function Pagination<TData extends RowData>({
           type="button"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           Prev
         </button>
-        <span className="tabular-nums text-zinc-400">
+        <span className="tabular-nums text-fg-muted">
           Page {pageIndex + 1} / {pageCount}
         </span>
         <button
           type="button"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
-          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           Next
         </button>
@@ -251,7 +251,7 @@ function Pagination<TData extends RowData>({
           type="button"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
-          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           Last
         </button>
@@ -273,8 +273,8 @@ function OrdersTableRow<TData extends RowData>({
   return (
     <tr
       className={cn(
-        "border-b border-zinc-800/70 transition-colors hover:bg-zinc-800/40",
-        stale && "bg-red-500/5 opacity-60",
+        "border-b border-border/70 transition-colors hover:bg-surface-hover/40",
+        stale && "bg-danger/5 opacity-60",
       )}
     >
       {row.getVisibleCells().map((cell) => {
@@ -341,11 +341,11 @@ export function OrdersTable<TData extends RowData>({
         showColumnVisibility={showColumnVisibility}
       />
 
-      <div className="max-h-[min(58vh,42rem)] overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/70">
+      <div className="max-h-[min(58vh,42rem)] overflow-auto rounded-lg border border-border bg-surface-raised/70">
         <table className="w-full border-collapse text-xs">
-          <thead className="sticky top-0 z-10 bg-zinc-900">
+          <thead className="sticky top-0 z-10 bg-surface-raised">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-zinc-700">
+              <tr key={headerGroup.id} className="border-b border-border-strong">
                 {headerGroup.headers.map((header) => {
                   const sorted = header.column.getIsSorted();
                   const canSort = header.column.getCanSort();
@@ -363,7 +363,7 @@ export function OrdersTable<TData extends RowData>({
                             : "none"
                       }
                       className={cn(
-                        "whitespace-nowrap px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500",
+                        "whitespace-nowrap px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-fg-subtle",
                         alignClass(align),
                       )}
                     >
@@ -372,12 +372,12 @@ export function OrdersTable<TData extends RowData>({
                           type="button"
                           onClick={header.column.getToggleSortingHandler()}
                           className={cn(
-                            "inline-flex items-center gap-1 hover:text-zinc-200",
+                            "inline-flex items-center gap-1 hover:text-fg",
                             align === "right" && "w-full justify-end",
                           )}
                         >
                           <FlexRender header={header} />
-                          <span className="text-[9px] text-zinc-600">
+                          <span className="text-[9px] text-fg-faint">
                             {sorted === "asc"
                               ? "▲"
                               : sorted === "desc"
@@ -399,11 +399,11 @@ export function OrdersTable<TData extends RowData>({
               Array.from({ length: 6 }, (_, index) => (
                 <tr
                   key={`skeleton-${index}`}
-                  className="border-b border-zinc-800/70"
+                  className="border-b border-border/70"
                 >
                   <td colSpan={visibleColumnCount} className="px-2 py-2">
                     <div
-                      className="h-4 animate-pulse rounded bg-zinc-800"
+                      className="h-4 animate-pulse rounded bg-surface-hover"
                       style={{ width: `${45 + ((index * 11) % 45)}%` }}
                     />
                   </td>
@@ -413,7 +413,7 @@ export function OrdersTable<TData extends RowData>({
               <tr>
                 <td
                   colSpan={visibleColumnCount}
-                  className="px-4 py-10 text-center text-xs text-zinc-500"
+                  className="px-4 py-10 text-center text-xs text-fg-subtle"
                 >
                   {emptyMessage}
                 </td>

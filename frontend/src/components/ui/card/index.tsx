@@ -8,7 +8,7 @@ export function Card({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "mb-6 rounded-lg border border-zinc-800 bg-zinc-900 p-6",
+        "mb-6 rounded-lg border border-border bg-surface-raised p-6",
         className,
       )}
       {...props}
@@ -23,7 +23,7 @@ export function CardTitle({ className, ...props }: ComponentProps<"h1">) {
 }
 
 export function CardSubtitle({ className, ...props }: ComponentProps<"p">) {
-  return <p className={cn("mb-4 text-gray-400", className)} {...props} />;
+  return <p className={cn("mb-4 text-fg-muted", className)} {...props} />;
 }
 
 export function DetailList({ className, ...props }: ComponentProps<"dl">) {
@@ -47,11 +47,11 @@ export function Section({
   return (
     <section
       className={cn(
-        "border-t border-zinc-800 pt-5 mt-5 first:border-t-0 first:pt-0 first:mt-0",
+        "border-t border-border pt-5 mt-5 first:border-t-0 first:pt-0 first:mt-0",
         className,
       )}
     >
-      <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
+      <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-fg-subtle">
         {title}
       </h2>
       <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -74,10 +74,10 @@ export function DetailItem({
 }) {
   return (
     <div className={className}>
-      <dt className="text-xs text-zinc-400">{label}</dt>
+      <dt className="text-xs text-fg-muted">{label}</dt>
       <dd
         className={cn(
-          "mt-0.5 text-sm text-zinc-100 break-all",
+          "mt-0.5 text-sm text-fg-strong break-all",
           mono && "font-mono",
         )}
       >
@@ -93,8 +93,8 @@ export function Badge({ active }: { active: boolean }) {
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
         active
-          ? "bg-emerald-500/10 text-emerald-400"
-          : "bg-zinc-700/40 text-zinc-400",
+          ? "bg-success/15 text-success"
+          : "bg-surface-hover/40 text-fg-muted",
       )}
     >
       {active ? "Enabled" : "Disabled"}

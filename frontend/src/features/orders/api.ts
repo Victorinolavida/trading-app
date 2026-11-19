@@ -91,6 +91,16 @@ export const ordersApi = {
     const response = await api.get<ListOrdersResponse>("/v0/orders", options);
     return response.orders.map(toOrder);
   },
+  getOrder: async (
+    orderId: string,
+    options: RequestOptions = {},
+  ): Promise<Order | null> => {
+    const response = await api.get<ListOrdersResponse>("/v0/orders", {
+      ...options,
+      params: { order_ids: orderId },
+    });
+    return response.orders.map(toOrder)[0] ?? null;
+  },
   createOrder: (
     orderRequest: CreateOrderRequest,
     options: RequestOptions = {},

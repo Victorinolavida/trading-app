@@ -5,10 +5,11 @@ import { securityQueries } from "../features/securities/queries";
 import { OrderBook } from "../components/OrderBook";
 import { SecurityInfoCard } from "../components/SecurityInfoCard";
 import { useOrdersStream } from "../features/orders/stream";
-import { DepthChart } from "../components/DepthChart";
 import { toast } from "sonner";
 import { getErrorMessage } from "../lib/apiError";
 import { CreateOrderForm } from "../components/CreateOrderForm";
+import { DepthChart } from "../components/DepthChart";
+
 
 export default function SecurityDetailPage() {
   const { securityId } = useParams();
@@ -33,12 +34,12 @@ export default function SecurityDetailPage() {
       <div className="flex min-h-screen overflow-x-hidden">
         <main className="flex-1 min-h-screen overflow-x-hidden p-8">
           <button
-            className="mb-4 cursor-pointer text-sm text-blue-400"
+            className="mb-4 cursor-pointer text-sm text-accent-soft"
             onClick={handleGoBack}
           >
             ← Back
           </button>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-fg-muted">Loading...</p>
         </main>
       </div>
     );
@@ -49,12 +50,12 @@ export default function SecurityDetailPage() {
       <div className="flex min-h-screen overflow-x-hidden">
         <main className="flex-1 min-h-screen overflow-x-hidden p-8">
           <button
-            className="mb-4 cursor-pointer text-sm text-blue-400"
+            className="mb-4 cursor-pointer text-sm text-accent-soft"
             onClick={handleGoBack}
           >
             ← Back
           </button>
-          <p className="text-gray-400">Security not found.</p>
+          <p className="text-fg-muted">Security not found.</p>
         </main>
       </div>
     );
@@ -67,7 +68,7 @@ export default function SecurityDetailPage() {
     <div className="flex min-h-screen overflow-x-hidden">
       <main className="flex-1 min-h-screen overflow-x-hidden p-8">
         <button
-          className="mb-4 cursor-pointer text-sm text-blue-400"
+          className="mb-4 cursor-pointer text-sm text-accent-soft"
           onClick={handleGoBack}
         >
           ← Back
@@ -75,12 +76,11 @@ export default function SecurityDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <SecurityInfoCard security={security} />
-
           <CreateOrderForm securityId={security.id} />
-
-          <DepthChart asks={asks} bids={bids} height={300} />
-
+          <div className="col-span-2">
           <OrderBook book={{ asks, bids }} />
+          <DepthChart asks={asks} bids={bids} height={4} />
+          </div>
         </div>
       </main>
     </div>

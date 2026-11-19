@@ -173,6 +173,7 @@ paths:
               price: "101.25"
               yield: "3.5"
               quantity: 100
+              expiration: "24h"
       responses:
         "201":
           description: The created order
@@ -186,8 +187,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                error: '"security_id" must be a valid uuid'
+              examples:
+                invalid_uuid:
+                  value:
+                    error: '"security_id" must be a valid uuid'
+                invalid_expiration:
+                  value:
+                    error: error invalid expiration value
+        "401":
+          description: Missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      tags: [orders]
+      summary: List the authenticated trader's orders, most recently created first
+      operationId: listOrders
+      parameters:
+        - name: order_ids
+          in: query
+          required: false
+          description: Only return these public order ids; may be repeated or comma-separated
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bid, ask]
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, fully_allocated, cancelled, expired, killed]
+      responses:
+        "200":
+          description: The trader's orders, most recently created first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListOrdersResponse"
+        "400":
+          description: A filter value is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Missing or invalid credentials
           content:
@@ -232,6 +290,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: The order was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: order not found
+        "409":
+          description: The order was already cancelled or is a market order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: cannot cancel market order
         "500":
           description: Unexpected error
           content:
@@ -320,59 +394,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Orders event broker is not available
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /api/v0/orders:
-    get:
-      tags: [orders]
-      summary: List the authenticated trader's orders, most recently created first
-      operationId: listOrders
-      parameters:
-        - name: order_ids
-          in: query
-          required: false
-          description: Only return these public order ids; may be repeated or comma-separated
-          schema:
-            type: array
-            items:
-              type: string
-              format: uuid
-        - name: direction
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [bid, ask]
-        - name: status
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [active, fully_allocated, cancelled, expired, killed]
-      responses:
-        "200":
-          description: The trader's orders, most recently created first
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ListOrdersResponse"
-        "400":
-          description: A filter value is invalid
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Missing or invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Unexpected error
           content:
             application/json:
               schema:
@@ -748,15 +769,23 @@ components:
           example: limit
         price:
           type: string
+          nullable: true
+          description: Required for limit orders; must be null for market orders
           example: "101.25"
         yield:
           type: string
+          nullable: true
+          description: Required for limit orders; must be null for market orders
           example: "3.5"
         quantity:
           type: integer
           format: int64
           minimum: 1
           example: 100
+        expiration:
+          type: string
+          description: Order lifetime as a Go duration string (e.g. "24h"); required for limit orders and rejected for market orders
+          example: "24h"
       required: [security_id, direction, order_type, quantity]
 
     CancelOrderRequest:
@@ -792,9 +821,13 @@ components:
           example: limit
         price:
           type: string
+          nullable: true
+          description: Null for market orders
           example: "101.25"
         yield:
           type: string
+          nullable: true
+          description: Null for market orders
           example: "3.5"
         quantity:
           type: integer
@@ -812,13 +845,15 @@ components:
           example: ""
         allocation_status:
           type: string
-          example: pending
+          enum: ["none", "partial", "allocated"]
+          example: "none"
         fx:
           type: string
           example: "1"
         status:
           type: string
-          example: open
+          enum: [active, fully_allocated, cancelled, expired, killed]
+          example: active
         created_at:
           type: string
           format: date-time
@@ -826,6 +861,11 @@ components:
         updated_at:
           type: string
           format: date-time
+          example: "2026-11-07T00:00:00Z"
+        expires_at:
+          type: string
+          format: date-time
+          description: When the order expires; equals created_at for market orders
           example: "2026-11-07T00:00:00Z"
 
     GetActiveOrdersResponse:

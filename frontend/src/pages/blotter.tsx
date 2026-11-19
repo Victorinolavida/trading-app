@@ -70,8 +70,8 @@ export default function BlotterRoute() {
   return (
     <div className="mx-auto flex w-full max-w-[110rem] flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-semibold text-zinc-100">Order Blotter</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold text-fg-strong">Order Blotter</h1>
+        <p className="mt-1 text-sm text-fg-subtle">
           Working orders and execution history.
         </p>
       </header>
@@ -79,7 +79,7 @@ export default function BlotterRoute() {
       {ordersQuery.isError ? (
         <div
           role="alert"
-          className="rounded-lg border border-red-900/60 bg-red-950/30 p-4 text-sm text-red-300"
+          className="rounded-lg border border-danger-border/60 bg-danger-surface/30 p-4 text-sm text-danger-soft"
         >
           <p>
             Could not load orders:{" "}
@@ -90,7 +90,7 @@ export default function BlotterRoute() {
           <button
             type="button"
             onClick={() => void ordersQuery.refetch()}
-            className="mt-3 rounded border border-red-800 px-2 py-1 text-xs text-red-200 hover:bg-red-900/40"
+            className="mt-3 rounded border border-danger-border px-2 py-1 text-xs text-danger-soft hover:bg-danger-surface/40"
           >
             Retry
           </button>
@@ -100,7 +100,7 @@ export default function BlotterRoute() {
           <div
             role="tablist"
             aria-label="Blotter view"
-            className="flex gap-1 border-b border-zinc-800"
+            className="flex gap-1 border-b border-border"
           >
             <button
               type="button"
@@ -110,12 +110,12 @@ export default function BlotterRoute() {
               className={cn(
                 "-mb-px border-b-2 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors",
                 isActive
-                  ? "border-blue-500 text-zinc-100"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300",
+                  ? "border-accent text-fg-strong"
+                  : "border-transparent text-fg-subtle hover:text-fg-soft",
               )}
             >
               Active orders{" "}
-              <span className="text-zinc-600">({activeOrders.length})</span>
+              <span className="text-fg-faint">({activeOrders.length})</span>
             </button>
             <button
               type="button"
@@ -125,12 +125,12 @@ export default function BlotterRoute() {
               className={cn(
                 "-mb-px border-b-2 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors",
                 !isActive
-                  ? "border-blue-500 text-zinc-100"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300",
+                  ? "border-accent text-fg-strong"
+                  : "border-transparent text-fg-subtle hover:text-fg-soft",
               )}
             >
               Order history{" "}
-              <span className="text-zinc-600">({historyOrders.length})</span>
+              <span className="text-fg-faint">({historyOrders.length})</span>
             </button>
           </div>
 
