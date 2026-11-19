@@ -94,7 +94,11 @@ function buildDepth(
     Math.abs(ref) * 0.005,
     0.01,
   );
-  const domain: [number, number] = [min - pad, max + pad];
+  let domain: [number, number] = [min - pad, max + pad];
+  if (mid !== undefined) {
+    const radius = Math.max(mid - min, max - mid) + pad;
+    domain = [mid - radius, mid + radius];
+  }
 
   const bidPts: DepthPoint[] = bidCum
     .map(({ price, total }) => ({ price, bid: total }))
@@ -110,6 +114,18 @@ function buildDepth(
   }
   if (askPts.length > 0) {
     askPts.push({ price: domain[1], ask: askPts[askPts.length - 1].ask! });
+  }
+
+  if (
+    mid !== undefined &&
+    bestBid !== undefined &&
+    bestAsk !== undefined &&
+    spread > 0
+  ) {
+    // Depth stays constant between the best price and the midpoint.
+    const halfGap = spread * 0.05;
+    bidPts.push({ price: mid - halfGap, bid: bidCum[0].total });
+    askPts.unshift({ price: mid + halfGap, ask: askCum[0].total });
   }
 
   const points = new Map<number, DepthPoint>();
