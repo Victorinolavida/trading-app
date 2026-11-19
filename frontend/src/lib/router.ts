@@ -14,13 +14,17 @@ import { toast } from "sonner";
 import { queryClient } from "./queryClient";
 import { securityQueries } from "../features/securities/queries";
 
+export function navigate(path: string) {
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: App,
     id: "root",
     loader: requireAuth,
-    ErrorBoundary: ErrorBoundary,
     children: [
       {
         index: true,
@@ -34,10 +38,12 @@ export const router = createBrowserRouter([
       {
         path: "/orders/:orderId",
         Component: OrderDetailsPage,
+        errorElement: <ErrorBoundary />,
       },
       {
         Component: SecurityDetailPage,
         path: "/securities/:securityId",
+        errorElement: <ErrorBoundary />,
         loader: async ({ params }) => {
           const securityId = params.securityId;
           if (!securityId || securityId.length <= 0) {
