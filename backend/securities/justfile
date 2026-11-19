@@ -94,7 +94,7 @@ new name:
 status: schema-create
     PGOPTIONS="-c search_path={{schema}}" dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
 
-# Seed reference securities (e.g. Mexico M-Bono 7.75% 2034). Idempotent.
+# Seed reference and synthetic test securities (40 rows). Idempotent.
 seed: migrate
     for f in {{seeds}}/*.sql; do (echo "set search_path to {{schema}};"; cat "$f") | docker exec -i {{pg_container}} psql -U postgres -d {{db_name}} -v ON_ERROR_STOP=1; done
 

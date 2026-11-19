@@ -32,7 +32,7 @@ old per-service databases (`trading_users`, `trading_securities`,
 just db-up       # start Postgres only
 just migrate     # apply pending migrations to every service schema
 just db-clean    # drop and reapply each service schema
-just db-reset    # db-clean + seed reference securities
+just db-reset    # db-clean + seed reference and synthetic securities
 just db-status   # show migration status per schema
 just db-schema   # regenerate sqlc schema.sql from each schema
 ```

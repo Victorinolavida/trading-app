@@ -129,7 +129,7 @@ db-schema:
     just --justfile backend/securities/justfile schema
     just --justfile backend/orders/justfile schema
 
-# Seed reference securities. Idempotent.
+# Seed reference and synthetic securities. Idempotent.
 db-seed:
     just --justfile backend/securities/justfile seed
 
