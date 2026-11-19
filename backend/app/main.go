@@ -5,12 +5,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log/slog"
-	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	appconfig "github.com/victorinolavida/app/config"
 	usersapi "github.com/victorinolavida/auth/api"
@@ -25,6 +26,12 @@ import (
 const shutdownTimeout = 30 * time.Second
 
 func main() {
+	if err := run(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	log := logger.NewLogger("app")
 
 	cfg, err := conf.NewConfig[appconfig.Config]()
@@ -35,22 +42,27 @@ func main() {
 		logger.Fatal("invalid config", slog.Any("error", err))
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	usersPool, err := database.NewPool(ctx, cfg.Database.For(cfg.Database.Users))
+	stopSignalLog := context.AfterFunc(rootCtx, func() {
+		log.Info("shutdown signal received")
+	})
+	defer stopSignalLog()
+
+	usersPool, err := database.NewPool(rootCtx, cfg.Database.For(cfg.Database.Users))
 	if err != nil {
 		logger.Fatal("error connecting to users database", slog.Any("error", err))
 	}
 	defer usersPool.Close()
 
-	securitiesPool, err := database.NewPool(ctx, cfg.Database.For(cfg.Database.Securities))
+	securitiesPool, err := database.NewPool(rootCtx, cfg.Database.For(cfg.Database.Securities))
 	if err != nil {
 		logger.Fatal("error connecting to securities database", slog.Any("error", err))
 	}
 	defer securitiesPool.Close()
 
-	ordersPool, err := database.NewPool(ctx, cfg.Database.For(cfg.Database.Orders))
+	ordersPool, err := database.NewPool(rootCtx, cfg.Database.For(cfg.Database.Orders))
 	if err != nil {
 		logger.Fatal("error connecting to orders database", slog.Any("error", err))
 	}
@@ -82,38 +94,43 @@ func main() {
 		logger.Fatal("error wiring gateway", slog.Any("error", err))
 	}
 
-	workerCtx, stopWorker := context.WithCancel(context.Background())
-	defer stopWorker()
+	log.Info("starting modules")
 
-	go func() {
-		if err := ordersModule.StartWorker(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
-			slog.Error("order expiration worker stopped", slog.Any("error", err))
-		}
-	}()
+	g, gctx := errgroup.WithContext(rootCtx)
+	g.Go(func() error { return usersModule.Start(gctx) })
+	g.Go(func() error { return securitiesModule.Start(gctx) })
+	g.Go(func() error { return ordersModule.Start(gctx) })
+	g.Go(func() error { return server.Run(gctx) })
 
-	go func() {
-		if err := server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Fatal("http server error", slog.Any("error", err))
-		}
-	}()
+	runErr := g.Wait()
+	if runErr != nil {
+		log.Error("module stopped with error", slog.Any("error", runErr))
+	}
 
-	<-ctx.Done()
+	log.Info("modules stopped")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	closeCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("error shutting down http server", slog.Any("error", err))
-	}
-
-	stopWorker()
-
-	if err := ordersModule.Close(); err != nil {
-		slog.Error("error closing orders module", slog.Any("error", err))
-	}
 	if err := server.Close(); err != nil {
-		slog.Error("error closing gateway", slog.Any("error", err))
+		log.Error("error closing gateway", slog.Any("error", err))
+	}
+	if err := ordersModule.Close(closeCtx); err != nil {
+		log.Error("error closing orders module", slog.Any("error", err))
+	}
+	if err := securitiesModule.Close(closeCtx); err != nil {
+		log.Error("error closing securities module", slog.Any("error", err))
+	}
+	if err := usersModule.Close(closeCtx); err != nil {
+		log.Error("error closing users module", slog.Any("error", err))
 	}
 
-	log.Info("monolith shutdown successfully")
+	log.Info("resources closed")
+
+	usersPool.Close()
+	securitiesPool.Close()
+	ordersPool.Close()
+
+	log.Info("exit")
+	return runErr
 }

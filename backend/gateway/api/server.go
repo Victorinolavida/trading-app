@@ -54,7 +54,7 @@ func New(
 		return nil, err
 	}
 
-	ordHandler, err := ordershandler.NewOrdersHandler(cfg, ordersAdapter{module: orders}, response.NewValidator(), rabbitClient)
+	ordHandler, err := ordershandler.NewOrdersHandler(cfg, ordersAdapter{module: orders}, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal())
 	if err != nil {
 		rabbitClient.Close()
 		return nil, err
@@ -70,6 +70,10 @@ func New(
 	}
 
 	return &Server{http: httpServer, rabbit: rabbitClient}, nil
+}
+
+func (s *Server) Run(ctx context.Context) error {
+	return s.http.Run(ctx)
 }
 
 // Start serves HTTP until the server is shut down.

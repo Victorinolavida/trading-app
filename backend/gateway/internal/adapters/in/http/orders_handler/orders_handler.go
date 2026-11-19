@@ -35,9 +35,10 @@ type OrdersHandler struct {
 	validate      *validator.Validate
 	jwtService    *jwt.TokenService
 	rabbitClient  *brokerrabbit.Client
+	shutdown      <-chan struct{}
 }
 
-func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate, rabbitClient *brokerrabbit.Client) (*OrdersHandler, error) {
+func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate, rabbitClient *brokerrabbit.Client, shutdown <-chan struct{}) (*OrdersHandler, error) {
 	if validate == nil {
 		return nil, ErrMissingValidator
 	}
@@ -51,6 +52,7 @@ func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, va
 		validate:      validate,
 		jwtService:    jwtService,
 		rabbitClient:  rabbitClient,
+		shutdown:      shutdown,
 	}, nil
 }
 
@@ -245,6 +247,7 @@ func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) 
 		response.RenderError(w, http.StatusServiceUnavailable, "orders events broker unavailable")
 		return
 	}
+	defer ch.Close()
 
 	queue, err := ch.QueueDeclare("", true, true, true, false, nil)
 	if err != nil {
@@ -266,11 +269,11 @@ func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) 
 	for {
 		select {
 		case <-ctx.Done():
-			_ = ch.Close()
+			return
+		case <-h.shutdown:
 			return
 		case d, ok := <-deliveries:
 			if !ok {
-				_ = ch.Close()
 				return
 			}
 

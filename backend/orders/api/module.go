@@ -3,7 +3,9 @@ package api
 
 import (
 	"context"
+	"errors"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,7 +25,10 @@ import (
 	"github.com/victorinolavida/orders/internal/domain"
 	broker "github.com/victorinolavida/pkg/broker/rabbitmq"
 	pkgconfig "github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/lifecycle"
 )
+
+var _ lifecycle.Service = (*Module)(nil)
 
 // Order is the order representation exposed across module boundaries.
 type Order struct {
@@ -150,6 +155,7 @@ type Module struct {
 	listOrders     *list_orders.Usecase
 	getMarketDepth *get_market_depth.Usecase
 	worker         *orderexpiration.OrderWorker
+	workerWG       sync.WaitGroup
 }
 
 // New wires the orders module and its infrastructure.
@@ -355,13 +361,29 @@ func (m *Module) MarketDepth(ctx context.Context, securityID uuid.UUID) (*Market
 	}, nil
 }
 
-// StartWorker runs the order expiration worker until the context is canceled.
-func (m *Module) StartWorker(ctx context.Context) error {
-	return m.worker.Start(ctx)
+func (m *Module) Start(ctx context.Context) error {
+	m.workerWG.Add(1)
+	result := make(chan error, 1)
+	go func() {
+		defer m.workerWG.Done()
+		result <- m.worker.Start(ctx)
+	}()
+
+	select {
+	case err := <-result:
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil
+		}
+		return err
+	case <-ctx.Done():
+		m.workerWG.Wait()
+		return nil
+	}
 }
 
 // Close releases the orders module infrastructure.
-func (m *Module) Close() error {
+func (m *Module) Close(context.Context) error {
+	m.workerWG.Wait()
 	return m.rabbit.Close()
 }
 

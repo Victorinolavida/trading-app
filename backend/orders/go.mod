@@ -9,6 +9,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/victorinolavida/pkg v0.0.0
 	github.com/victorinolavida/proto v0.0.0
+	go.uber.org/goleak v1.3.0
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 )

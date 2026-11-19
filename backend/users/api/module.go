@@ -18,7 +18,10 @@ import (
 	"github.com/victorinolavida/auth/internal/application/usecases/whoami"
 	pkgconfig "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/jwt"
+	"github.com/victorinolavida/pkg/lifecycle"
 )
+
+var _ lifecycle.Service = (*Module)(nil)
 
 // User is the user representation exposed across module boundaries.
 type User struct {
@@ -57,6 +60,15 @@ func New(pool *pgxpool.Pool, tokenCfg pkgconfig.TokenConfig) (*Module, error) {
 		register: register.New(repo, issuer),
 		whoami:   whoami.New(repo),
 	}, nil
+}
+
+func (m *Module) Start(ctx context.Context) error {
+	<-ctx.Done()
+	return nil
+}
+
+func (m *Module) Close(context.Context) error {
+	return nil
 }
 
 // Login authenticates a user and returns a signed token.

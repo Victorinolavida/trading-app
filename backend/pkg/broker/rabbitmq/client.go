@@ -27,6 +27,7 @@ type Client struct {
 
 	done chan struct{}
 	once sync.Once
+	wg   sync.WaitGroup
 }
 
 // NewClientFromConfig builds the address from config and connects.
@@ -55,7 +56,11 @@ func NewClient(addr string) (*Client, error) {
 	for attempt := 1; attempt <= initialConnectTries; attempt++ {
 		notify, err = c.connect()
 		if err == nil {
-			go c.handleReconnect(notify)
+			c.wg.Add(1)
+			go func() {
+				defer c.wg.Done()
+				c.handleReconnect(notify)
+			}()
 			return c, nil
 		}
 		slog.Warn("rabbitmq: initial connect failed",
@@ -155,8 +160,11 @@ func (c *Client) Close() error {
 	c.isReady = false
 	c.m.Unlock()
 
-	if conn == nil || conn.IsClosed() {
-		return nil
+	var err error
+	if conn != nil && !conn.IsClosed() {
+		err = conn.Close()
 	}
-	return conn.Close()
+
+	c.wg.Wait()
+	return err
 }

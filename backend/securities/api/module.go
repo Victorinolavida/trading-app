@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/victorinolavida/pkg/lifecycle"
 	"github.com/victorinolavida/securities/internal/adapters/out/postgres"
 	"github.com/victorinolavida/securities/internal/application/ports"
 	getenablesecurities "github.com/victorinolavida/securities/internal/application/usecases/get_enable_securities"
@@ -15,6 +16,8 @@ import (
 	"github.com/victorinolavida/securities/internal/domain"
 	"github.com/victorinolavida/securities/internal/domainerrors"
 )
+
+var _ lifecycle.Service = (*Module)(nil)
 
 // ErrSecurityNotFound is re-exported for callers that need to classify the
 // failure without importing the internal domain error package.
@@ -77,6 +80,15 @@ func New(pool *pgxpool.Pool) *Module {
 		getEnabled:  getenablesecurities.New(repo),
 		getByParams: getsecuritybyparams.New(repo),
 	}
+}
+
+func (m *Module) Start(ctx context.Context) error {
+	<-ctx.Done()
+	return nil
+}
+
+func (m *Module) Close(context.Context) error {
+	return nil
 }
 
 // List returns the securities matching the given filters.

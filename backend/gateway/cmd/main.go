@@ -82,7 +82,7 @@ func main() {
 	}
 	defer rabbitClient.Close()
 
-	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient)
+	ordHandler, err := ordershandler.NewOrdersHandler(conf, ordService, response.NewValidator(), rabbitClient, httpServer.ShutdownSignal())
 	if err != nil {
 		logger.Fatal("error creating orders handler", slog.Any("error", err))
 	}
