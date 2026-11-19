@@ -18,7 +18,10 @@ func main() {
 		logger.Fatal("error loading config", slog.Any("error", err))
 	}
 
-	module := api.New(nil)
+	module, err := api.New(api.Deps{Security: nil})
+	if err != nil {
+		logger.Fatal("error wiring calculator module", slog.Any("error", err))
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

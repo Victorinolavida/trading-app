@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/victorinolavida/calculator/internal/domain"
 )
 
 // Security holds the coupon data the calculator needs from the securities service.
@@ -15,7 +17,7 @@ type Security struct {
 	Name             string
 	SecurityType     string
 	MaturityDate     time.Time
-	NominalValue     float64
+	NominalValue     domain.Decimal
 	Currency         string
 	CouponRate       float64
 	CouponPeriodDays int
