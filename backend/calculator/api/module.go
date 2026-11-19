@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,18 +43,20 @@ type CashflowRequest struct {
 // Deps are the external dependencies the calculator module needs to start.
 type Deps struct {
 	Security ports.SecurityProvider
+	Udi      ports.UdiProvider
 }
 
 // Module is the in-process calculator module.
 type Module struct {
 	security ports.SecurityProvider
+	udi      ports.UdiProvider
 }
 
 var _ lifecycle.Service = (*Module)(nil)
 
 // New wires the calculator module on top of the securities provider.
 func New(deps Deps) (*Module, error) {
-	return &Module{security: deps.Security}, nil
+	return &Module{security: deps.Security, udi: deps.Udi}, nil
 }
 
 // Start runs the calculator module until the context is cancelled.
@@ -73,10 +76,27 @@ func (m *Module) Price(ctx context.Context, req PriceRequest) (PriceResult, erro
 	if err != nil {
 		return PriceResult{}, err
 	}
-	if _, err := m.security.GetByPublicID(ctx, id); err != nil {
+	security, err := m.security.GetByPublicID(ctx, id)
+	if err != nil {
 		return PriceResult{}, err
 	}
-	return PriceResult{}, nil
+	schedule, err := domain.BuildCouponSchedule(security.MaturityDate, req.SettlementDate, security.CouponPeriodDays, security.CouponRate, security.NominalValue)
+	if err != nil {
+		return PriceResult{}, err
+	}
+	daysSinceLastCoupon := daysSinceLastCoupon(req.SettlementDate, schedule)
+	accrued := domain.ComputeAccruedInterest(security.NominalValue, security.CouponRate, daysSinceLastCoupon, security.DayCountBasis)
+	dirty := domain.ComputeDirtyPrice(schedule, req.SettlementDate, req.Yield)
+	clean := domain.ComputeCleanPrice(schedule, req.SettlementDate, req.Yield, security.NominalValue, security.CouponRate, daysSinceLastCoupon, security.DayCountBasis)
+	mxn := clean
+	if isUdibono(security.SecurityType) {
+		udiValue, err := m.udi.GetByDate(ctx, req.SettlementDate)
+		if err != nil {
+			return PriceResult{}, err
+		}
+		mxn = domain.ComputeMXNValue(udiValue, clean)
+	}
+	return PriceResult{CleanPrice: clean, AccruedInterest: accrued, DirtyPrice: dirty, MXNValue: mxn}, nil
 }
 
 // Yield solves the yield from a clean price.
@@ -85,10 +105,16 @@ func (m *Module) Yield(ctx context.Context, req YieldRequest) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if _, err := m.security.GetByPublicID(ctx, id); err != nil {
+	security, err := m.security.GetByPublicID(ctx, id)
+	if err != nil {
 		return 0, err
 	}
-	return 0, nil
+	schedule, err := domain.BuildCouponSchedule(security.MaturityDate, req.SettlementDate, security.CouponPeriodDays, security.CouponRate, security.NominalValue)
+	if err != nil {
+		return 0, err
+	}
+	daysSinceLastCoupon := daysSinceLastCoupon(req.SettlementDate, schedule)
+	return domain.ComputeYield(schedule, req.SettlementDate, req.CleanPrice, security.NominalValue, security.CouponRate, daysSinceLastCoupon, security.DayCountBasis), nil
 }
 
 // Cashflows returns the coupon schedule.
@@ -106,4 +132,30 @@ func (m *Module) Cashflows(ctx context.Context, req CashflowRequest) ([]domain.C
 		return nil, err
 	}
 	return schedule.CashFlows, nil
+}
+
+// isUdibono reports whether the security is denominated in UDI.
+func isUdibono(securityType string) bool {
+	switch strings.ToUpper(strings.TrimSpace(securityType)) {
+	case "UDI", "UDIBONO", "UD":
+		return true
+	default:
+		return false
+	}
+}
+
+// daysSinceLastCoupon returns the number of days elapsed since the last coupon
+// before the settlement date.
+func daysSinceLastCoupon(settlement time.Time, schedule *domain.CouponSchedule) int {
+	last := settlement
+	for _, cf := range schedule.CashFlows {
+		if !cf.Date.After(settlement) && cf.Date.Before(last) {
+			last = cf.Date
+		}
+	}
+	days := int(settlement.Sub(last).Hours() / 24)
+	if days < 0 {
+		days = 0
+	}
+	return days
 }
