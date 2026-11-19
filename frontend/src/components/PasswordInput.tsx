@@ -1,8 +1,6 @@
+import { Button } from "./ui/button";
 import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
-
-const inputClass =
-  "w-full rounded-md border border-border bg-surface py-2.5 pl-3 pr-11 text-base text-inherit focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
 
 interface PasswordInputProps {
   id: string;
@@ -25,11 +23,12 @@ export function PasswordInput({
         id={id}
         type={visible ? "text" : "password"}
         autoComplete={autoComplete}
-        className={inputClass}
+        className="ui-field w-full pr-11"
       />
-      <button
-        type="button"
-        className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-fg-muted hover:text-fg"
+      <Button
+        variant="plain"
+        size="inline"
+        className="absolute inset-y-0 right-0 w-11 text-fg-muted focus-visible:-outline-offset-2"
         onClick={() => setVisible((value) => !value)}
         aria-label={label}
         aria-pressed={visible}
@@ -66,7 +65,7 @@ export function PasswordInput({
             <circle cx="12" cy="12" r="3" />
           </svg>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

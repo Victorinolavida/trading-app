@@ -1,3 +1,4 @@
+import { Button } from "../../components/ui/button";
 import { memo } from "react";
 import { Link } from "react-router";
 import {
@@ -25,7 +26,8 @@ import {
 } from "../../components/Badge";
 import { cn } from "../../components/ui/card";
 import { useCancelOrder } from "./hooks";
-import type { AllocationStatus, Order } from "./types";
+import { allocationStatusClasses } from "./constants";
+import type { Order } from "./types";
 import { formatDuration, useNow } from "./useNow";
 
 export const orderTableFeatures = tableFeatures({
@@ -101,12 +103,6 @@ const percentFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-const allocationStatusClasses: Record<AllocationStatus, string> = {
-  none: "text-fg-subtle",
-  partial: "text-warning",
-  allocated: "text-success",
-};
-
 function formatDecimal(
   value: string | number | null | undefined,
   formatter: Intl.NumberFormat,
@@ -142,18 +138,19 @@ async function copyText(value: string, label: string) {
 
 function CopyableCell({ value, label }: { value: string; label: string }) {
   return (
-    <button
-      type="button"
+    <Button
       title={value}
       aria-label={`Copy ${label} ${value}`}
       onClick={() => void copyText(value, label)}
-      className="group inline-flex items-center gap-1 rounded font-mono text-xs text-fg-soft hover:text-fg-strong focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      variant="plain"
+      size="inline"
+      className="group font-mono text-xs font-normal text-fg-soft"
     >
       <span>{value.slice(0, 8)}</span>
-      <span className="text-[9px] uppercase text-fg-faint opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="text-[9px] uppercase text-fg-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
         copy
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -178,15 +175,15 @@ function CancelOrderButton({ orderId }: { orderId: string }) {
   const cancelOrder = useCancelOrder();
 
   return (
-    <button
-      type="button"
+    <Button
       aria-label={`Cancel order ${orderId}`}
       disabled={cancelOrder.isPending}
       onClick={() => cancelOrder.mutate(orderId)}
-      className="rounded border border-danger-border/70 bg-danger-surface/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-danger-soft hover:border-danger-strong hover:bg-danger-surface/50 disabled:cursor-not-allowed disabled:opacity-50"
+      variant="danger"
+      size="sm"
     >
       {cancelOrder.isPending ? "Cancelling..." : "Cancel"}
-    </button>
+    </Button>
   );
 }
 

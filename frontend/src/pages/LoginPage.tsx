@@ -1,3 +1,4 @@
+import { Button } from "../components/ui/button";
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "../components/PasswordInput";
 import { useLogin } from "../features/auth/hooks";
@@ -16,9 +17,6 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-const inputClass =
-  "rounded-md border border-border bg-surface px-3 py-2.5 text-base text-inherit focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
-
 export function LoginPage() {
   const login = useLogin();
   const {
@@ -35,14 +33,14 @@ export function LoginPage() {
     login.mutate(values, { onSuccess: () => goToRedirect() });
 
   return (
-    <div className="w-full max-w-sm rounded-lg border border-border bg-surface-raised p-8">
-      <h1 className="mb-5 text-2xl font-semibold">Sign in</h1>
+    <div className="ui-panel w-full max-w-md p-6 sm:p-8">
+      <h1 className="ui-title mb-5">Sign in</h1>
       <form className="flex flex-col gap-1.5" onSubmit={handleSubmit(onSubmit)}>
         <label className="mt-2 text-sm text-fg-muted" htmlFor="email">
           Email
         </label>
         <input
-          className={inputClass}
+          className="ui-field"
           id="email"
           type="email"
           autoComplete="email"
@@ -66,21 +64,18 @@ export function LoginPage() {
           <p className="mt-1 text-sm text-danger">{errors.password.message}</p>
         )}
 
-        <button
-          className="mt-4 cursor-pointer rounded-md bg-accent-strong px-4 py-2.5 text-base text-fg-strong disabled:cursor-default disabled:opacity-60"
+        <Button
+          variant="primary"
+          className="mt-4"
           type="submit"
           disabled={login.isPending}
         >
           {login.isPending ? "Signing in..." : "Sign in"}
-        </button>
+        </Button>
       </form>
       <p className="mt-5 text-center text-sm text-fg-muted">
         No account?{" "}
-        <Link
-          className="cursor-pointer text-accent-soft"
-          type="button"
-          to="/register"
-        >
+        <Link className="ui-link" type="button" to="/register">
           Create one
         </Link>
       </p>

@@ -47,3 +47,29 @@
     @apply bg-surface text-fg overflow-x-hidden;
   }
 }
+
+@layer components {
+  .ui-panel {
+    @apply rounded-lg border border-border bg-surface-raised/70;
+  }
+
+  .ui-alert-danger {
+    @apply rounded-lg border border-danger-border/60 bg-danger-surface/30 text-danger-soft;
+  }
+
+  .ui-title {
+    @apply text-2xl font-semibold text-fg-strong;
+  }
+
+  .ui-section-title {
+    @apply text-xs font-medium uppercase tracking-wider text-fg-muted;
+  }
+
+  .ui-link {
+    @apply cursor-pointer text-accent-soft hover:text-accent-subtle hover:underline;
+  }
+
+  .ui-field {
+    @apply rounded border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60;
+  }
+}
