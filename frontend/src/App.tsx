@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Menu } from "lucide-react";
 import { Sidebar } from "./components/Sidebar";
+import { OfflineBanner } from "./components/OfflineBanner";
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,8 @@ export default function App() {
         <img src="/favicon.svg" alt="" className="h-6 w-6" />
         <span className="font-semibold text-fg-strong">Trading</span>
       </header>
+
+      <OfflineBanner />
 
       <Sidebar open={open} onClose={() => setOpen(false)} />
 
