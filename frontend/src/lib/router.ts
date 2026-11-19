@@ -25,6 +25,7 @@ export const router = createBrowserRouter([
     Component: App,
     id: "root",
     loader: requireAuth,
+    ErrorBoundary: ErrorBoundary,
     children: [
       {
         index: true,
@@ -33,17 +34,14 @@ export const router = createBrowserRouter([
       {
         path: "/blotter",
         Component: BlotterRoute,
-        errorElement: <ErrorBoundary />,
       },
       {
         path: "/orders/:orderId",
         Component: OrderDetailsPage,
-        errorElement: <ErrorBoundary />,
       },
       {
         Component: SecurityDetailPage,
         path: "/securities/:securityId",
-        errorElement: <ErrorBoundary />,
         loader: async ({ params }) => {
           const securityId = params.securityId;
           if (!securityId || securityId.length <= 0) {

@@ -12,7 +12,7 @@ import (
 )
 
 const getByID = `-- name: GetByID :one
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities 
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE public_id = $1
 `
 
@@ -23,7 +23,6 @@ func (q *Queries) GetByID(ctx context.Context, publicID uuid.UUID) (Security, er
 		&i.ID,
 		&i.PublicID,
 		&i.Isin,
-		&i.Name,
 		&i.Type,
 		&i.Serie,
 		&i.IssueDate,
@@ -34,12 +33,13 @@ func (q *Queries) GetByID(ctx context.Context, publicID uuid.UUID) (Security, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Enable,
+		&i.Name,
 	)
 	return i, err
 }
 
 const getByIDs = `-- name: GetByIDs :many
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE public_id = ANY($1::uuid[])
 ORDER BY issue_date DESC
 `
@@ -57,7 +57,6 @@ func (q *Queries) GetByIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]Securit
 			&i.ID,
 			&i.PublicID,
 			&i.Isin,
-			&i.Name,
 			&i.Type,
 			&i.Serie,
 			&i.IssueDate,
@@ -68,6 +67,7 @@ func (q *Queries) GetByIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]Securit
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enable,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (q *Queries) GetByIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]Securit
 }
 
 const getByISIN = `-- name: GetByISIN :one
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities 
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE isin = $1
 `
 
@@ -91,7 +91,6 @@ func (q *Queries) GetByISIN(ctx context.Context, isin string) (Security, error) 
 		&i.ID,
 		&i.PublicID,
 		&i.Isin,
-		&i.Name,
 		&i.Type,
 		&i.Serie,
 		&i.IssueDate,
@@ -102,12 +101,13 @@ func (q *Queries) GetByISIN(ctx context.Context, isin string) (Security, error) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Enable,
+		&i.Name,
 	)
 	return i, err
 }
 
 const getByISINs = `-- name: GetByISINs :many
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE isin = ANY($1::text[])
 ORDER BY issue_date DESC
 `
@@ -125,7 +125,6 @@ func (q *Queries) GetByISINs(ctx context.Context, dollar_1 []string) ([]Security
 			&i.ID,
 			&i.PublicID,
 			&i.Isin,
-			&i.Name,
 			&i.Type,
 			&i.Serie,
 			&i.IssueDate,
@@ -136,6 +135,7 @@ func (q *Queries) GetByISINs(ctx context.Context, dollar_1 []string) ([]Security
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enable,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func (q *Queries) GetByISINs(ctx context.Context, dollar_1 []string) ([]Security
 }
 
 const getBySeries = `-- name: GetBySeries :many
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE serie = ANY($1::text[])
 ORDER BY issue_date DESC
 `
@@ -166,7 +166,6 @@ func (q *Queries) GetBySeries(ctx context.Context, dollar_1 []string) ([]Securit
 			&i.ID,
 			&i.PublicID,
 			&i.Isin,
-			&i.Name,
 			&i.Type,
 			&i.Serie,
 			&i.IssueDate,
@@ -177,6 +176,7 @@ func (q *Queries) GetBySeries(ctx context.Context, dollar_1 []string) ([]Securit
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enable,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
@@ -189,7 +189,7 @@ func (q *Queries) GetBySeries(ctx context.Context, dollar_1 []string) ([]Securit
 }
 
 const getByTypes = `-- name: GetByTypes :many
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE type = ANY($1::text[])
 ORDER BY issue_date DESC
 `
@@ -207,7 +207,6 @@ func (q *Queries) GetByTypes(ctx context.Context, dollar_1 []string) ([]Security
 			&i.ID,
 			&i.PublicID,
 			&i.Isin,
-			&i.Name,
 			&i.Type,
 			&i.Serie,
 			&i.IssueDate,
@@ -218,6 +217,7 @@ func (q *Queries) GetByTypes(ctx context.Context, dollar_1 []string) ([]Security
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enable,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}
@@ -230,7 +230,7 @@ func (q *Queries) GetByTypes(ctx context.Context, dollar_1 []string) ([]Security
 }
 
 const getEnableList = `-- name: GetEnableList :many
-SELECT id, public_id, isin, name, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable FROM securities
+SELECT id, public_id, isin, type, serie, issue_date, maturity_date, nominal_value, currency, fx, created_at, updated_at, enable, name FROM securities
 WHERE enable = true
 `
 
@@ -247,7 +247,6 @@ func (q *Queries) GetEnableList(ctx context.Context) ([]Security, error) {
 			&i.ID,
 			&i.PublicID,
 			&i.Isin,
-			&i.Name,
 			&i.Type,
 			&i.Serie,
 			&i.IssueDate,
@@ -258,6 +257,7 @@ func (q *Queries) GetEnableList(ctx context.Context) ([]Security, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Enable,
+			&i.Name,
 		); err != nil {
 			return nil, err
 		}

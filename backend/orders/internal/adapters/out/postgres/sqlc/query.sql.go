@@ -127,7 +127,7 @@ SET
 WHERE status = 'active'
   AND expires_at < now()
   AND EXISTS (SELECT 1 FROM locks)
-RETURNING id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at
+RETURNING id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at
 `
 
 func (q *Queries) ExpireOrders(ctx context.Context) ([]Order, error) {
@@ -148,14 +148,14 @@ func (q *Queries) ExpireOrders(ctx context.Context) ([]Order, error) {
 			&i.OrderType,
 			&i.Price,
 			&i.Yield,
-			&i.Quantity,
 			&i.AllocationQty,
-			&i.AllocationStatus,
+			&i.Quantity,
 			&i.NominalValue,
 			&i.Fx,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AllocationStatus,
 			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
@@ -169,7 +169,7 @@ func (q *Queries) ExpireOrders(ctx context.Context) ([]Order, error) {
 }
 
 const getActiveOrders = `-- name: GetActiveOrders :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE 
     security_id = $1
     AND trader_id = $2
@@ -205,14 +205,14 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 			&i.OrderType,
 			&i.Price,
 			&i.Yield,
-			&i.Quantity,
 			&i.AllocationQty,
-			&i.AllocationStatus,
+			&i.Quantity,
 			&i.NominalValue,
 			&i.Fx,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AllocationStatus,
 			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
@@ -226,7 +226,7 @@ func (q *Queries) GetActiveOrders(ctx context.Context, arg GetActiveOrdersParams
 }
 
 const getAsksToTrade = `-- name: GetAsksToTrade :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE direction = 'ask'
   AND status = 'active'
   AND security_id = $1
@@ -251,14 +251,14 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 			&i.OrderType,
 			&i.Price,
 			&i.Yield,
-			&i.Quantity,
 			&i.AllocationQty,
-			&i.AllocationStatus,
+			&i.Quantity,
 			&i.NominalValue,
 			&i.Fx,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AllocationStatus,
 			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
@@ -272,7 +272,7 @@ func (q *Queries) GetAsksToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 }
 
 const getBidsToTrade = `-- name: GetBidsToTrade :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE direction = 'bid'
   AND status = 'active'
   AND security_id = $1
@@ -297,14 +297,14 @@ func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 			&i.OrderType,
 			&i.Price,
 			&i.Yield,
-			&i.Quantity,
 			&i.AllocationQty,
-			&i.AllocationStatus,
+			&i.Quantity,
 			&i.NominalValue,
 			&i.Fx,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AllocationStatus,
 			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
@@ -318,7 +318,7 @@ func (q *Queries) GetBidsToTrade(ctx context.Context, securityID uuid.UUID) ([]O
 }
 
 const getOrderByID = `-- name: GetOrderByID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE id = $1
 `
 
@@ -334,21 +334,21 @@ func (q *Queries) GetOrderByID(ctx context.Context, id uuid.UUID) (Order, error)
 		&i.OrderType,
 		&i.Price,
 		&i.Yield,
-		&i.Quantity,
 		&i.AllocationQty,
-		&i.AllocationStatus,
+		&i.Quantity,
 		&i.NominalValue,
 		&i.Fx,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AllocationStatus,
 		&i.ExpiresAt,
 	)
 	return i, err
 }
 
 const getOrderByPublicID = `-- name: GetOrderByPublicID :one
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE public_id = $1
 `
 
@@ -364,14 +364,14 @@ func (q *Queries) GetOrderByPublicID(ctx context.Context, publicID uuid.UUID) (O
 		&i.OrderType,
 		&i.Price,
 		&i.Yield,
-		&i.Quantity,
 		&i.AllocationQty,
-		&i.AllocationStatus,
+		&i.Quantity,
 		&i.NominalValue,
 		&i.Fx,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AllocationStatus,
 		&i.ExpiresAt,
 	)
 	return i, err
@@ -434,7 +434,7 @@ func (q *Queries) GetTradesByOrderID(ctx context.Context, makerOrderID uuid.UUID
 }
 
 const listOrders = `-- name: ListOrders :many
-SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, quantity, allocation_qty, allocation_status, nominal_value, fx, status, created_at, updated_at, expires_at FROM orders
+SELECT id, public_id, trader_id, security_id, direction, order_type, price, yield, allocation_qty, quantity, nominal_value, fx, status, created_at, updated_at, allocation_status, expires_at FROM orders
 WHERE
     trader_id = $1
     AND (
@@ -483,14 +483,14 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order
 			&i.OrderType,
 			&i.Price,
 			&i.Yield,
-			&i.Quantity,
 			&i.AllocationQty,
-			&i.AllocationStatus,
+			&i.Quantity,
 			&i.NominalValue,
 			&i.Fx,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.AllocationStatus,
 			&i.ExpiresAt,
 		); err != nil {
 			return nil, err

@@ -18,19 +18,24 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: securities; Type: SCHEMA; Schema: -; Owner: -
+--
+
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: securities; Type: TABLE; Schema: public; Owner: -
+-- Name: securities; Type: TABLE; Schema: securities; Owner: -
 --
 
-CREATE TABLE public.securities (
+CREATE TABLE securities (
     id uuid NOT NULL,
     public_id uuid NOT NULL,
     isin character(12) NOT NULL,
-    name character varying(128) NOT NULL DEFAULT '',
     type character varying(4) NOT NULL,
     serie character varying(16) NOT NULL,
     issue_date date NOT NULL,
@@ -41,74 +46,34 @@ CREATE TABLE public.securities (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     enable boolean DEFAULT true,
+    name character varying(128) DEFAULT ''::character varying NOT NULL,
     CONSTRAINT securities_currency_check CHECK (((currency)::text = ANY ((ARRAY['MXN'::character varying, 'UDI'::character varying])::text[]))),
-    CONSTRAINT securities_type_check CHECK (((type)::text = ANY ((ARRAY['M'::character varying, 'S'::character varying])::text[]))),
-    CONSTRAINT securities_name_not_empty CHECK (char_length(trim(name)) > 0)
+    CONSTRAINT securities_type_check CHECK (((type)::text = ANY ((ARRAY['M'::character varying, 'S'::character varying])::text[])))
 );
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: securities securities_pkey; Type: CONSTRAINT; Schema: securities; Owner: -
 --
 
-CREATE TABLE public.users (
-    id uuid NOT NULL,
-    email text NOT NULL,
-    first_name text NOT NULL,
-    last_name text NOT NULL,
-    password_hash text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT users_first_name_len CHECK (((char_length(first_name) >= 3) AND (char_length(first_name) <= 49))),
-    CONSTRAINT users_last_name_len CHECK (((char_length(last_name) >= 3) AND (char_length(last_name) <= 49)))
-);
-
-
---
--- Name: securities securities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.securities
+ALTER TABLE ONLY securities
     ADD CONSTRAINT securities_pkey PRIMARY KEY (id);
 
 
 --
--- Name: securities securities_public_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: securities securities_public_id_key; Type: CONSTRAINT; Schema: securities; Owner: -
 --
 
-ALTER TABLE ONLY public.securities
+ALTER TABLE ONLY securities
     ADD CONSTRAINT securities_public_id_key UNIQUE (public_id);
 
 
 --
--- Name: securities securities_type_serie_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: securities securities_type_serie_key; Type: CONSTRAINT; Schema: securities; Owner: -
 --
 
-ALTER TABLE ONLY public.securities
+ALTER TABLE ONLY securities
     ADD CONSTRAINT securities_type_serie_key UNIQUE (type, serie);
-
-
---
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_email_key UNIQUE (email);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: users_created_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX users_created_at_idx ON public.users USING btree (created_at);
 
 
 --

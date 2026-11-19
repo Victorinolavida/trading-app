@@ -1,8 +1,7 @@
 # Task runner for the Go backend workspace.
 #
-# Each service lives in its own module (see go.work) and has its own justfile.
-# The recipes below fan out to those modules, accepting either a single service
-# name or `all` where documented.
+# The monolith lives in app/. The legacy service justfiles are only invoked
+# internally by the test and code-quality recipes.
 
 set shell := ["zsh", "-cu"]
 
@@ -10,20 +9,10 @@ set shell := ["zsh", "-cu"]
 # Modules
 # =============================================================================
 
-mod gateway "gateway"
-mod users "users"
-mod securities "securities"
-mod orders "orders"
+mod app "app"
 
-# =============================================================================
-# Configuration
-# =============================================================================
-
-# Every backend service. Used by the `all` target of the dispatch helpers.
-services := "gateway users securities orders"
-
-# Services that own database migrations. Used by the `all` target of DB recipes.
-db_services := "users securities orders"
+# Modules that make up the monolith. Used by the `all` targets below.
+modules := "gateway users securities orders"
 
 # =============================================================================
 # Default
@@ -43,7 +32,7 @@ setup:
     # Existing config files are left untouched. Run this once after cloning,
     # then edit `<service>/config/config.yaml` as needed.
     set -eu
-    for s in {{services}}; do
+    for s in {{modules}} app; do
         if [[ -f "$s/config/config.yaml" ]]; then
             echo "$s/config/config.yaml already exists"
         else
@@ -53,133 +42,61 @@ setup:
     done
 
 # =============================================================================
-# Service lifecycle
+# Monolith lifecycle
 # =============================================================================
 
-# Run a service: `just run users` or `just run all`.
-run service:
-    just _each run {{service}}
+# Run the modular monolith (all bounded contexts in one process).
+run:
+    just app run
 
-# Build a service binary: `just build users` or `just build all`.
-build service:
-    just _each build {{service}}
+# Build the modular monolith binary.
+build:
+    just app build
 
-# Run a service's tests: `just test users` or `just test all`.
-test service:
-    just _each test {{service}}
+# Run every test suite: monolith plus each module.
+test:
+    just app test
+    just _each test all
 
 # =============================================================================
 # Code quality
 # =============================================================================
 
-# Format Go code: `just fmt` (all) or `just fmt users`.
-fmt service="all":
-    #!/usr/bin/env zsh
-    set -eu
-    if [[ "{{service}}" == "all" ]]; then
-        just _each fmt all
-        gofmt -w pkg
-    else
-        just "{{service}}" fmt
-    fi
+# Format Go code.
+fmt:
+    just _each fmt all
+    just app fmt
+    gofmt -w pkg
 
-# Vet Go code: `just vet` (all) or `just vet users`.
-vet service="all":
-    #!/usr/bin/env zsh
-    set -eu
-    if [[ "{{service}}" == "all" ]]; then
-        just _each vet all
-        go vet ./pkg/...
-    else
-        just "{{service}}" vet
-    fi
+# Vet Go code.
+vet:
+    just _each vet all
+    just app vet
+    go vet ./pkg/...
 
 # Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
-tidy service="all":
-    #!/usr/bin/env zsh
-    set -eu
-    if [[ "{{service}}" == "all" ]]; then
-        just _each tidy all
-        (cd pkg && GOWORK=off go mod tidy)
-        (cd gen && GOWORK=off go mod tidy)
-    else
-        just "{{service}}" tidy
-    fi
-
-# =============================================================================
-# Database migrations
-# =============================================================================
-
-# Each service owns its own database (e.g. trading_users); see the service justfiles.
-# Apply pending DB migrations: `just migrate users` or `just migrate all`.
-migrate service:
-    just _db migrate {{service}}
-
-# Roll back the last migration batch: `just down users` or `just down all`.
-down service:
-    just _db down {{service}}
-
-# Drop the database and reapply migrations: `just clean users` or `just clean all`.
-clean service:
-    just _db clean {{service}}
-
-# Show migration status: `just status users` or `just status all`.
-status service:
-    just _db status {{service}}
-
-# Regenerate sqlc schema.sql: `just schema users` or `just schema all`.
-schema service:
-    just _db schema {{service}}
-
-# =============================================================================
-# Code generation
-# =============================================================================
-
-# Generate Go code from the protobuf definitions in backend/proto.
-gen-proto:
-    @buf generate
-    @echo "proto code generated in gen/"
-
-# =============================================================================
-# Service scaffolding
-# =============================================================================
-
-# Scaffold a new service: `just new payments [module]`.
-new name module="":
-    zsh scripts/new-service.sh "{{name}}" "{{module}}"
+tidy:
+    just _each tidy all
+    (cd app && GOWORK=off go mod tidy)
+    (cd pkg && GOWORK=off go mod tidy)
+    (cd gen && GOWORK=off go mod tidy)
 
 # =============================================================================
 # Private helpers
 # =============================================================================
 
-# Dispatch a command to one service, or every service when `service` is `all`.
+# Dispatch a command to one module, or every module when `module` is `all`.
 [private]
-_each cmd service:
+_each cmd module:
     #!/usr/bin/env zsh
     set -eu
-    if [[ "{{service}}" == "all" ]]; then
-        for s in {{services}}; do
-            just "$s" "{{cmd}}"
+    if [[ "{{module}}" == "all" ]]; then
+        for s in {{modules}}; do
+            just --justfile "$s/justfile" "{{cmd}}"
         done
-    elif [[ " {{services}} " == *" {{service}} "* ]]; then
-        just "{{service}}" "{{cmd}}"
+    elif [[ " {{modules}} " == *" {{module}} "* ]]; then
+        just --justfile "{{module}}/justfile" "{{cmd}}"
     else
-        echo "unknown service '{{service}}' (expected: {{services}} or all)" >&2
-        exit 2
-    fi
-
-# Dispatch a DB command to one service, or every DB service when `service` is `all`.
-[private]
-_db cmd service:
-    #!/usr/bin/env zsh
-    set -eu
-    if [[ "{{service}}" == "all" ]]; then
-        for s in {{db_services}}; do
-            just "$s" "{{cmd}}"
-        done
-    elif [[ " {{db_services}} " == *" {{service}} "* ]]; then
-        just "{{service}}" "{{cmd}}"
-    else
-        echo "unknown service '{{service}}' (expected: {{db_services}} or all)" >&2
+        echo "unknown module '{{module}}' (expected: {{modules}} or all)" >&2
         exit 2
     fi

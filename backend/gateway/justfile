@@ -9,13 +9,13 @@ set shell := ["zsh", "-cu"]
 # Service lifecycle
 # =============================================================================
 
-# Run the gateway service.
-run:
-    go run ./cmd
+# Legacy microservices form: run the gateway service on its own.
+# run:
+#     go run ./cmd
 
-# Build the gateway binary into ./bin/gateway.
-build:
-    go build -o bin/gateway ./cmd
+# Legacy microservices form: build the gateway binary on its own.
+# build:
+#     go build -o bin/gateway ./cmd
 
 # Run the test suite, starting from a clean test cache.
 test: cache-clean

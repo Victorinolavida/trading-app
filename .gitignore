@@ -3,3 +3,6 @@ config.yaml
 
 # Frontend env (local) - copy .env.example to .env
 .env
+
+# Go build output
+bin/

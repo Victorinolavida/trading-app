@@ -13,7 +13,6 @@ type Security struct {
 	ID           uuid.UUID
 	PublicID     uuid.UUID
 	Isin         string
-	Name         string
 	Type         string
 	Serie        string
 	IssueDate    pgtype.Date
@@ -24,14 +23,5 @@ type Security struct {
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 	Enable       pgtype.Bool
-}
-
-type User struct {
-	ID           uuid.UUID
-	Email        string
-	FirstName    string
-	LastName     string
-	PasswordHash string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	Name         string
 }

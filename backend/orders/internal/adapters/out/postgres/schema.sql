@@ -18,15 +18,21 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: orders; Type: SCHEMA; Schema: -; Owner: -
+--
+
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: orders; Type: TABLE; Schema: public; Owner: -
+-- Name: orders; Type: TABLE; Schema: orders; Owner: -
 --
 
-CREATE TABLE public.orders (
+CREATE TABLE orders (
     id uuid NOT NULL,
     public_id uuid NOT NULL,
     trader_id uuid NOT NULL,
@@ -35,14 +41,14 @@ CREATE TABLE public.orders (
     order_type text NOT NULL,
     price bigint,
     yield bigint,
+    allocation_qty bigint NOT NULL,
     quantity bigint NOT NULL,
-    allocation_qty bigint DEFAULT 0 NOT NULL,
-    allocation_status text DEFAULT 'none'::text NOT NULL,
     nominal_value bigint NOT NULL,
     fx bigint NOT NULL,
     status text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    allocation_status text DEFAULT 'none'::text NOT NULL,
     expires_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT orders_alloc_consistency_check CHECK ((((allocation_status = 'none'::text) AND (allocation_qty = 0)) OR ((allocation_status = 'partial'::text) AND (allocation_qty > 0) AND (allocation_qty < quantity)) OR ((allocation_status = 'allocated'::text) AND (allocation_qty = quantity)))),
     CONSTRAINT orders_alloc_qty_check CHECK (((allocation_qty >= 0) AND (allocation_qty <= quantity))),
@@ -57,10 +63,10 @@ CREATE TABLE public.orders (
 
 
 --
--- Name: trades; Type: TABLE; Schema: public; Owner: -
+-- Name: trades; Type: TABLE; Schema: orders; Owner: -
 --
 
-CREATE TABLE public.trades (
+CREATE TABLE trades (
     id uuid NOT NULL,
     public_id uuid NOT NULL,
     maker_order_id uuid NOT NULL,
@@ -76,72 +82,72 @@ CREATE TABLE public.trades (
 
 
 --
--- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: orders; Owner: -
 --
 
-ALTER TABLE ONLY public.orders
+ALTER TABLE ONLY orders
     ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
 
 
 --
--- Name: orders orders_public_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_public_id_key; Type: CONSTRAINT; Schema: orders; Owner: -
 --
 
-ALTER TABLE ONLY public.orders
+ALTER TABLE ONLY orders
     ADD CONSTRAINT orders_public_id_key UNIQUE (public_id);
 
 
 --
--- Name: trades trades_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: trades trades_pkey; Type: CONSTRAINT; Schema: orders; Owner: -
 --
 
-ALTER TABLE ONLY public.trades
+ALTER TABLE ONLY trades
     ADD CONSTRAINT trades_pkey PRIMARY KEY (id);
 
 
 --
--- Name: trades trades_public_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: trades trades_public_id_key; Type: CONSTRAINT; Schema: orders; Owner: -
 --
 
-ALTER TABLE ONLY public.trades
+ALTER TABLE ONLY trades
     ADD CONSTRAINT trades_public_id_key UNIQUE (public_id);
 
 
 --
--- Name: orders_active_book_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: orders_active_book_idx; Type: INDEX; Schema: orders; Owner: -
 --
 
-CREATE INDEX orders_active_book_idx ON public.orders USING btree (security_id, direction, price) WHERE (status = 'active'::text);
-
-
---
--- Name: trades_maker_order_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX trades_maker_order_id_idx ON public.trades USING btree (maker_order_id);
+CREATE INDEX orders_active_book_idx ON orders USING btree (security_id, direction, price) WHERE (status = 'active'::text);
 
 
 --
--- Name: trades_taker_order_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: trades_maker_order_id_idx; Type: INDEX; Schema: orders; Owner: -
 --
 
-CREATE INDEX trades_taker_order_id_idx ON public.trades USING btree (taker_order_id);
-
-
---
--- Name: trades trades_maker_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.trades
-    ADD CONSTRAINT trades_maker_order_id_fkey FOREIGN KEY (maker_order_id) REFERENCES public.orders(id);
+CREATE INDEX trades_maker_order_id_idx ON trades USING btree (maker_order_id);
 
 
 --
--- Name: trades trades_taker_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: trades_taker_order_id_idx; Type: INDEX; Schema: orders; Owner: -
 --
 
-ALTER TABLE ONLY public.trades
-    ADD CONSTRAINT trades_taker_order_id_fkey FOREIGN KEY (taker_order_id) REFERENCES public.orders(id);
+CREATE INDEX trades_taker_order_id_idx ON trades USING btree (taker_order_id);
+
+
+--
+-- Name: trades trades_maker_order_id_fkey; Type: FK CONSTRAINT; Schema: orders; Owner: -
+--
+
+ALTER TABLE ONLY trades
+    ADD CONSTRAINT trades_maker_order_id_fkey FOREIGN KEY (maker_order_id) REFERENCES orders(id);
+
+
+--
+-- Name: trades trades_taker_order_id_fkey; Type: FK CONSTRAINT; Schema: orders; Owner: -
+--
+
+ALTER TABLE ONLY trades
+    ADD CONSTRAINT trades_taker_order_id_fkey FOREIGN KEY (taker_order_id) REFERENCES orders(id);
 
 
 --

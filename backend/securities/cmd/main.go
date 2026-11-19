@@ -6,22 +6,22 @@ import (
 	"os/signal"
 	"syscall"
 
+	conf "github.com/victorinolavida/pkg/config"
+	"github.com/victorinolavida/pkg/database"
+	grpcserver "github.com/victorinolavida/pkg/grpc_server"
+	"github.com/victorinolavida/pkg/logger"
+	securitypb "github.com/victorinolavida/proto/security"
 	"github.com/victorinolavida/securities/config"
 	grpcAdapter "github.com/victorinolavida/securities/internal/adapters/in/grcp"
 	"github.com/victorinolavida/securities/internal/adapters/out/postgres"
 	getenablesecurities "github.com/victorinolavida/securities/internal/application/usecases/get_enable_securities"
 	getsecurities "github.com/victorinolavida/securities/internal/application/usecases/get_securities"
 	getsecuritybyparams "github.com/victorinolavida/securities/internal/application/usecases/get_security_by_params"
-	conf "github.com/victorinolavida/pkg/config"
-	"github.com/victorinolavida/pkg/database"
-	grpcserver "github.com/victorinolavida/pkg/grpc_server"
-	"github.com/victorinolavida/pkg/logger"
-	securitypb "github.com/victorinolavida/proto/security"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	logs := logger.NewLogger()
+	logs := logger.NewLogger("securities")
 
 	cfg, err := conf.NewConfig[config.Config]()
 	if err != nil {
@@ -60,4 +60,3 @@ func main() {
 	grpcServer.Server().GracefulStop()
 	logs.Info("securities server shutdown successfully")
 }
-

@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	logs := logger.NewLogger()
+	logs := logger.NewLogger("orders-worker")
 
 	cfg, err := cfgpkg.NewConfig[config.Config]()
 	if err != nil {

@@ -125,6 +125,7 @@ func ReconstructSecurity(
 		publicID:     publicID,
 		enable:       enable,
 		isin:         isin,
+		name:         name,
 		securityType: secType,
 		serie:        serie,
 		issueDate:    issueDate,

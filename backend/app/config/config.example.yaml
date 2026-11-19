@@ -1,0 +1,58 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (SERVER_PORT, DATABASE_HOST, ...).
+
+env: development
+
+server:
+  host: localhost
+  port: 3001
+  allow_origins:
+    - http://localhost:8000
+
+# One Postgres database shared by every bounded context. Each value below is
+# the schema owned by that context; the monolith sets search_path per pool.
+database:
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+  name: trading
+  users: users
+  securities: securities
+  orders: orders
+  max_conns: 10
+  min_conns: 2
+
+token:
+  secret: change-me-to-a-long-random-secret
+  issuer: trading-app
+  audience: trading-app-service
+  ttl: 10h
+
+cookie:
+  name: auth_token
+  csrfname: csrf_token
+  path: /
+  domain: ""
+  secure: false # set to true in production (https only)
+  samesite: Lax
+  ttl: 10h
+  secret: change-me-to-a-long-random-csrf-secret # hmac key for the csrf token, >= 32 bytes, must differ from token.secret
+
+allow_internal_crossing: true
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+publisher:
+  exchange: orders.events

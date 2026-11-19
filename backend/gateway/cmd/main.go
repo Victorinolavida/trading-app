@@ -31,7 +31,7 @@ const (
 )
 
 func main() {
-	log := logger.NewLogger()
+	log := logger.NewLogger("gateway")
 
 	conf, err := cfg.NewConfig[config.Config]()
 	if err != nil {

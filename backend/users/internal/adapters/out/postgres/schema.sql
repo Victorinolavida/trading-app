@@ -18,15 +18,21 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: users; Type: SCHEMA; Schema: -; Owner: -
+--
+
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: users; Type: TABLE; Schema: users; Owner: -
 --
 
-CREATE TABLE public.users (
+CREATE TABLE users (
     id uuid NOT NULL,
     email text NOT NULL,
     first_name text NOT NULL,
@@ -40,26 +46,26 @@ CREATE TABLE public.users (
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: users; Owner: -
 --
 
-ALTER TABLE ONLY public.users
+ALTER TABLE ONLY users
     ADD CONSTRAINT users_email_key UNIQUE (email);
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: users; Owner: -
 --
 
-ALTER TABLE ONLY public.users
+ALTER TABLE ONLY users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
 --
--- Name: users_created_at_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: users_created_at_idx; Type: INDEX; Schema: users; Owner: -
 --
 
-CREATE INDEX users_created_at_idx ON public.users USING btree (created_at);
+CREATE INDEX users_created_at_idx ON users USING btree (created_at);
 
 
 --

@@ -25,6 +25,10 @@ func NewPool(ctx context.Context, conf config.Database) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
+	if conf.Schema != "" {
+		cfg.ConnConfig.RuntimeParams["search_path"] = conf.Schema
+	}
+
 	cfg.MaxConns = defaultMaxConns
 	cfg.MinConns = defaultMinConns
 	if conf.MaxConns > 0 {

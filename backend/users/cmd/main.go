@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	logs := logger.NewLogger()
+	logs := logger.NewLogger("users")
 
 	cfg, err := conf.NewConfig[config.Config]()
 	if err != nil {

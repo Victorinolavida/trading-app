@@ -8,6 +8,7 @@ type Database struct {
 	Host     string `koanf:"host"`
 	Port     int    `koanf:"port"`
 	Name     string `koanf:"name"`
+	Schema   string `koanf:"schema"`
 	MaxConns int    `koanf:"max_conns"`
 	MinConns int    `koanf:"min_conns"`
 }

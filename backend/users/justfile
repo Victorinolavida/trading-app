@@ -10,8 +10,13 @@ set shell := ["zsh", "-cu"]
 # Configuration
 # =============================================================================
 
-# Database owned by the users service. Override with DATABASE_URL if needed.
-db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/trading_users?sslmode=disable")
+# Shared database that stores one schema per service. Override with DATABASE_URL if needed.
+db_name := "trading"
+
+# Postgres schema owned by the users service.
+schema := "users"
+
+db_url := env_var_or_default("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/" + db_name + "?sslmode=disable")
 
 # Directory containing dbmate migration files.
 migrations := "internal/adapters/out/postgres/migrations"
@@ -26,13 +31,13 @@ schema_file := "internal/adapters/out/postgres/schema.sql"
 # Service lifecycle
 # =============================================================================
 
-# Run the users service.
-run:
-    go run ./cmd
+# Legacy microservices form: run the users service on its own.
+# run:
+#     go run ./cmd
 
-# Build the users binary into ./bin/users.
-build:
-    go build -o bin/users ./cmd
+# Legacy microservices form: build the users binary on its own.
+# build:
+#     go build -o bin/users ./cmd
 
 # Run the test suite, starting from a clean test cache.
 test: cache-clean
@@ -59,30 +64,32 @@ tidy:
 # =============================================================================
 
 # Apply all pending DB migrations.
-migrate: db-create
-    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+migrate: schema-create
+    PGOPTIONS="-c search_path={{schema}}" dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
 
 # Regenerate sqlc schema.sql from the migrated database.
 schema: migrate
     docker exec {{pg_container}} pg_dump --schema-only --no-owner --no-privileges \
-        --exclude-table=schema_migrations "{{db_url}}" | grep -v '^\\' > "{{schema_file}}"
+        --schema={{schema}} --exclude-table={{schema}}.schema_migrations \
+        "{{db_url}}" | sed 's/{{schema}}\.//g' | grep -v '^CREATE SCHEMA' | grep -v '^\\' > "{{schema_file}}"
 
 # Roll back the last migration batch.
-down: db-create
-    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" down
+down: schema-create
+    PGOPTIONS="-c search_path={{schema}}" dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" down
 
-# Drop the database and reapply all migrations.
+# Drop and reapply this service's schema.
 clean: db-create
-    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" drop
-    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+    docker exec {{pg_container}} psql -U postgres -d {{db_name}} -v ON_ERROR_STOP=1 \
+        -c 'DROP SCHEMA IF EXISTS {{schema}} CASCADE; CREATE SCHEMA {{schema}};'
+    PGOPTIONS="-c search_path={{schema}}" dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
 
 # Create a new migration file.
 new name:
     dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" new {{name}}
 
 # Show pending/applied migrations.
-status: db-create
-    dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
+status: schema-create
+    PGOPTIONS="-c search_path={{schema}}" dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
 
 # =============================================================================
 # Private helpers
@@ -97,3 +104,9 @@ cache-clean:
 [private]
 db-create:
     dbmate --url "{{db_url}}" create 2>/dev/null || true
+
+# Create this service's schema if it does not exist yet.
+[private]
+schema-create: db-create
+    docker exec {{pg_container}} psql -U postgres -d {{db_name}} -v ON_ERROR_STOP=1 \
+        -c 'CREATE SCHEMA IF NOT EXISTS {{schema}};'

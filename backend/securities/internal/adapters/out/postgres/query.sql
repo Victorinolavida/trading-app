@@ -1,9 +1,9 @@
 -- name: GetByID :one
-SELECT * FROM securities 
+SELECT * FROM securities
 WHERE public_id = $1;
 
 -- name: GetByISIN :one
-SELECT * FROM securities 
+SELECT * FROM securities
 WHERE isin = $1;
 
 -- name: GetEnableList :many

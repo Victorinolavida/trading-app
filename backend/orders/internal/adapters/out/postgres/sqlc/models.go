@@ -18,14 +18,14 @@ type Order struct {
 	OrderType        string
 	Price            pgtype.Int8
 	Yield            pgtype.Int8
-	Quantity         int64
 	AllocationQty    int64
-	AllocationStatus string
+	Quantity         int64
 	NominalValue     int64
 	Fx               int64
 	Status           string
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
+	AllocationStatus string
 	ExpiresAt        pgtype.Timestamptz
 }
 

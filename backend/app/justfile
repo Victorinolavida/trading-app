@@ -1,0 +1,47 @@
+# Task runner for the modular monolith.
+#
+# The monolith runs the gateway, users, securities and orders bounded contexts
+# in a single process and owns the wiring between them.
+
+set shell := ["zsh", "-cu"]
+
+# =============================================================================
+# Service lifecycle
+# =============================================================================
+
+# Run the monolith.
+run:
+    go run .
+
+# Build the monolith binary into ./bin/trading.
+build:
+    go build -o bin/trading .
+
+# Run the test suite, starting from a clean test cache.
+test: cache-clean
+    go test ./...
+
+# =============================================================================
+# Code quality
+# =============================================================================
+
+# Format Go code with gofmt.
+fmt:
+    gofmt -w .
+
+# Vet Go code with the standard vet tool.
+vet:
+    go vet ./...
+
+# Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
+tidy:
+    GOWORK=off go mod tidy
+
+# =============================================================================
+# Private helpers
+# =============================================================================
+
+# Clear the Go test cache so `just test` always runs the full suite.
+[private]
+cache-clean:
+    go clean -testcache

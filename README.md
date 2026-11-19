@@ -2,25 +2,62 @@
 
 Monorepo with a Go backend (`backend/`) and a React frontend (`frontend/`).
 
-## Getting started
+The backend runs as a **modular monolith**: the HTTP gateway and the users,
+securities and orders bounded contexts live in one process and talk to each
+other through their public `api` packages instead of gRPC. The previous
+microservices layout is preserved on the `microservices` branch.
+
+## Getting started (modular monolith)
 
 ```sh
-just backend setup           # copy config.example.yaml -> config.yaml for gateway + users + orders + securities
-just infra-up                # start Postgres (docker compose)
-just backend migrate users   # apply migrations (dbmate)
-just backend run users       # run the users service (gRPC, :3030)
-just backend orders migrate     # apply orders migrations (dbmate)
-just backend orders run-service # run the orders service (gRPC)
-just backend orders run-worker  # run the orders expiration worker
-just backend run gateway     # run the gateway (HTTP, :3001)
+just setup                   # copy every config.example.yaml -> config.yaml (includes app/)
+just infra-up                # start Postgres, Redis and RabbitMQ (docker compose)
+just migrate                 # apply the users, securities and orders migrations
+just run                     # run the whole backend in one process (HTTP, :3001)
 just web                     # run the frontend (Vite, :8000)
 ```
 
-Config files are read from `<service>/config/config.yaml` and every key can be
-overridden with an env var (`SERVER_PORT`, `DATABASE_HOST`, `TOKEN_SECRET`, ...).
-`config.yaml` is git-ignored: `backend/*/config/config.example.yaml` is the template
-to copy, and the token secret must match between gateway and users. The frontend uses
-the same pattern with `frontend/.env.example` → `frontend/.env`.
+Or run the infrastructure, backend and frontend together with `just dev`, and run
+the backend test suites with `just test`.
+
+### Database
+
+Postgres runs one database, `trading`, with one schema per bounded context:
+`users`, `securities` and `orders`. Each service justfile sets `search_path` to
+its schema, and dbmate keeps a `schema_migrations` table inside that schema. The
+old per-service databases (`trading_users`, `trading_securities`,
+`trading_orders`) are obsolete; their data was reset and they can be dropped.
+
+```sh
+just db-up       # start Postgres only
+just migrate     # apply pending migrations to every service schema
+just db-clean    # drop and reapply each service schema
+just db-reset    # db-clean + seed reference securities
+just db-status   # show migration status per schema
+just db-schema   # regenerate sqlc schema.sql from each schema
+```
+
+The monolith entrypoint is `backend/app`; its config lives in
+`backend/app/config/config.yaml` (template: `config.example.yaml`). Every key can
+be overridden with an env var (`SERVER_PORT`, `DATABASE_HOST`, `TOKEN_SECRET`, ...).
+The token secret must match between the gateway and users modules inside that
+single config. The frontend uses the same pattern with `frontend/.env.example` →
+`frontend/.env`.
+
+### Legacy microservices layout
+
+The individual services still build, but the backend justfile no longer exposes
+their modules or standalone lifecycle recipes. The per-service run/build recipes
+are commented out in their own justfiles, and the full microservices layout
+lives on the `microservices` branch. Per-service schema commands are still available from each service's justfile:
+
+```sh
+just --justfile backend/users/justfile migrate
+just --justfile backend/orders/justfile migrate
+```
+
+To run a service on its own, uncomment its recipe and invoke it from its
+directory (for example, `cd backend/users && just run`).
 
 ## Authentication
 
@@ -36,13 +73,13 @@ the same pattern with `frontend/.env.example` → `frontend/.env`.
 
 | Tool | Purpose | Install |
 | --- | --- | --- |
-| [Go](https://go.dev) (1.26+) | Language; multi-module workspace (`backend/go.work`: `gateway`, `users`, `pkg`) | `brew install go` |
+| [Go](https://go.dev) (1.26+) | Language; multi-module workspace (`backend/go.work`: `app`, `gateway`, `users`, `securities`, `orders`, `pkg`, `gen`) | `brew install go` |
 | [just](https://just.systems) | Task runner (root, `backend/`, and per-service justfiles) | `brew install just` |
-| [buf](https://buf.build) | Proto lint/codegen (`just backend gen-proto` → `backend/gen/`); uses remote plugins, no local protoc plugins needed | `brew install buf` |
+| [buf](https://buf.build) | Legacy proto lint/codegen (`buf generate` → `backend/gen/`; see the `microservices` branch); uses remote plugins, no local protoc plugins needed | `brew install buf` |
 | [sqlc](https://sqlc.dev) | Generates type-safe Go DB code from `query.sql` + `schema.sql` (`sqlc generate` in the service's postgres dir) | `brew install sqlc` |
-| [dbmate](https://databasebeard.com/dbmate) | DB migrations (`just backend migrate users`, `down`, `status`, ...) | `brew install dbmate` |
+| [dbmate](https://databasebeard.com/dbmate) | DB migrations (`just migrate`, `db-clean`, `db-status`, ...) | `brew install dbmate` |
 | [PostgreSQL 17](https://www.postgresql.org) | Database, via Docker Compose (`just infra-up`) | containerized |
-| [Docker](https://www.docker.com) | Runs Postgres | `brew install docker` |
+| [Docker](https://www.docker.com) | Runs Postgres, Redis and RabbitMQ | `brew install docker` |
 
 Notable Go libraries: [chi](https://github.com/go-chi/chi) (gateway router), [pgx](https://github.com/jackc/pgx) (Postgres driver), [grpc](https://google.golang.org/grpc) + [protobuf](https://github.com/protocolbuffers/protobuf) (users service), [jwt/v5](https://github.com/golang-jwt/jwt), [koanf](https://github.com/knadh/koanf) (config), [testify](https://github.com/stretchr/testify) (tests).
 
@@ -70,8 +107,7 @@ Pending: add Prometheus metrics to gateway and users services.
 ### Migration / codegen workflow
 
 ```sh
-just backend migrate users      # apply migrations (dbmate)
-just backend schema users       # regenerate schema.sql (dbmate + pg_dump)
-cd backend/users/internal/adapters/secondary_adapter/postgres && sqlc generate
-just backend gen-proto          # regenerate backend/gen/ from backend/proto (buf)
+just migrate                    # apply all migrations (dbmate)
+just db-schema                  # regenerate schema.sql (dbmate + pg_dump)
+cd backend/users/internal/adapters/out/postgres && sqlc generate
 ```

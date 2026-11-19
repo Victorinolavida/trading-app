@@ -34,7 +34,7 @@ import (
 )
 
 func main() {
-	logs := logger.NewLogger()
+	logs := logger.NewLogger("orders")
 
 	cfg, err := conf.NewConfig[config.Config]()
 	if err != nil {

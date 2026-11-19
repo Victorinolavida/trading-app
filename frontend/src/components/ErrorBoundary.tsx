@@ -1,24 +1,28 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useRouteError, isRouteErrorResponse } from "react-router";
 
-export function ErrorBoundary() {
-  const [didCatch, setDidCatch] = useState(false);
+export default function ErrorBoundary() {
+  const error = useRouteError();
 
   useEffect(() => {
-    // Optionally log the error to an error tracking service
-    if (didCatch) {
-      // console.error("Error caught by ErrorBoundary");
-    }
-  }, [didCatch]);
+    // send to your error tracker here (Sentry, etc.)
+    console.error("Route error:", error);
+  }, [error]);
 
-  if (!didCatch) return null;
+  const isResponse = isRouteErrorResponse(error);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-surface-raised p-8 rounded-lg shadow-lg max-w-md w-full text-center">
         <div className="text-6xl mb-4">⚠️</div>
-        <h2 className="text-2xl font-semibold text-fg-strong mb-2">Unexpected Application Error!</h2>
+        <h2 className="text-2xl font-semibold text-fg-strong mb-2">
+          {isResponse
+            ? `${error.status} ${error.statusText}`
+            : "Unexpected Application Error!"}
+        </h2>
         <p className="text-fg-muted mb-6">
-          Something went wrong on our end. Our team has been notified, and we're working to fix it.
+          Something went wrong on our end. Our team has been notified, and we're
+          working to fix it.
         </p>
         <button
           onClick={() => window.location.reload()}

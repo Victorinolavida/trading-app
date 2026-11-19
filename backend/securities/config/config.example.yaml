@@ -15,6 +15,7 @@ database:
   password: postgres
   host: localhost
   port: 5432
-  name: trading_securities
+  name: trading
+  schema: securities
   max_conns: 10
   min_conns: 1
