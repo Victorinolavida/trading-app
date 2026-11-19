@@ -79,10 +79,32 @@ export class ApiClient {
   }
 
   private async request<T>(config: AxiosRequestConfig): Promise<T> {
-    return this.http.request<T>(config).then((res) => {
-      if (res.status === 204) return undefined as T;
-      return res.data;
-    });
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        return await this.http.request<T>(config).then((res) => {
+          if (res.status === 204) return undefined as T;
+          return res.data;
+        });
+      } catch (err) {
+        const apiErr = this.toApiError(err);
+        if (
+          apiErr instanceof ApiError &&
+          apiErr.status >= 500 &&
+          apiErr.status < 600 &&
+          attempts < maxAttempts
+        ) {
+          const waitMs = 1000 * attempts;
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+          continue;
+        }
+        return Promise.reject(apiErr);
+      }
+    }
+    return Promise.reject(new ApiError(0, "Max retries exceeded"));
   }
 
   private toApiError(err: unknown): unknown {
