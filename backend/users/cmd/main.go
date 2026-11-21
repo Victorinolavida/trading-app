@@ -48,7 +48,8 @@ func main() {
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)
 	whoamiHandler := whoami.New(userRepo)
-	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler)
+	// Reset remains disabled until email delivery and request safeguards are configured.
+	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler, nil)
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)
 

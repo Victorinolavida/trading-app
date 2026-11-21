@@ -35,8 +35,21 @@ message WhoamiResponse {
   int64 session_version = 5;
 }
 
+message RequestPasswordResetRequest {
+  string email = 1;
+}
+
+message ConfirmPasswordResetRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message PasswordResetResponse {}
+
 service AuthService {
   rpc RegisterUser(RegisterRequest) returns (AuthUserResponse){}
   rpc LoginUser(LoginRequest) returns (AuthUserResponse){}
   rpc Whoami(WhoamiRequest) returns (WhoamiResponse){}
+  rpc RequestPasswordReset(RequestPasswordResetRequest) returns (PasswordResetResponse){}
+  rpc ConfirmPasswordReset(ConfirmPasswordResetRequest) returns (PasswordResetResponse){}
 }

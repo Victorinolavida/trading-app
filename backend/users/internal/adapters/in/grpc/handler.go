@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
@@ -14,17 +15,45 @@ import (
 
 type AuthGRPCHandler struct {
 	authpb.UnimplementedAuthServiceServer
-	register *register.Usecase
-	login    *login.Usecase
-	whoami   *whoami.Usecase
+	register      *register.Usecase
+	login         *login.Usecase
+	whoami        *whoami.Usecase
+	passwordReset passwordResetUsecase
+}
+
+type passwordResetUsecase interface {
+	Request(context.Context, string) error
+	Confirm(context.Context, string, string) error
 }
 
 func NewAuthGRPCHandler(
 	registerUC *register.Usecase,
 	loginUC *login.Usecase,
 	whoamiUC *whoami.Usecase,
+	resetUC passwordResetUsecase,
 ) *AuthGRPCHandler {
-	return &AuthGRPCHandler{register: registerUC, login: loginUC, whoami: whoamiUC}
+	return &AuthGRPCHandler{register: registerUC, login: loginUC, whoami: whoamiUC, passwordReset: resetUC}
+}
+
+func (handler *AuthGRPCHandler) RequestPasswordReset(ctx context.Context, req *authpb.RequestPasswordResetRequest) (*authpb.PasswordResetResponse, error) {
+	if handler.passwordReset == nil {
+		return nil, status.Error(codes.Unimplemented, "password reset is not available")
+	}
+	// Do not reveal whether a user exists or whether delivery succeeded.
+	if err := handler.passwordReset.Request(ctx, strings.TrimSpace(req.GetEmail())); err != nil {
+		slog.Error("password reset request could not be processed")
+	}
+	return &authpb.PasswordResetResponse{}, nil
+}
+
+func (handler *AuthGRPCHandler) ConfirmPasswordReset(ctx context.Context, req *authpb.ConfirmPasswordResetRequest) (*authpb.PasswordResetResponse, error) {
+	if handler.passwordReset == nil {
+		return nil, status.Error(codes.Unimplemented, "password reset is not available")
+	}
+	if err := handler.passwordReset.Confirm(ctx, req.GetToken(), req.GetNewPassword()); err != nil {
+		return nil, err
+	}
+	return &authpb.PasswordResetResponse{}, nil
 }
 
 func (handler *AuthGRPCHandler) RegisterUser(ctx context.Context, req *authpb.RegisterRequest) (*authpb.AuthUserResponse, error) {

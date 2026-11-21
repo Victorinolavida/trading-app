@@ -329,6 +329,138 @@ func (x *WhoamiResponse) GetSessionVersion() int64 {
 	return 0
 }
 
+type RequestPasswordResetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestPasswordResetRequest) Reset() {
+	*x = RequestPasswordResetRequest{}
+	mi := &file_auth_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestPasswordResetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestPasswordResetRequest) ProtoMessage() {}
+
+func (x *RequestPasswordResetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestPasswordResetRequest.ProtoReflect.Descriptor instead.
+func (*RequestPasswordResetRequest) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RequestPasswordResetRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+type ConfirmPasswordResetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	NewPassword   string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfirmPasswordResetRequest) Reset() {
+	*x = ConfirmPasswordResetRequest{}
+	mi := &file_auth_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfirmPasswordResetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfirmPasswordResetRequest) ProtoMessage() {}
+
+func (x *ConfirmPasswordResetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfirmPasswordResetRequest.ProtoReflect.Descriptor instead.
+func (*ConfirmPasswordResetRequest) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ConfirmPasswordResetRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *ConfirmPasswordResetRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+type PasswordResetResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PasswordResetResponse) Reset() {
+	*x = PasswordResetResponse{}
+	mi := &file_auth_auth_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PasswordResetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PasswordResetResponse) ProtoMessage() {}
+
+func (x *PasswordResetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PasswordResetResponse.ProtoReflect.Descriptor instead.
+func (*PasswordResetResponse) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{7}
+}
+
 var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
@@ -357,11 +489,19 @@ const file_auth_auth_proto_rawDesc = "" +
 	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
 	"\tlast_name\x18\x03 \x01(\tR\blastName\x12\x14\n" +
 	"\x05email\x18\x04 \x01(\tR\x05email\x12'\n" +
-	"\x0fsession_version\x18\x05 \x01(\x03R\x0esessionVersion2\xc0\x01\n" +
+	"\x0fsession_version\x18\x05 \x01(\x03R\x0esessionVersion\"3\n" +
+	"\x1bRequestPasswordResetRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\"V\n" +
+	"\x1bConfirmPasswordResetRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12!\n" +
+	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\"\x17\n" +
+	"\x15PasswordResetResponse2\xf4\x02\n" +
 	"\vAuthService\x12?\n" +
 	"\fRegisterUser\x12\x15.auth.RegisterRequest\x1a\x16.auth.AuthUserResponse\"\x00\x129\n" +
 	"\tLoginUser\x12\x12.auth.LoginRequest\x1a\x16.auth.AuthUserResponse\"\x00\x125\n" +
-	"\x06Whoami\x12\x13.auth.WhoamiRequest\x1a\x14.auth.WhoamiResponse\"\x00B'Z%github.com/victorinolavida/proto/authb\x06proto3"
+	"\x06Whoami\x12\x13.auth.WhoamiRequest\x1a\x14.auth.WhoamiResponse\"\x00\x12X\n" +
+	"\x14RequestPasswordReset\x12!.auth.RequestPasswordResetRequest\x1a\x1b.auth.PasswordResetResponse\"\x00\x12X\n" +
+	"\x14ConfirmPasswordReset\x12!.auth.ConfirmPasswordResetRequest\x1a\x1b.auth.PasswordResetResponse\"\x00B'Z%github.com/victorinolavida/proto/authb\x06proto3"
 
 var (
 	file_auth_auth_proto_rawDescOnce sync.Once
@@ -375,23 +515,30 @@ func file_auth_auth_proto_rawDescGZIP() []byte {
 	return file_auth_auth_proto_rawDescData
 }
 
-var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auth_auth_proto_goTypes = []any{
-	(*RegisterRequest)(nil),  // 0: auth.RegisterRequest
-	(*AuthUserResponse)(nil), // 1: auth.AuthUserResponse
-	(*LoginRequest)(nil),     // 2: auth.LoginRequest
-	(*WhoamiRequest)(nil),    // 3: auth.WhoamiRequest
-	(*WhoamiResponse)(nil),   // 4: auth.WhoamiResponse
+	(*RegisterRequest)(nil),             // 0: auth.RegisterRequest
+	(*AuthUserResponse)(nil),            // 1: auth.AuthUserResponse
+	(*LoginRequest)(nil),                // 2: auth.LoginRequest
+	(*WhoamiRequest)(nil),               // 3: auth.WhoamiRequest
+	(*WhoamiResponse)(nil),              // 4: auth.WhoamiResponse
+	(*RequestPasswordResetRequest)(nil), // 5: auth.RequestPasswordResetRequest
+	(*ConfirmPasswordResetRequest)(nil), // 6: auth.ConfirmPasswordResetRequest
+	(*PasswordResetResponse)(nil),       // 7: auth.PasswordResetResponse
 }
 var file_auth_auth_proto_depIdxs = []int32{
 	0, // 0: auth.AuthService.RegisterUser:input_type -> auth.RegisterRequest
 	2, // 1: auth.AuthService.LoginUser:input_type -> auth.LoginRequest
 	3, // 2: auth.AuthService.Whoami:input_type -> auth.WhoamiRequest
-	1, // 3: auth.AuthService.RegisterUser:output_type -> auth.AuthUserResponse
-	1, // 4: auth.AuthService.LoginUser:output_type -> auth.AuthUserResponse
-	4, // 5: auth.AuthService.Whoami:output_type -> auth.WhoamiResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	5, // 3: auth.AuthService.RequestPasswordReset:input_type -> auth.RequestPasswordResetRequest
+	6, // 4: auth.AuthService.ConfirmPasswordReset:input_type -> auth.ConfirmPasswordResetRequest
+	1, // 5: auth.AuthService.RegisterUser:output_type -> auth.AuthUserResponse
+	1, // 6: auth.AuthService.LoginUser:output_type -> auth.AuthUserResponse
+	4, // 7: auth.AuthService.Whoami:output_type -> auth.WhoamiResponse
+	7, // 8: auth.AuthService.RequestPasswordReset:output_type -> auth.PasswordResetResponse
+	7, // 9: auth.AuthService.ConfirmPasswordReset:output_type -> auth.PasswordResetResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -408,7 +555,7 @@ func file_auth_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_auth_proto_rawDesc), len(file_auth_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
