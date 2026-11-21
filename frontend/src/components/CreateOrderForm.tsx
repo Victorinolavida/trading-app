@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import { Check } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -229,24 +230,28 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         </div>
         {orderType === "limit" && (
           <>
-            <div className="col-span-2">
-              <label className={labelClass} htmlFor="calculationField">
-                Enter by
-              </label>
-              <select
-                id="calculationField"
-                className={inputClass}
-                {...register("calculationField", {
-                  onChange: clearCalculation,
-                })}
-              >
+            <fieldset className="col-span-2">
+              <legend className={labelClass}>Enter by</legend>
+              <div className="relative inline-grid grid-cols-2 border border-border-strong bg-surface p-1">
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] bg-surface-hover transition-transform duration-200 motion-reduce:transition-none ${calculationField === "yield" ? "translate-x-full" : ""}`}
+                />
                 {calculationFields.map((field) => (
-                  <option key={field} value={field}>
-                    {calculationLabels[field]}
-                  </option>
+                  <label key={field} className="relative cursor-pointer">
+                    <input
+                      type="radio"
+                      value={field}
+                      className="peer sr-only"
+                      {...register("calculationField", { onChange: clearCalculation })}
+                    />
+                    <span className="block min-w-24 px-4 py-1.5 text-center text-sm font-medium text-fg-muted transition-colors peer-checked:text-fg-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                      {calculationLabels[field]}
+                    </span>
+                  </label>
                 ))}
-              </select>
-            </div>
+              </div>
+            </fieldset>
             <div>
               <label className={labelClass} htmlFor="calculationValue">
                 {calculationLabels[calculationField]}
@@ -306,21 +311,26 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         {orderType == "limit" && (
           <>
             <div className="col-span-2">
-              <div className="flex items-center gap-2">
-                <input
-                  id="expirationEnabled"
-                  type="checkbox"
-                  className="h-5 w-5 cursor-pointer rounded border-border-strong bg-surface-hover text-accent-strong focus:ring-2 focus:ring-accent-strong"
-                  onChange={(e) => setDefaultExpiration(e.target.checked)}
-                  checked={defaultExpiration}
-                />
-                <label
-                  className="text-sm text-fg-muted"
-                  htmlFor="expirationEnabled"
-                >
-                  day expiration
-                </label>
-              </div>
+              <label className="group inline-flex cursor-pointer items-center gap-3 text-sm text-fg-soft" htmlFor="expirationEnabled">
+                <span className="relative flex items-center">
+                  <input
+                    id="expirationEnabled"
+                    type="checkbox"
+                    className="peer h-5 w-5 cursor-pointer appearance-none border border-border-strong bg-surface transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setDefaultExpiration(checked);
+                      if (checked) {
+                        setValue("expirationValue", 24, { shouldValidate: true });
+                        setValue("expirationUnit", "hour", { shouldValidate: true });
+                      }
+                    }}
+                    checked={defaultExpiration}
+                  />
+                  <Check aria-hidden="true" strokeWidth={3} className="pointer-events-none absolute left-0.5 h-4 w-4 text-surface opacity-0 peer-checked:opacity-100" />
+                </span>
+                Use 24-hour expiration
+              </label>
             </div>
             <div className="col-span-2 grid grid-cols-2 gap-3">
               <div>
@@ -361,8 +371,8 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
 
         <div className="col-span-2">
           <Button
-            variant="dark"
-            className="w-full"
+            variant="secondary"
+            className="w-full border-fg-strong bg-fg-strong py-3 text-surface enabled:hover:border-fg-soft enabled:hover:bg-fg-soft"
             type="submit"
             disabled={createOrderMutation.isPending || !isValid}
           >
