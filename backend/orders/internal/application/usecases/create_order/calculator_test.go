@@ -4,11 +4,30 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"testing"
+	"time"
+
+	"github.com/victorinolavida/orders/internal/domain"
 )
 
 type calculatorStub struct {
 	field, value, result string
 	calls                int
+}
+
+func TestCalculatedZeroYieldIsRetainedInOrder(t *testing.T) {
+	calc := &calculatorStub{result: "0.0000004"}
+	u := Usecase{calculator: calc}
+	cmd := Command{TraderID: uuid.New(), SecurityID: uuid.New(), Direction: "bid", OrderType: "limit", Quantity: 1, Price: 100000000, ExpiresAt: time.Hour}
+	if err := u.completeLimitOrder(context.Background(), &cmd); err != nil {
+		t.Fatal(err)
+	}
+	order, err := domain.NewOrder(cmd.TraderID, cmd.SecurityID, cmd.Direction, cmd.OrderType, int(cmd.Quantity), cmd.Price, cmd.Yield, 1000000, 1000000, cmd.ExpiresAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calc.calls != 1 || order.Yield() == nil || *order.Yield() != 0 {
+		t.Fatalf("calculated zero yield was not retained: calls=%d yield=%v", calc.calls, order.Yield())
+	}
 }
 
 func (c *calculatorStub) Calculate(_ context.Context, _, _, field, value string) (string, error) {

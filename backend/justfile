@@ -15,16 +15,17 @@ mod users "users"
 mod securities "securities"
 mod orders "orders"
 mod calculator "calculator"
+mod notifications "notifications"
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
 # Every backend service. Used by the `all` target of the dispatch helpers.
-services := "gateway users securities orders calculator"
+services := "gateway users securities orders calculator notifications"
 
 # Services that own database migrations. Used by the `all` target of DB recipes.
-db_services := "users securities orders"
+db_services := "users securities orders notifications"
 
 # =============================================================================
 # Default
