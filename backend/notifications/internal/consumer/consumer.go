@@ -55,6 +55,9 @@ func (c *Consumer) consume(ctx context.Context) error {
 	if err := ch.ExchangeDeclare(c.exchange, "topic", true, false, false, false, nil); err != nil {
 		return err
 	}
+	if err := ch.ExchangeDeclare("notifications.live", "topic", true, false, false, false, nil); err != nil {
+		return err
+	}
 	if _, err := ch.QueueDeclare(c.queue+".dlq", true, false, false, false, amqp.Table{"x-message-ttl": int32(604800000)}); err != nil {
 		return err
 	}
@@ -91,11 +94,23 @@ func (c *Consumer) consume(ctx context.Context) error {
 				}
 				continue
 			}
-			if _, err = c.store.Save(ctx, n); err == nil {
+			if inserted, saveErr := c.store.Save(ctx, n); saveErr == nil {
+				if inserted {
+					// This signal is best effort; clients reconcile from the database on reconnect.
+					confirmation, signalErr := ch.PublishWithDeferredConfirmWithContext(ctx, "notifications.live", n.UserID.String(), false, false, amqp.Publishing{ContentType: "application/json", Body: []byte(`{}`)})
+					if signalErr == nil {
+						_, signalErr = confirmation.WaitContext(ctx)
+					}
+					if signalErr != nil {
+						slog.Warn("notification live signal failed", slog.Any("error", signalErr))
+					}
+				}
 				if err = d.Ack(false); err != nil {
 					return err
 				}
 				continue
+			} else {
+				err = saveErr
 			}
 			if ctx.Err() != nil {
 				return ctx.Err()

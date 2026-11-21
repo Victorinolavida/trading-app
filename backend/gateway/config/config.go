@@ -23,16 +23,17 @@ type Server struct {
 }
 
 type Config struct {
-	Env               string              `koanf:"env"`
-	Server            Server              `koanf:"server"`
-	AuthService       config.GRPCClient   `koanf:"auth_service"`
-	SecuritiesService config.GRPCClient   `koanf:"securities_service"`
-	CalculatorService config.GRPCClient   `koanf:"calculator_service"`
-	OrdersService     config.GRPCClient   `koanf:"orders_service"`
-	Token             config.TokenConfig  `koanf:"token"`
-	Cookie            config.CookieConfig `koanf:"cookie"`
-	RabbitMQ          config.RabbitMQ     `koanf:"rabbitmq"`
-	Publisher         config.Publisher    `koanf:"publisher"`
+	Env                 string              `koanf:"env"`
+	Server              Server              `koanf:"server"`
+	AuthService         config.GRPCClient   `koanf:"auth_service"`
+	SecuritiesService   config.GRPCClient   `koanf:"securities_service"`
+	CalculatorService   config.GRPCClient   `koanf:"calculator_service"`
+	OrdersService       config.GRPCClient   `koanf:"orders_service"`
+	NotificationService config.GRPCClient   `koanf:"notification_service"`
+	Token               config.TokenConfig  `koanf:"token"`
+	Cookie              config.CookieConfig `koanf:"cookie"`
+	RabbitMQ            config.RabbitMQ     `koanf:"rabbitmq"`
+	Publisher           config.Publisher    `koanf:"publisher"`
 }
 
 func (c Config) IsProduction() bool {

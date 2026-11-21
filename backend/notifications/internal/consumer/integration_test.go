@@ -69,11 +69,21 @@ func TestConsumerIntegrationRetryAndDeadLetter(t *testing.T) {
 	if err := ch.QueueBind(queue, "notifications.private.*.order.*", exchange, false, nil); err != nil {
 		t.Fatal(err)
 	}
+	if err := ch.ExchangeDeclare("notifications.live", "topic", true, false, false, false, nil); err != nil {
+		t.Fatal(err)
+	}
+	live, err := ch.QueueDeclare("", false, true, true, false, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	c := New(client, store, exchange, queue)
 	done := make(chan error, 1)
 	go func() { done <- c.consume(ctx) }()
 	user, id, order, security := uuid.New(), uuid.New(), uuid.New(), uuid.New()
 	key := "notifications.private." + user.String() + ".order.created"
+	if err := ch.QueueBind(live.Name, user.String(), "notifications.live", false, nil); err != nil {
+		t.Fatal(err)
+	}
 	body, _ := json.Marshal(map[string]any{"id": id, "type": key, "sequence": 1, "occurred_at": time.Now().UTC(), "payload": map[string]any{"schema_version": 1, "event_type": "order.created", "user_id": user, "order": map[string]any{"id": order, "security_id": security}}})
 	if err := ch.PublishWithContext(ctx, exchange, key, false, false, amqp.Publishing{Body: body, Type: key, MessageId: id.String(), DeliveryMode: amqp.Persistent}); err != nil {
 		t.Fatal(err)
@@ -85,6 +95,20 @@ func TestConsumerIntegrationRetryAndDeadLetter(t *testing.T) {
 		}
 	case <-ctx.Done():
 		t.Fatal("retry did not succeed")
+	}
+	for {
+		_, ok, err := ch.Get(live.Name, true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ok {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("live signal missing")
+		case <-time.After(30 * time.Millisecond):
+		}
 	}
 	if err := ch.PublishWithContext(ctx, exchange, key, false, false, amqp.Publishing{Body: []byte(`{}`), DeliveryMode: amqp.Persistent}); err != nil {
 		t.Fatal(err)

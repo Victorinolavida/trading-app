@@ -17,6 +17,7 @@ import (
 	authhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/auth_handler"
 	calculatorhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/calculator_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
+	notificationhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/notification_handler"
 	ordershandler "github.com/victorinolavida/gateway/internal/adapters/in/http/orders_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	securityhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/security_handler"
@@ -26,6 +27,7 @@ import (
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	calculatorpb "github.com/victorinolavida/proto/calculator"
+	notificationpb "github.com/victorinolavida/proto/notification"
 )
 
 const (
@@ -99,12 +101,22 @@ func main() {
 	if err != nil {
 		logger.Fatal("error creating calculator handler", slog.Any("error", err))
 	}
+	notificationConn, err := grpcclient.NewGRPCClient(conf.NotificationService)
+	if err != nil {
+		logger.Fatal("error connecting notifications", slog.Any("error", err))
+	}
+	defer notificationConn.Close()
+	notificationHandler, err := notificationhandler.New(conf, notificationpb.NewNotificationServiceClient(notificationConn.Client), rabbitClient)
+	if err != nil {
+		logger.Fatal("error creating notification handler", slog.Any("error", err))
+	}
 
 	modules := []module.Module{
 		calcHandler,
 		authHandler,
 		secHandler,
 		ordHandler,
+		notificationHandler,
 	}
 
 	for _, mod := range modules {
