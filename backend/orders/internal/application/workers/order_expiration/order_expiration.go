@@ -96,8 +96,8 @@ func (w *OrderWorker) execute(ctx context.Context) error {
 			}
 			event := domain.NewMarketDepthEvent(secId.String(), depth)
 
-			if pubErr := w.publisher.Publish(ctx, event); pubErr != nil {
-				slog.Warn("failed to publish market depth event", slog.Any("error", pubErr))
+			if err := w.outbox.EnqueueMarketDepth(ctx, event); err != nil {
+				return err
 			}
 		}
 		return nil

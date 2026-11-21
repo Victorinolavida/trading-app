@@ -72,7 +72,7 @@ func main() {
 	}
 
 	go notificationoutbox.New(pool, rabbitClient, exchange).Run(ctx)
-	worker := orderexpiration.NewOrderWorker(orderRepo, txManager, eventPublisher, time.Second*10, postgres.NewNotificationOutbox())
+	worker := orderexpiration.NewOrderWorker(orderRepo, txManager, eventPublisher, time.Second*10, postgres.NewNotificationOutbox(memoryPort))
 	if err := worker.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		logs.Error("worker stopped with error", slog.Any("error", err))
 		return // lets defers run

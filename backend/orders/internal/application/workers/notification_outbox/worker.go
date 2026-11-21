@@ -56,11 +56,15 @@ func (w *Worker) drain(ctx context.Context) error {
 	}
 	returns := ch.NotifyReturn(make(chan amqp.Return, 1))
 	for ctx.Err() == nil {
-		found, err := w.publishOne(ctx, ch, returns)
+		found, err := w.publishOne(ctx, ch, returns, false)
 		if err != nil {
 			return err
 		}
-		if !found {
+		marketFound, err := w.publishOne(ctx, ch, returns, true)
+		if err != nil {
+			return err
+		}
+		if !found && !marketFound {
 			return nil
 		}
 	}
@@ -81,7 +85,7 @@ func declareTopology(ch *amqp.Channel, exchange, queue string) error {
 	return ch.QueueBind(queue, "notifications.private.*.order.*", exchange, false, nil)
 }
 
-func (w *Worker) publishOne(ctx context.Context, ch *amqp.Channel, returns <-chan amqp.Return) (bool, error) {
+func (w *Worker) publishOne(ctx context.Context, ch *amqp.Channel, returns <-chan amqp.Return, marketDepth bool) (bool, error) {
 	tx, err := w.pool.Begin(ctx)
 	if err != nil {
 		return false, err
@@ -92,7 +96,11 @@ func (w *Worker) publishOne(ctx context.Context, ch *amqp.Channel, returns <-cha
 	var key string
 	var occurred time.Time
 	var payload []byte
-	err = tx.QueryRow(ctx, `SELECT id, sequence, routing_key, occurred_at, payload FROM notification_outbox WHERE published_at IS NULL ORDER BY occurred_at, id FOR UPDATE SKIP LOCKED LIMIT 1`).Scan(&id, &sequence, &key, &occurred, &payload)
+	table := "notification_outbox"
+	if marketDepth {
+		table = "market_depth_outbox"
+	}
+	err = tx.QueryRow(ctx, `SELECT id, sequence, routing_key, occurred_at, payload FROM `+table+` WHERE published_at IS NULL ORDER BY occurred_at, id FOR UPDATE SKIP LOCKED LIMIT 1`).Scan(&id, &sequence, &key, &occurred, &payload)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}
@@ -103,7 +111,8 @@ func (w *Worker) publishOne(ctx context.Context, ch *amqp.Channel, returns <-cha
 	if err != nil {
 		return false, err
 	}
-	confirmation, err := ch.PublishWithDeferredConfirmWithContext(ctx, w.exchange, key, true, false, amqp.Publishing{ContentType: "application/json", DeliveryMode: amqp.Persistent, MessageId: id.String(), Type: key, Timestamp: occurred, Body: body})
+	// Market depth uses transient subscriber queues, so having no subscribers is normal.
+	confirmation, err := ch.PublishWithDeferredConfirmWithContext(ctx, w.exchange, key, !marketDepth, false, amqp.Publishing{ContentType: "application/json", DeliveryMode: amqp.Persistent, MessageId: id.String(), Type: key, Timestamp: occurred, Body: body})
 	if err != nil {
 		return false, err
 	}
@@ -119,7 +128,7 @@ func (w *Worker) publishOne(ctx context.Context, ch *amqp.Channel, returns <-cha
 		return false, fmt.Errorf("notification unroutable: %s", returned.ReplyText)
 	default:
 	}
-	if _, err := tx.Exec(ctx, `UPDATE notification_outbox SET published_at = now() WHERE id = $1`, id); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE `+table+` SET published_at = now() WHERE id = $1`, id); err != nil {
 		return false, err
 	}
 	return true, tx.Commit(ctx)

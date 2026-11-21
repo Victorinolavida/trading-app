@@ -103,7 +103,7 @@ func main() {
 	}
 
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
-	outbox := postgres.NewNotificationOutbox()
+	outbox := postgres.NewNotificationOutbox(memoryPort)
 	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher, calculator.New(calculatorConn), outbox)
 	cancelUC := cancel_order.New(orderRepo, eventPublisher, txManager, outbox)
 	activeUc := active_orders.New(orderRepo)

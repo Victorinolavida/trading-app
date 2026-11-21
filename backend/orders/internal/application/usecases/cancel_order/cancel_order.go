@@ -59,15 +59,12 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 			return err
 		}
 
-		if u.publisher != nil {
-			depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
-			if err != nil {
-				return err
-			}
-			event := domain.NewMarketDepthEvent(order.SecurityID().String(), depth)
-			if err := u.publisher.Publish(ctx, event); err != nil {
-				return err
-			}
+		depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
+		if err != nil {
+			return err
+		}
+		if err := u.outbox.EnqueueMarketDepth(ctx, domain.NewMarketDepthEvent(order.SecurityID().String(), depth)); err != nil {
+			return err
 		}
 		return nil
 	})

@@ -46,6 +46,7 @@ type MatchingEngine interface {
 
 type NotificationOutbox interface {
 	EnqueueOrder(ctx context.Context, eventType string, order *domain.Order, reason string) error
+	EnqueueMarketDepth(ctx context.Context, event *domain.MarketDepthEvent) error
 }
 
 type EventPublisher interface {

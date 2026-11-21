@@ -140,21 +140,17 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 				return err
 			}
 		}
+		depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
+		if err != nil {
+			return err
+		}
+		if err := u.outbox.EnqueueMarketDepth(ctx, domain.NewMarketDepthEvent(order.SecurityID().String(), depth)); err != nil {
+			return err
+		}
 
 		return nil
 	}); err != nil {
 		return Result{}, err
-	}
-
-	// publish market depth event after tx commit
-	if u.publisher != nil {
-		depth, err := u.orderRepo.GetMarketDepth(ctx, order.SecurityID())
-		if err == nil {
-			event := domain.NewMarketDepthEvent(order.SecurityID().String(), depth)
-			if pubErr := u.publisher.Publish(ctx, event); pubErr != nil {
-				slog.Warn("failed to publish market depth event", slog.Any("error", pubErr))
-			}
-		}
 	}
 
 	return Result{

@@ -1,0 +1,9 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (SERVER_HOST, SERVER_PORT, ...).
+
+env: development
+
+server:
+  host: localhost
+  port: 8080

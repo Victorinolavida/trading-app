@@ -8,12 +8,35 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/victorinolavida/orders/internal/application/ports"
 	"github.com/victorinolavida/orders/internal/domain"
 )
 
-type NotificationOutbox struct{}
+type NotificationOutbox struct{ memory ports.MemoryPort }
 
-func NewNotificationOutbox() *NotificationOutbox { return &NotificationOutbox{} }
+func NewNotificationOutbox(memory ports.MemoryPort) *NotificationOutbox {
+	return &NotificationOutbox{memory: memory}
+}
+
+func (o *NotificationOutbox) EnqueueMarketDepth(ctx context.Context, event *domain.MarketDepthEvent) error {
+	tx, ok := txFromContext(ctx)
+	if !ok {
+		return ErrNoTx
+	}
+	if event == nil || event.SecurityID == "" {
+		return fmt.Errorf("market depth security is required")
+	}
+	body, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal market depth: %w", err)
+	}
+	sequence, err := o.memory.Incr(ctx, event.EventType())
+	if err != nil {
+		return fmt.Errorf("allocate market depth sequence: %w", err)
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO market_depth_outbox (id, sequence, routing_key, occurred_at, payload) VALUES ($1,$2,$3,$4,$5)`, uuid.New(), sequence, event.EventType(), time.Now().UTC(), body)
+	return err
+}
 
 func (*NotificationOutbox) EnqueueOrder(ctx context.Context, eventType string, order *domain.Order, reason string) error {
 	if !strings.HasPrefix(eventType, "order.") || strings.Contains(strings.TrimPrefix(eventType, "order."), ".") {

@@ -48,6 +48,13 @@ func TestIntegrationPublishAndDeadLetter(t *testing.T) {
 	if _, err := pool.Exec(ctx, strings.Split(string(migration), "-- migrate:down")[0]); err != nil {
 		t.Fatal(err)
 	}
+	marketMigration, err := os.ReadFile("../../../adapters/out/postgres/migrations/20261121000001_market_depth_outbox.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, strings.Split(string(marketMigration), "-- migrate:down")[0]); err != nil {
+		t.Fatal(err)
+	}
 	client, err := rabbitmq.NewClient("amqp://guest:guest@localhost:5672/")
 	if err != nil {
 		t.Fatal(err)
@@ -113,5 +120,38 @@ func TestIntegrationPublishAndDeadLetter(t *testing.T) {
 			t.Fatal("dead letter not received")
 		case <-time.After(50 * time.Millisecond):
 		}
+	}
+	marketID := uuid.New()
+	marketKey := "market.depth." + uuid.NewString()
+	if _, err := cleanup.QueueDeclare(queue+".market", false, true, true, false, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := cleanup.QueueBind(queue+".market", "market.depth.*", exchange, false, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO market_depth_outbox (id,sequence,routing_key,occurred_at,payload) VALUES ($1,7,$2,now(),$3)`, marketID, marketKey, []byte(`{"security_id":"test","ask":[],"bid":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.drain(ctx); err != nil {
+		t.Fatal(err)
+	}
+	market, ok, err := cleanup.Get(queue+".market", true)
+	if err != nil || !ok {
+		t.Fatalf("market message missing: %v", err)
+	}
+	if err := json.Unmarshal(market.Body, &envelope); err != nil {
+		t.Fatal(err)
+	}
+	if envelope.ID != marketID || envelope.Type != marketKey || envelope.Sequence != 7 {
+		t.Fatalf("unexpected market envelope: %+v", envelope)
+	}
+	if _, err := cleanup.QueueDelete(queue+".market", false, false, false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO market_depth_outbox (id,sequence,routing_key,occurred_at,payload) VALUES ($1,8,$2,now(),'{}')`, uuid.New(), marketKey); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.drain(ctx); err != nil {
+		t.Fatalf("market event without subscribers: %v", err)
 	}
 }
