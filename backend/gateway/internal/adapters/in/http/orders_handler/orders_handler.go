@@ -15,6 +15,7 @@ import (
 	authmiddleware "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/stream"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
 	"github.com/victorinolavida/gateway/internal/application/ports"
 	broker "github.com/victorinolavida/pkg/broker"
@@ -266,6 +267,9 @@ func (h *OrdersHandler) StreamOrderBook(w http.ResponseWriter, r *http.Request) 
 	for {
 		select {
 		case <-ctx.Done():
+			_ = ch.Close()
+			return
+		case <-stream.Done(ctx):
 			_ = ch.Close()
 			return
 		case d, ok := <-deliveries:

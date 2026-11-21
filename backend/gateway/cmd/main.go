@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	defaultTimeout = 30 * time.Second
+	defaultTimeout = 5 * time.Second
 	apiPrefix      = "/api/v0"
 )
 
@@ -150,7 +150,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		logger.Fatal("http error shutdown", slog.Any("error", err))
+		slog.Warn("http shutdown deadline reached; connections closed", slog.Any("error", err))
 	}
 
 	if err := authService.Close(); err != nil {
