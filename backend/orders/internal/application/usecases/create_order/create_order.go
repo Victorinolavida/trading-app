@@ -3,6 +3,7 @@ package create_order
 import (
 	"context"
 	"log/slog"
+	"sort"
 
 	"github.com/victorinolavida/orders/internal/application/ports"
 	"github.com/victorinolavida/orders/internal/domain"
@@ -17,9 +18,10 @@ type Usecase struct {
 	txManager      ports.TxManager
 	publisher      ports.EventPublisher
 	calculator     Calculator
+	outbox         ports.NotificationOutbox
 }
 
-func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager, publisher ports.EventPublisher, calculator Calculator) *Usecase {
+func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager, publisher ports.EventPublisher, calculator Calculator, outbox ports.NotificationOutbox) *Usecase {
 	return &Usecase{
 		orderRepo:      orderRepo,
 		tradeRepo:      tradeRepo,
@@ -29,6 +31,7 @@ func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, secur
 		txManager:      tx,
 		publisher:      publisher,
 		calculator:     calculator,
+		outbox:         outbox,
 	}
 }
 
@@ -84,8 +87,10 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		if err := u.orderRepo.Save(ctx, order); err != nil {
 			return err
 		}
+		// Keep the creation snapshot before matching changes the order.
+		created := *order
 
-		matches, trades, err := u.matchingEngine.ExecuteIncomingOrder(ctx, order)
+		matches, trades, internalCrossing, err := u.matchingEngine.ExecuteIncomingOrder(ctx, order)
 		if err != nil {
 			return err
 		}
@@ -101,14 +106,37 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 			slog.Int64("matched_quantity", int64(matchedQty)),
 		)
 
-		if len(trades) > 0 {
+		if len(trades) > 0 || !order.IsActive() {
 			orders := make([]*domain.Order, 0, len(matches)+1)
 			orders = append(orders, order)
 			orders = append(orders, matches...)
 			if err := u.orderRepo.UpdateBulk(ctx, orders...); err != nil {
 				return err
 			}
-			if err := u.tradeRepo.Save(ctx, trades...); err != nil {
+			if len(trades) > 0 {
+				if err := u.tradeRepo.Save(ctx, trades...); err != nil {
+					return err
+				}
+			}
+		}
+		type notification struct {
+			kind   string
+			order  *domain.Order
+			reason string
+		}
+		notifications := []notification{{"order.created", &created, ""}}
+		for _, match := range matches {
+			notifications = append(notifications, notification{"order.executed", order, ""}, notification{"order.executed", match, ""})
+		}
+		if internalCrossing {
+			notifications = append(notifications, notification{"order.discarded", order, "internal_crossing"})
+		}
+		// Acquire recipient sequence locks in a consistent order across securities.
+		sort.SliceStable(notifications, func(i, j int) bool {
+			return notifications[i].order.TraderID().String() < notifications[j].order.TraderID().String()
+		})
+		for _, n := range notifications {
+			if err := u.outbox.EnqueueOrder(ctx, n.kind, n.order, n.reason); err != nil {
 				return err
 			}
 		}

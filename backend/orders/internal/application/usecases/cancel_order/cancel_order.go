@@ -14,13 +14,15 @@ type Usecase struct {
 	orderRepo ports.OrderRepository
 	publisher ports.EventPublisher
 	txManger  ports.TxManager
+	outbox    ports.NotificationOutbox
 }
 
-func New(orderRepo ports.OrderRepository, publisher ports.EventPublisher, manager ports.TxManager) *Usecase {
+func New(orderRepo ports.OrderRepository, publisher ports.EventPublisher, manager ports.TxManager, outbox ports.NotificationOutbox) *Usecase {
 	return &Usecase{
 		orderRepo: orderRepo,
 		txManger:  manager,
 		publisher: publisher,
+		outbox:    outbox,
 	}
 }
 
@@ -51,6 +53,9 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 		}
 
 		if err := u.orderRepo.Update(ctx, order); err != nil {
+			return err
+		}
+		if err := u.outbox.EnqueueOrder(ctx, "order.canceled", order, ""); err != nil {
 			return err
 		}
 

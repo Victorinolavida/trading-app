@@ -41,7 +41,11 @@ type TradeRepository interface {
 }
 
 type MatchingEngine interface {
-	ExecuteIncomingOrder(ctx context.Context, order *domain.Order) ([]*domain.Order, []*domain.Trade, error)
+	ExecuteIncomingOrder(ctx context.Context, order *domain.Order) ([]*domain.Order, []*domain.Trade, bool, error)
+}
+
+type NotificationOutbox interface {
+	EnqueueOrder(ctx context.Context, eventType string, order *domain.Order, reason string) error
 }
 
 type EventPublisher interface {

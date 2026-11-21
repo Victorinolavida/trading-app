@@ -103,8 +103,9 @@ func main() {
 	}
 
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
-	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher, calculator.New(calculatorConn))
-	cancelUC := cancel_order.New(orderRepo, eventPublisher, txManager)
+	outbox := postgres.NewNotificationOutbox()
+	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher, calculator.New(calculatorConn), outbox)
+	cancelUC := cancel_order.New(orderRepo, eventPublisher, txManager, outbox)
 	activeUc := active_orders.New(orderRepo)
 	listUc := list_orders.New(orderRepo)
 	getMarketDepthUC := get_market_depth.New(orderRepo)

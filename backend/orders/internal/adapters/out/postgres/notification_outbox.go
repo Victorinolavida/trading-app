@@ -4,10 +4,47 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/victorinolavida/orders/internal/domain"
 )
+
+type NotificationOutbox struct{}
+
+func NewNotificationOutbox() *NotificationOutbox { return &NotificationOutbox{} }
+
+func (*NotificationOutbox) EnqueueOrder(ctx context.Context, eventType string, order *domain.Order, reason string) error {
+	if !strings.HasPrefix(eventType, "order.") || strings.Contains(strings.TrimPrefix(eventType, "order."), ".") {
+		return fmt.Errorf("invalid notification event type %q", eventType)
+	}
+	payload := struct {
+		SchemaVersion int    `json:"schema_version"`
+		EventType     string `json:"event_type"`
+		UserID        string `json:"user_id"`
+		Reason        string `json:"reason,omitempty"`
+		Order         struct {
+			ID               string `json:"id"`
+			SecurityID       string `json:"security_id"`
+			Status           string `json:"status"`
+			Price            string `json:"price"`
+			Yield            string `json:"yield"`
+			Quantity         int64  `json:"quantity"`
+			AllocationStatus string `json:"allocation_status"`
+		} `json:"order"`
+	}{SchemaVersion: 1, EventType: eventType, UserID: order.TraderID().String(), Reason: reason}
+	payload.Order.ID = order.PublicID().String()
+	payload.Order.SecurityID = order.SecurityID().String()
+	payload.Order.Status = order.Status().String()
+	payload.Order.Price = domain.FormatDecimal(order.Price())
+	payload.Order.Yield = domain.FormatDecimal(order.Yield())
+	payload.Order.Quantity = order.Quantity().Value()
+	payload.Order.AllocationStatus = order.AllocationStatus().String()
+	routingKey := "notifications.private." + payload.UserID + "." + eventType
+	_, _, err := EnqueueNotification(ctx, order.TraderID(), routingKey, payload)
+	return err
+}
 
 // EnqueueNotification atomically assigns a recipient sequence and saves the
 // event in the transaction that owns the order change.

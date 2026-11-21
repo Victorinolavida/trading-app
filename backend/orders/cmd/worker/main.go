@@ -70,7 +70,7 @@ func main() {
 		logger.Fatal("error creating order event producer", slog.Any("error", err))
 	}
 
-	worker := orderexpiration.NewOrderWorker(orderRepo, txManager, eventPublisher, time.Second*10)
+	worker := orderexpiration.NewOrderWorker(orderRepo, txManager, eventPublisher, time.Second*10, postgres.NewNotificationOutbox())
 	if err := worker.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		logs.Error("worker stopped with error", slog.Any("error", err))
 		return // lets defers run

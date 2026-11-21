@@ -31,10 +31,10 @@ func (me *MatchingEngineService) canMatch(takerOrder, makerOrder *domain.Order) 
 	return "", true
 }
 
-func (me *MatchingEngineService) ExecuteIncomingOrder(ctx context.Context, incomingOrder *domain.Order) ([]*domain.Order, []*domain.Trade, error) {
+func (me *MatchingEngineService) ExecuteIncomingOrder(ctx context.Context, incomingOrder *domain.Order) ([]*domain.Order, []*domain.Trade, bool, error) {
 	ordersToTrade, err := me.repo.GetOrdersToTrade(ctx, incomingOrder)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 	matches := make([]*domain.Order, 0, len(ordersToTrade))
 	trades := make([]*domain.Trade, 0, len(ordersToTrade))
@@ -47,14 +47,19 @@ func (me *MatchingEngineService) ExecuteIncomingOrder(ctx context.Context, incom
 				slog.String("reason", rejectReason),
 				slog.String("order_id", order.ID().String()),
 			)
-			killUnfilledMarketOrder(incomingOrder)
-			return matches, trades, nil
+			internalCrossing := rejectReason == RejectInternalCrossing.String()
+			if internalCrossing {
+				incomingOrder.Kill()
+			} else {
+				killUnfilledMarketOrder(incomingOrder)
+			}
+			return matches, trades, internalCrossing, nil
 		}
 
 		execution, validMatch := incomingOrder.MatchWith(order)
 		if !validMatch {
 			killUnfilledMarketOrder(incomingOrder)
-			return matches, trades, nil
+			return matches, trades, false, nil
 		}
 
 		trade, err := domain.NewTrade(
@@ -65,7 +70,7 @@ func (me *MatchingEngineService) ExecuteIncomingOrder(ctx context.Context, incom
 			incomingOrder.Direction(),
 		)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, false, err
 		}
 
 		matches = append(matches, order)
@@ -73,7 +78,7 @@ func (me *MatchingEngineService) ExecuteIncomingOrder(ctx context.Context, incom
 
 	}
 	killUnfilledMarketOrder(incomingOrder)
-	return matches, trades, nil
+	return matches, trades, false, nil
 }
 
 // A market order only cares about quantity: whatever is left unfilled

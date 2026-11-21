@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"log/slog"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,17 +17,19 @@ type OrderWorker struct {
 	interval  time.Duration
 	txManager ports.TxManager
 	publisher ports.EventPublisher
+	outbox    ports.NotificationOutbox
 }
 
 func NewOrderWorker(
 	repo ports.OrderRepository, txManager ports.TxManager,
-	publisher ports.EventPublisher, interval time.Duration,
+	publisher ports.EventPublisher, interval time.Duration, outbox ports.NotificationOutbox,
 ) *OrderWorker {
 	return &OrderWorker{
 		repo:      repo,
 		interval:  interval,
 		txManager: txManager,
 		publisher: publisher,
+		outbox:    outbox,
 	}
 }
 
@@ -71,8 +74,12 @@ func (w *OrderWorker) execute(ctx context.Context) error {
 
 		slog.Debug("orders to expire", slog.Int("number of orders", len(rows)))
 		slog.Debug("orders to expire", slog.Any("number of orders", rows))
+		sort.Slice(rows, func(i, j int) bool { return rows[i].TraderID().String() < rows[j].TraderID().String() })
 		securities := make(map[uuid.UUID]bool)
 		for _, row := range rows {
+			if err := w.outbox.EnqueueOrder(ctx, "order.expired", row, ""); err != nil {
+				return err
+			}
 			_, ok := securities[row.SecurityID()]
 			if !ok {
 				securities[row.SecurityID()] = true
