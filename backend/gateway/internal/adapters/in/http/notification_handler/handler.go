@@ -14,6 +14,7 @@ import (
 	"github.com/victorinolavida/gateway/config"
 	auth "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/stream"
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	"github.com/victorinolavida/pkg/jwt"
 	pb "github.com/victorinolavida/proto/notification"
@@ -219,6 +220,8 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case <-r.Context().Done():
+			return
+		case <-stream.Done(r.Context()):
 			return
 		case msg, ok := <-msgs:
 			if !ok {

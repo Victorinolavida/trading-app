@@ -2,9 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -13,6 +15,7 @@ import (
 	"github.com/victorinolavida/gateway/config"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	"github.com/victorinolavida/gateway/internal/adapters/in/http/stream"
 )
 
 var defaultPort = 8080
@@ -31,12 +34,16 @@ type ServerInterface interface {
 var _ ServerInterface = (*httpServer)(nil)
 
 type httpServer struct {
-	srv    *http.Server
-	router *chi.Mux
+	srv          *http.Server
+	router       *chi.Mux
+	streamDone   chan struct{}
+	shutdownOnce sync.Once
 }
 
 func NewHttpServer(conf config.Config) ServerInterface {
 	r := chi.NewRouter()
+	streamDone := make(chan struct{})
+	r.Use(stream.Middleware(streamDone))
 
 	r.Use(middleware.RequestID)
 	r.Use(response.RequestIDResponseMiddleware)
@@ -86,8 +93,9 @@ func NewHttpServer(conf config.Config) ServerInterface {
 	}
 
 	httpSvc := &httpServer{
-		srv:    srv,
-		router: r,
+		srv:        srv,
+		router:     r,
+		streamDone: streamDone,
 	}
 
 	httpSvc.Method(http.MethodGet, "/health", func(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +142,13 @@ func (h *httpServer) Start() error {
 
 func (h *httpServer) Shutdown(ctx context.Context) error {
 	slog.Info("HTTP server shutting down...")
-	return h.srv.Shutdown(ctx)
+	h.shutdownOnce.Do(func() { close(h.streamDone) })
+	if err := h.srv.Shutdown(ctx); err != nil {
+		// Shutdown does not interrupt blocked writes or handlers that ignore their
+		// context. Close their connections after the graceful deadline.
+		return errors.Join(err, h.srv.Close())
+	}
+	return nil
 }
 
 func formatServerAddress(host string, port int) string {
