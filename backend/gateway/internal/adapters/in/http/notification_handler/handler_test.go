@@ -48,7 +48,7 @@ func TestAuthenticatedRoutesUseTokenIdentity(t *testing.T) {
 		t.Fatal(err)
 	}
 	user := uuid.NewString()
-	token, err := h.token.Issue(context.Background(), jwt.Claims{UserID: user})
+	token, err := h.token.(*jwt.TokenService).Issue(context.Background(), jwt.Claims{UserID: user})
 	if err != nil {
 		t.Fatal(err)
 	}

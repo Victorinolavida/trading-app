@@ -34,9 +34,11 @@ type OrdersHandler struct {
 	conf          *config.Config
 	ordersService ports.OrdersService
 	validate      *validator.Validate
-	jwtService    *jwt.TokenService
+	jwtService    ports.TokenVerifier
 	rabbitClient  *brokerrabbit.Client
 }
+
+func (h *OrdersHandler) SetTokenVerifier(v ports.TokenVerifier) { h.jwtService = v }
 
 func NewOrdersHandler(conf *config.Config, ordersService ports.OrdersService, validate *validator.Validate, rabbitClient *brokerrabbit.Client) (*OrdersHandler, error) {
 	if validate == nil {

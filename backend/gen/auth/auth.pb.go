@@ -254,13 +254,14 @@ func (x *WhoamiRequest) GetUserId() string {
 }
 
 type WhoamiResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FirstName     string                 `protobuf:"bytes,2,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	LastName      string                 `protobuf:"bytes,3,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FirstName      string                 `protobuf:"bytes,2,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName       string                 `protobuf:"bytes,3,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	Email          string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	SessionVersion int64                  `protobuf:"varint,5,opt,name=session_version,json=sessionVersion,proto3" json:"session_version,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *WhoamiResponse) Reset() {
@@ -321,6 +322,13 @@ func (x *WhoamiResponse) GetEmail() string {
 	return ""
 }
 
+func (x *WhoamiResponse) GetSessionVersion() int64 {
+	if x != nil {
+		return x.SessionVersion
+	}
+	return 0
+}
+
 var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
@@ -342,13 +350,14 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"(\n" +
 	"\rWhoamiRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"r\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x9b\x01\n" +
 	"\x0eWhoamiResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
 	"\tlast_name\x18\x03 \x01(\tR\blastName\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email2\xc0\x01\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12'\n" +
+	"\x0fsession_version\x18\x05 \x01(\x03R\x0esessionVersion2\xc0\x01\n" +
 	"\vAuthService\x12?\n" +
 	"\fRegisterUser\x12\x15.auth.RegisterRequest\x1a\x16.auth.AuthUserResponse\"\x00\x129\n" +
 	"\tLoginUser\x12\x12.auth.LoginRequest\x1a\x16.auth.AuthUserResponse\"\x00\x125\n" +

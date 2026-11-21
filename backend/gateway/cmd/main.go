@@ -25,7 +25,9 @@ import (
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
 	ordersservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/orders_service"
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
+	"github.com/victorinolavida/gateway/internal/application/session"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
+	"github.com/victorinolavida/pkg/jwt"
 	calculatorpb "github.com/victorinolavida/proto/calculator"
 	notificationpb "github.com/victorinolavida/proto/notification"
 )
@@ -110,6 +112,17 @@ func main() {
 	if err != nil {
 		logger.Fatal("error creating notification handler", slog.Any("error", err))
 	}
+
+	tokenVerifier, err := jwt.NewService(conf.Token)
+	if err != nil {
+		logger.Fatal("error creating token verifier", slog.Any("error", err))
+	}
+	sessionVerifier := session.NewVerifier(tokenVerifier, authService)
+	authHandler.SetTokenVerifier(sessionVerifier)
+	secHandler.SetTokenVerifier(sessionVerifier)
+	ordHandler.SetTokenVerifier(sessionVerifier)
+	calcHandler.SetTokenVerifier(sessionVerifier)
+	notificationHandler.SetTokenVerifier(sessionVerifier)
 
 	modules := []module.Module{
 		calcHandler,

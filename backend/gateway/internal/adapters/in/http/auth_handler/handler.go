@@ -36,9 +36,11 @@ var ErrMissingValidator = errors.New("auth handler: validator is required")
 type AuthHandler struct {
 	service    ports.AuthService
 	validate   *validator.Validate
-	jwtService *jwt.TokenService
+	jwtService ports.TokenVerifier
 	cfg        *config.Config
 }
+
+func (h *AuthHandler) SetTokenVerifier(v ports.TokenVerifier) { h.jwtService = v }
 
 var _ module.Module = (*AuthHandler)(nil)
 

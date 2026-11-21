@@ -32,6 +32,7 @@ message WhoamiResponse {
   string first_name = 2;
   string last_name  = 3;
   string email = 4;
+  int64 session_version = 5;
 }
 
 service AuthService {

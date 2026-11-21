@@ -35,9 +35,11 @@ var ErrMissingValidator = errors.New("security handler: validator is required")
 type SecurityHandler struct {
 	service    ports.SecurityService
 	validate   *validator.Validate
-	jwtService *jwt.TokenService
+	jwtService ports.TokenVerifier
 	cfg        *config.Config
 }
+
+func (h *SecurityHandler) SetTokenVerifier(v ports.TokenVerifier) { h.jwtService = v }
 
 var _ module.Module = (*SecurityHandler)(nil)
 
@@ -144,4 +146,3 @@ func (h *SecurityHandler) Routes() http.Handler {
 	protected.Get("/enabled", h.GetActive)
 	return r
 }
-

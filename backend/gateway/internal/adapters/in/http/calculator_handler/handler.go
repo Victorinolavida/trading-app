@@ -7,6 +7,7 @@ import (
 	"github.com/victorinolavida/gateway/config"
 	authmiddleware "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
+	"github.com/victorinolavida/gateway/internal/application/ports"
 	"github.com/victorinolavida/pkg/jwt"
 	calculatorpb "github.com/victorinolavida/proto/calculator"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -14,9 +15,11 @@ import (
 
 type Handler struct {
 	client calculatorpb.CalculatorServiceClient
-	jwt    *jwt.TokenService
+	jwt    ports.TokenVerifier
 	config *config.Config
 }
+
+func (h *Handler) SetTokenVerifier(v ports.TokenVerifier) { h.jwt = v }
 
 func New(conf *config.Config, client calculatorpb.CalculatorServiceClient) (*Handler, error) {
 	token, err := jwt.NewService(conf.Token)

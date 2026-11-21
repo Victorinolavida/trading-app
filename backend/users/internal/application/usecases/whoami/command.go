@@ -5,8 +5,9 @@ type Command struct {
 }
 
 type Result struct {
-	UserID    string
-	FirstName string
-	LastName  string
-	Email     string
+	UserID         string
+	FirstName      string
+	LastName       string
+	Email          string
+	SessionVersion int64
 }

@@ -87,9 +87,10 @@ func (handler *AuthGRPCHandler) Whoami(ctx context.Context, req *authpb.WhoamiRe
 	}
 
 	return &authpb.WhoamiResponse{
-		Id:        result.UserID,
-		Email:     result.Email,
-		FirstName: result.FirstName,
-		LastName:  result.LastName,
+		Id:             result.UserID,
+		Email:          result.Email,
+		FirstName:      result.FirstName,
+		LastName:       result.LastName,
+		SessionVersion: result.SessionVersion,
 	}, nil
 }

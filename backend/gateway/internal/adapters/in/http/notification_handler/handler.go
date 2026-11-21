@@ -15,6 +15,7 @@ import (
 	auth "github.com/victorinolavida/gateway/internal/adapters/in/http/middleware/auth_middleware"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/stream"
+	"github.com/victorinolavida/gateway/internal/application/ports"
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	"github.com/victorinolavida/pkg/jwt"
 	pb "github.com/victorinolavida/proto/notification"
@@ -24,9 +25,11 @@ import (
 type Handler struct {
 	conf   *config.Config
 	client pb.NotificationServiceClient
-	token  *jwt.TokenService
+	token  ports.TokenVerifier
 	rabbit *rabbitmq.Client
 }
+
+func (h *Handler) SetTokenVerifier(v ports.TokenVerifier) { h.token = v }
 
 func New(conf *config.Config, client pb.NotificationServiceClient, rabbit *rabbitmq.Client) (*Handler, error) {
 	token, err := jwt.NewService(conf.Token)

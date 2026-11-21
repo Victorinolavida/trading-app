@@ -84,9 +84,10 @@ func (serv *AuthService) Whoami(ctx context.Context, request dtos.WhoamiUserRequ
 		return dtos.WhoamiUserResponse{}, err
 	}
 	return dtos.WhoamiUserResponse{
-		UserID:    result.Id,
-		FirstName: result.FirstName,
-		LastName:  result.LastName,
-		Email:     result.Email,
+		UserID:         result.Id,
+		FirstName:      result.FirstName,
+		LastName:       result.LastName,
+		Email:          result.Email,
+		SessionVersion: result.SessionVersion,
 	}, nil
 }
