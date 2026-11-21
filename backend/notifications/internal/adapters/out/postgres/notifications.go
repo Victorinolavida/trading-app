@@ -43,7 +43,7 @@ func (r *Repository) Save(ctx context.Context, n Notification) (bool, error) {
 }
 
 func (r *Repository) List(ctx context.Context, userID uuid.UUID, unread bool, cursor *Cursor, limit int) ([]Notification, error) {
-	if userID == uuid.Nil || limit < 1 || limit > 100 {
+	if userID == uuid.Nil || limit < 1 || limit > 101 {
 		return nil, fmt.Errorf("invalid list arguments")
 	}
 	var created *time.Time

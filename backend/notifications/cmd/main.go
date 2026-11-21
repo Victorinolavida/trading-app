@@ -14,9 +14,12 @@ import (
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	cfg "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
+	grpcserver "github.com/victorinolavida/pkg/grpc_server"
 	"github.com/victorinolavida/pkg/logger"
+	pb "github.com/victorinolavida/proto/notification"
 
 	"module/config"
+	grpcadapter "module/internal/adapters/in/grpc"
 	"module/internal/adapters/out/postgres"
 	"module/internal/consumer"
 )
@@ -50,6 +53,15 @@ func main() {
 		defer close(consumerDone)
 		consumer.New(broker, postgres.New(pool), conf.Consumer.Exchange, conf.Consumer.Queue).Run(ctx)
 	}()
+	grpcServer := grpcserver.NewGRPCServer(conf.GRPC)
+	pb.RegisterNotificationServiceServer(grpcServer.Server(), grpcadapter.New(postgres.New(pool)))
+	listener := grpcServer.Listen()
+	go func() {
+		if err := grpcServer.Server().Serve(listener); err != nil {
+			log.Error("grpc server stopped", slog.Any("error", err))
+			stop()
+		}
+	}()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -71,6 +83,7 @@ func main() {
 	}()
 
 	<-ctx.Done()
+	grpcServer.Server().GracefulStop()
 	<-consumerDone
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)

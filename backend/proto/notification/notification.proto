@@ -1,0 +1,39 @@
+syntax = "proto3";
+package notification;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/victorinolavida/proto/notification";
+
+message Notification {
+  string id = 1;
+  string event_type = 2;
+  string payload_json = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp read_at = 5;
+}
+
+message Cursor {
+  google.protobuf.Timestamp created_at = 1;
+  string id = 2;
+}
+
+message ListRequest {
+  string user_id = 1;
+  bool unread_only = 2;
+  int32 limit = 3;
+  Cursor cursor = 4;
+}
+message ListResponse { repeated Notification notifications = 1; Cursor next_cursor = 2; }
+message UserRequest { string user_id = 1; }
+message CountResponse { int64 count = 1; }
+message MarkReadRequest { string user_id = 1; string notification_id = 2; }
+message MarkReadResponse {}
+message MarkAllReadResponse { int64 updated = 1; }
+
+service NotificationService {
+  rpc List(ListRequest) returns (ListResponse);
+  rpc UnreadCount(UserRequest) returns (CountResponse);
+  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+  rpc MarkAllRead(UserRequest) returns (MarkAllReadResponse);
+}

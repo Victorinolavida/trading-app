@@ -13,6 +13,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import { toast } from "sonner";
 import { queryClient } from "./queryClient";
 import { securityQueries } from "../features/securities/queries";
+import NotificationsPage from "../pages/NotificationsPage";
 
 export function navigate(path: string) {
   window.history.pushState({}, "", path);
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: "/blotter",
         Component: BlotterRoute,
+      },
+      {
+        path: "/notifications",
+        Component: NotificationsPage,
       },
       {
         path: "/orders/:orderId",

@@ -4,8 +4,10 @@ import { Outlet, useLocation } from "react-router";
 import { Menu } from "lucide-react";
 import { Sidebar } from "./components/Sidebar";
 import { OfflineBanner } from "./components/OfflineBanner";
+import { useNotificationStream } from "./features/notifications/useNotificationStream";
 
 export default function App() {
+  useNotificationStream();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
 

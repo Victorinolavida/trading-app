@@ -13,9 +13,10 @@ type Consumer struct {
 }
 
 type Config struct {
-	Env      string       `koanf:"env"`
-	Server   Server       `koanf:"server"`
-	Database cfg.Database `koanf:"database"`
-	RabbitMQ cfg.RabbitMQ `koanf:"rabbitmq"`
-	Consumer Consumer     `koanf:"consumer"`
+	Env      string         `koanf:"env"`
+	Server   Server         `koanf:"server"`
+	GRPC     cfg.GRPCServer `koanf:"grpc"`
+	Database cfg.Database   `koanf:"database"`
+	RabbitMQ cfg.RabbitMQ   `koanf:"rabbitmq"`
+	Consumer Consumer       `koanf:"consumer"`
 }
