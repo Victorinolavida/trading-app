@@ -4,7 +4,7 @@ A trading application with a React frontend and a Go microservices backend. Sear
 
 ## Video demo
 
-> Video demo coming soon. Add a link or embedded video here.
+[Watch the video demo](https://videos.victorinolavida.com/demo_trading_v1).
 
 ## Services
 
