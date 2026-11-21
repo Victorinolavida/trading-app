@@ -11,6 +11,7 @@ just backend migrate users   # apply migrations (dbmate)
 just backend run users       # run the users service (gRPC, :3030)
 just backend orders migrate     # apply orders migrations (dbmate)
 just backend migrate securities # apply securities and UDI quote migrations
+just backend securities seed    # load reference and synthetic securities
 just backend run securities  # run the securities service (gRPC, :3031)
 just backend orders run-service # run the orders service (gRPC)
 just backend orders run-worker  # run the orders expiration worker
@@ -82,3 +83,5 @@ just backend gen-proto          # regenerate backend/gen/ from backend/proto (bu
 Calculator exposes price, yield and cashflow calculations through the gateway at `/api/v0/calculator`. It depends on the securities service and its database for UDI quotes; apply the securities migrations and run both services before using the order form. Configure the calculator gRPC address in the gateway and orders service configuration.
 
 The calculator infers the coupon rate from the security name, defaulting to 5% when no rate is present, and assumes a 182-day coupon period and a 360-day basis. UDI calculations require a quote for the settlement date in the `udi_values` table.
+
+The securities seed includes test bonds. Udibono seed rows are skipped until a UDI quote dated today or earlier is present; rerun `just backend securities seed` after loading a quote. The calculator requires a quote for the exact settlement date.
