@@ -57,8 +57,9 @@ setup:
 # Service lifecycle
 # =============================================================================
 
-# Run a service: `just run users` or `just run all`.
+# Run one service; orders runs its service, with the worker started separately.
 run service:
+    @if [[ "{{service}}" == "all" ]]; then echo "Run services in separate terminals; start the orders worker with just orders run-worker." >&2; exit 2; fi
     just _each run {{service}}
 
 # Build a service binary: `just build users` or `just build all`.

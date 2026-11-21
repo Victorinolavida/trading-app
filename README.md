@@ -13,8 +13,8 @@ just backend orders migrate     # apply orders migrations (dbmate)
 just backend migrate securities # apply securities and UDI quote migrations
 just backend securities seed    # load reference and synthetic securities
 just backend run securities  # run the securities service (gRPC, :3031)
-just backend orders run-service # run the orders service (gRPC)
-just backend orders run-worker  # run the orders expiration worker
+just backend run orders      # run the orders service (gRPC)
+just backend orders run-worker  # run the orders expiration worker (separate terminal)
 just backend run calculator  # run the calculator service (gRPC, :3034)
 just backend run gateway     # run the gateway (HTTP, :3001)
 just web                     # run the frontend (Vite, :8000)
@@ -85,3 +85,5 @@ Calculator exposes price, yield and cashflow calculations through the gateway at
 The calculator infers the coupon rate from the security name, defaulting to 5% when no rate is present, and assumes a 182-day coupon period and a 360-day basis. UDI calculations require a quote for the settlement date in the `udi_values` table.
 
 The securities seed includes test bonds. Udibono seed rows are skipped until a UDI quote dated today or earlier is present; rerun `just backend securities seed` after loading a quote. The calculator requires a quote for the exact settlement date.
+
+Each service supports `run`, `build`, `test`, `fmt`, `vet`, and `tidy` through its justfile. `just backend build orders` builds both the orders service and worker; use `just backend orders build-service` or `build-worker` to build one.

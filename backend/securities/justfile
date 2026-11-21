@@ -38,8 +38,8 @@ build:
     go build -o bin/securities ./cmd
 
 # Run the test suite, starting from a clean test cache.
-test: cache-clean
-    go test ./...
+test:
+    go test -count=1 ./...
 
 # =============================================================================
 # Code quality
@@ -94,11 +94,6 @@ seed: migrate
 # =============================================================================
 # Private helpers
 # =============================================================================
-
-# Clear the Go test cache so `just test` always runs the full suite.
-[private]
-cache-clean:
-    go clean -testcache
 
 # Create the database if it does not exist yet.
 [private]
