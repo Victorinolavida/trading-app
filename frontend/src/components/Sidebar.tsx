@@ -1,3 +1,4 @@
+import { Button } from "./ui/button";
 // components/Sidebar.tsx
 import { Link, NavLink } from "react-router";
 import {
@@ -51,14 +52,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               <h2 className="text-lg font-semibold text-fg-strong">Trading</h2>
             </Link>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={onClose}
             aria-label="Close menu"
-            className="rounded-md p-1.5 text-fg-muted hover:bg-surface-hover hover:text-fg-strong md:hidden"
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
@@ -83,15 +85,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="border-t border-border pt-4">
-          <button
-            type="button"
+          <Button
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-surface-hover px-4 py-2 text-sm text-fg-soft transition-colors hover:bg-danger-strong hover:text-fg-strong disabled:cursor-default disabled:opacity-60"
+            className="w-full enabled:hover:border-danger-border enabled:hover:bg-danger-surface enabled:hover:text-danger-soft"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             {logout.isPending ? "Signing out..." : "Logout"}
-          </button>
+          </Button>
         </div>
       </aside>
     </>

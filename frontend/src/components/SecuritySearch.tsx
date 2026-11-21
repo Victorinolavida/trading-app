@@ -33,7 +33,7 @@ export function SecuritySearch() {
         value={term}
         onChange={handleOnChange}
         placeholder="Search by name or ISIN..."
-        className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-base text-inherit focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="ui-field w-full"
       />
       {isLoading && term.length > 0 && (
         <p className="mt-2 text-sm text-fg-muted">Searching...</p>
@@ -43,11 +43,11 @@ export function SecuritySearch() {
         <p className="mt-2 text-sm text-fg-muted">No securities found</p>
       )}
       {!isLoading && data && data.securities && (
-        <ul className="mt-2 max-h-80 overflow-auto rounded-md border border-border bg-surface">
+        <ul className="ui-panel mt-2 max-h-80 overflow-auto">
           {data.securities.map((s) => (
             <li
               key={s.id}
-              className="cursor-pointer border-b border-border-subtle px-3 py-2 hover:bg-surface-raised last:border-b-0"
+              className="cursor-pointer border-b border-border/70 px-3 py-2 hover:bg-surface-hover/40 last:border-b-0"
               onClick={() => navigate("/securities/" + s.id)}
             >
               <div className="text-sm font-medium">{s.name || s.isin}</div>

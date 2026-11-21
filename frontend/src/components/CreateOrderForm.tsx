@@ -1,3 +1,4 @@
+import { Button } from "./ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,7 +71,7 @@ const EXPIRATION_UNIT_SUFFIX: Record<string, string> = {
 };
 
 const labelClass = "mb-1 block text-xs text-fg-muted";
-const inputClass = "w-full rounded bg-surface-hover p-2 text-sm";
+const inputClass = "ui-field w-full";
 const errorClass = "mt-1 text-sm text-danger";
 
 export function CreateOrderForm({ securityId }: { securityId: string }) {
@@ -332,7 +333,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                   min="1"
                   step="1"
                   disabled={defaultExpiration}
-                  className={`${inputClass} disabled:opacity-60`}
+                  className={inputClass}
                   {...register("expirationValue")}
                 />
                 {errors.expirationValue && (
@@ -345,7 +346,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                 </label>
                 <select
                   id="expirationUnit"
-                  className={`${inputClass} disabled:opacity-60`}
+                  className={inputClass}
                   {...register("expirationUnit")}
                   disabled={defaultExpiration}
                 >
@@ -359,13 +360,14 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         )}
 
         <div className="col-span-2">
-          <button
-            className="w-full cursor-pointer rounded-md bg-accent-strong px-4 py-2.5 text-base text-fg-strong disabled:opacity-60"
+          <Button
+            variant="dark"
+            className="w-full"
             type="submit"
             disabled={createOrderMutation.isPending || !isValid}
           >
             {createOrderMutation.isPending ? "Creating..." : "Create Order"}
-          </button>
+          </Button>
         </div>
       </form>
     </Card>

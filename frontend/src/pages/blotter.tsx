@@ -1,7 +1,7 @@
+import { Button } from "../components/ui/button";
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SortingState } from "@tanstack/react-table";
-import { cn } from "../components/ui/card";
 import { activeColumns, historyColumns } from "../features/orders/columns";
 import { HISTORY_PAGE_SIZE } from "../features/orders/constants";
 import { OrdersTable } from "../features/orders/OrdersTable";
@@ -70,30 +70,27 @@ export default function BlotterRoute() {
   return (
     <div className="mx-auto flex w-full max-w-[110rem] flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-semibold text-fg-strong">Order Blotter</h1>
-        <p className="mt-1 text-sm text-fg-subtle">
+        <h1 className="ui-title">Order Blotter</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           Working orders and execution history.
         </p>
       </header>
 
       {ordersQuery.isError ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-danger-border/60 bg-danger-surface/30 p-4 text-sm text-danger-soft"
-        >
+        <div role="alert" className="ui-alert-danger p-4 text-sm">
           <p>
             Could not load orders:{" "}
             {ordersQuery.error instanceof Error
               ? ordersQuery.error.message
               : "unknown error"}
           </p>
-          <button
-            type="button"
+          <Button
             onClick={() => void ordersQuery.refetch()}
-            className="mt-3 rounded border border-danger-border px-2 py-1 text-xs text-danger-soft hover:bg-danger-surface/40"
+            size="sm"
+            className="mt-3"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
         <>
@@ -102,36 +99,28 @@ export default function BlotterRoute() {
             aria-label="Blotter view"
             className="flex gap-1 border-b border-border"
           >
-            <button
-              type="button"
+            <Button
               role="tab"
               aria-selected={isActive}
               onClick={() => setTab("active")}
-              className={cn(
-                "-mb-px border-b-2 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors",
-                isActive
-                  ? "border-accent text-fg-strong"
-                  : "border-transparent text-fg-subtle hover:text-fg-soft",
-              )}
+              variant="tab"
+              size="sm"
+              className="gap-1 px-3 py-2"
             >
               Active orders{" "}
               <span className="text-fg-faint">({activeOrders.length})</span>
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               role="tab"
               aria-selected={!isActive}
               onClick={() => setTab("history")}
-              className={cn(
-                "-mb-px border-b-2 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors",
-                !isActive
-                  ? "border-accent text-fg-strong"
-                  : "border-transparent text-fg-subtle hover:text-fg-soft",
-              )}
+              variant="tab"
+              size="sm"
+              className="gap-1 px-3 py-2"
             >
               Order history{" "}
               <span className="text-fg-faint">({historyOrders.length})</span>
-            </button>
+            </Button>
           </div>
 
           <section className="flex flex-col gap-3">

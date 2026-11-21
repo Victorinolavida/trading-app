@@ -1,3 +1,4 @@
+import { Button } from "../components/ui/button";
 import { useCallback } from "react";
 import { redirect, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,6 @@ import { toast } from "sonner";
 import { getErrorMessage } from "../lib/apiError";
 import { CreateOrderForm } from "../components/CreateOrderForm";
 import { DepthChart } from "../components/DepthChart";
-
 
 export default function SecurityDetailPage() {
   const { securityId } = useParams();
@@ -29,60 +29,34 @@ export default function SecurityDetailPage() {
     redirect("/");
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen overflow-x-hidden">
-        <main className="flex-1 min-h-screen overflow-x-hidden p-8">
-          <button
-            className="mb-4 cursor-pointer text-sm text-accent-soft"
-            onClick={handleGoBack}
-          >
-            ← Back
-          </button>
-          <p className="text-fg-muted">Loading...</p>
-        </main>
-      </div>
-    );
-  }
-
-  if (!security) {
-    return (
-      <div className="flex min-h-screen overflow-x-hidden">
-        <main className="flex-1 min-h-screen overflow-x-hidden p-8">
-          <button
-            className="mb-4 cursor-pointer text-sm text-accent-soft"
-            onClick={handleGoBack}
-          >
-            ← Back
-          </button>
-          <p className="text-fg-muted">Security not found.</p>
-        </main>
-      </div>
-    );
-  }
-
   const asks = data?.asks ?? [];
   const bids = data?.bids ?? [];
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden">
-      <main className="flex-1 min-h-screen overflow-x-hidden p-8">
-        <button
-          className="mb-4 cursor-pointer text-sm text-accent-soft"
-          onClick={handleGoBack}
-        >
-          ← Back
-        </button>
+    <div className="mx-auto flex w-full max-w-[110rem] flex-col gap-4">
+      <Button
+        variant="link"
+        size="inline"
+        className="self-start text-sm"
+        onClick={handleGoBack}
+      >
+        ← Back
+      </Button>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+      {isLoading || !security ? (
+        <p className="ui-panel p-4 text-sm text-fg-muted">
+          {isLoading ? "Loading..." : "Security not found."}
+        </p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
           <SecurityInfoCard security={security} />
-          <CreateOrderForm securityId={security.id} />
-          <div className="col-span-2">
-          <OrderBook book={{ asks, bids }} />
-          <DepthChart asks={asks} bids={bids} height={4} />
+          <CreateOrderForm key={security.id} securityId={security.id} />
+          <div className="grid min-w-0 gap-4 lg:col-span-2">
+            <OrderBook book={{ asks, bids }} />
+            <DepthChart asks={asks} bids={bids} />
           </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
