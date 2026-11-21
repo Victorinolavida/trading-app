@@ -1,0 +1,60 @@
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="tab-bar"
+        }
+        children
+        pane size=1 borderless=true {
+            plugin location="status-bar"
+        }
+    }
+
+    tab name="Frontend" {
+        pane command="just" {
+            args "web"
+            close_on_exit false
+        }
+    }
+    tab name="Gateway" {
+        pane command="just" {
+            args "backend" "run" "gateway"
+            close_on_exit false
+        }
+    }
+    tab name="Users" {
+        pane command="just" {
+            args "backend" "run" "users"
+            close_on_exit false
+        }
+    }
+    tab name="Securities" {
+        pane command="just" {
+            args "backend" "run" "securities"
+            close_on_exit false
+        }
+    }
+    tab name="Calculator" {
+        pane command="just" {
+            args "backend" "run" "calculator"
+            close_on_exit false
+        }
+    }
+    tab name="Orders" {
+        pane split_direction="vertical" {
+            pane name="service" command="just" {
+                args "backend" "run" "orders"
+                close_on_exit false
+            }
+            pane name="worker" command="just" {
+                args "backend" "orders" "run-worker"
+                close_on_exit false
+            }
+        }
+    }
+    tab name="Notifications" {
+        pane command="just" {
+            args "backend" "run" "notifications"
+            close_on_exit false
+        }
+    }
+}

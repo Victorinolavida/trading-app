@@ -115,6 +115,11 @@ func NewOrder(
 	if err != nil {
 		return nil, err
 	}
+	// A zero yield is a valid calculated value for a limit order.
+	if orderType == OrderTypeLimit && yieldPtr == nil {
+		zero := Decimal(0)
+		yieldPtr = &zero
+	}
 
 	if orderType == OrderTypeMarket {
 		if pricePtr != nil {

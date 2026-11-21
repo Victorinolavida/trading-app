@@ -73,6 +73,15 @@ web-build:
 # Development workflow
 # =============================================================================
 
+# Start the frontend and backend services in a Zellij session.
+zellij:
+    @zellij delete-session trading-app 2>/dev/null || true
+    zellij --session trading-app --new-session-with-layout zellij.kdl
+
+# Stop the Zellij session and the processes running in its panes.
+zellij-stop:
+    zellij kill-session trading-app
+
 # Start the full local stack: infrastructure, gateway, and frontend.
 dev:
     #!/usr/bin/env zsh
