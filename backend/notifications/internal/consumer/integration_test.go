@@ -88,8 +88,10 @@ func TestConsumerIntegrationRetryAndDeadLetter(t *testing.T) {
 	if err := ch.PublishWithContext(ctx, exchange, key, false, false, amqp.Publishing{Body: body, Type: key, MessageId: id.String(), DeliveryMode: amqp.Persistent}); err != nil {
 		t.Fatal(err)
 	}
+	var saved postgres.Notification
 	select {
 	case n := <-store.saved:
+		saved = n
 		if n.EventID != id {
 			t.Fatalf("wrong event %s", n.EventID)
 		}
@@ -97,11 +99,18 @@ func TestConsumerIntegrationRetryAndDeadLetter(t *testing.T) {
 		t.Fatal("retry did not succeed")
 	}
 	for {
-		_, ok, err := ch.Get(live.Name, true)
+		message, ok, err := ch.Get(live.Name, true)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if ok {
+			var signal struct {
+				ID        uuid.UUID `json:"id"`
+				EventType string    `json:"event_type"`
+			}
+			if err := json.Unmarshal(message.Body, &signal); err != nil || signal.ID != saved.ID || signal.EventType != "order.created" {
+				t.Fatalf("invalid signal: %s (%v)", message.Body, err)
+			}
 			break
 		}
 		select {

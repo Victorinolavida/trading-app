@@ -220,11 +220,22 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-r.Context().Done():
 			return
-		case _, ok := <-msgs:
+		case msg, ok := <-msgs:
 			if !ok {
 				return
 			}
-			if _, err := fmt.Fprint(w, "event: notifications.changed\ndata: {}\n\n"); err != nil {
+			var signal struct {
+				ID        string `json:"id"`
+				EventType string `json:"event_type"`
+			}
+			if err := json.Unmarshal(msg.Body, &signal); err != nil {
+				continue
+			}
+			data, err := json.Marshal(signal)
+			if err != nil {
+				continue
+			}
+			if _, err := fmt.Fprintf(w, "event: notifications.changed\ndata: %s\n\n", data); err != nil {
 				return
 			}
 			flusher.Flush()

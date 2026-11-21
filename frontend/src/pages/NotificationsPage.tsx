@@ -13,13 +13,7 @@ import {
   type Notification,
 } from "../features/notifications/api";
 
-const titles: Record<string, string> = {
-  "order.created": "Order created",
-  "order.canceled": "Order canceled",
-  "order.expired": "Order expired",
-  "order.executed": "Order executed",
-  "order.discarded": "Order discarded",
-};
+import { notificationTitles } from "../features/notifications/presentation";
 
 function NotificationRow({
   item,
@@ -45,7 +39,7 @@ function NotificationRow({
             aria-hidden="true"
           />
           <h2 className="font-semibold text-fg-strong">
-            {titles[item.event_type] ?? "Order notification"}
+            {notificationTitles[item.event_type] ?? "Order notification"}
           </h2>
         </div>
         <time

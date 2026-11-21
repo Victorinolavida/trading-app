@@ -72,7 +72,7 @@ func TestSSEPrivateDelivery(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer ch.Close()
-	if err := ch.PublishWithContext(ctx, "notifications.live", user, false, false, amqp.Publishing{Body: []byte(`{}`)}); err != nil {
+	if err := ch.PublishWithContext(ctx, "notifications.live", user, false, false, amqp.Publishing{Body: []byte(`{"id":"notice-1","event_type":"order.executed"}`)}); err != nil {
 		t.Fatal(err)
 	}
 	for _, lines := range []<-chan string{a, b} {
@@ -83,6 +83,14 @@ func TestSSEPrivateDelivery(t *testing.T) {
 			}
 		case <-time.After(2 * time.Second):
 			t.Fatal("signal not delivered")
+		}
+		select {
+		case line := <-lines:
+			if line != `data: {"id":"notice-1","event_type":"order.executed"}` {
+				t.Fatalf("unexpected data %q", line)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("signal data not delivered")
 		}
 	}
 	select {

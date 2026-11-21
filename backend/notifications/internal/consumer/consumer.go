@@ -97,7 +97,14 @@ func (c *Consumer) consume(ctx context.Context) error {
 			if inserted, saveErr := c.store.Save(ctx, n); saveErr == nil {
 				if inserted {
 					// This signal is best effort; clients reconcile from the database on reconnect.
-					confirmation, signalErr := ch.PublishWithDeferredConfirmWithContext(ctx, "notifications.live", n.UserID.String(), false, false, amqp.Publishing{ContentType: "application/json", Body: []byte(`{}`)})
+					body, signalErr := json.Marshal(struct {
+						ID        uuid.UUID `json:"id"`
+						EventType string    `json:"event_type"`
+					}{n.ID, n.EventType})
+					var confirmation *amqp.DeferredConfirmation
+					if signalErr == nil {
+						confirmation, signalErr = ch.PublishWithDeferredConfirmWithContext(ctx, "notifications.live", n.UserID.String(), false, false, amqp.Publishing{ContentType: "application/json", Body: body})
+					}
 					if signalErr == nil {
 						_, signalErr = confirmation.WaitContext(ctx)
 					}
