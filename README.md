@@ -2,10 +2,6 @@
 
 A trading application with a React frontend and a Go microservices backend. Search securities, view the order book and market depth, calculate bond prices and yields, and manage orders in the blotter.
 
-## Video demo
-
-[Watch the video demo](https://videos.victorinolavida.com/demo_trading_v1).
-
 ## Services
 
 | Service | Role | Local port |
