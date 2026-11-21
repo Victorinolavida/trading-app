@@ -13,6 +13,7 @@ import (
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
 	orderproducer "github.com/victorinolavida/orders/internal/adapters/out/producer/rabbitmq"
 	redisadapter "github.com/victorinolavida/orders/internal/adapters/out/redis"
+	notificationoutbox "github.com/victorinolavida/orders/internal/application/workers/notification_outbox"
 	orderexpiration "github.com/victorinolavida/orders/internal/application/workers/order_expiration"
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	cfgpkg "github.com/victorinolavida/pkg/config"
@@ -70,6 +71,7 @@ func main() {
 		logger.Fatal("error creating order event producer", slog.Any("error", err))
 	}
 
+	go notificationoutbox.New(pool, rabbitClient, exchange).Run(ctx)
 	worker := orderexpiration.NewOrderWorker(orderRepo, txManager, eventPublisher, time.Second*10, postgres.NewNotificationOutbox())
 	if err := worker.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		logs.Error("worker stopped with error", slog.Any("error", err))
