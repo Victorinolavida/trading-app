@@ -16,4 +16,5 @@ type Config struct {
 type Services struct {
 	Users      config.GRPCClient `koanf:"users"`
 	Securities config.GRPCClient `koanf:"securities"`
+	Calculator config.GRPCClient `koanf:"calculator"`
 }

@@ -1,0 +1,16 @@
+env: development
+grpc:
+  host: localhost
+  port: 3034
+  protocol: tcp
+  service: calculator
+securities_service:
+  host: localhost
+  port: 3031
+# The securities database stores UDI quotes.
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  name: trading_securities

@@ -21,6 +21,11 @@ securities_service:
   port: 3031
 
 
+# calculator service over gRPC
+calculator_service:
+  host: localhost
+  port: 3034
+
 # must match the users service token.secret
 token:
   secret: change-me-to-a-long-random-secret

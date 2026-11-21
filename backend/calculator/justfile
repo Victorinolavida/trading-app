@@ -1,0 +1,13 @@
+set shell := ["zsh", "-cu"]
+run:
+    go run ./cmd
+build:
+    go build -o bin/calculator ./cmd
+test:
+    go test ./...
+fmt:
+    gofmt -w .
+vet:
+    go vet ./...
+tidy:
+    GOWORK=off go mod tidy

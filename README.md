@@ -5,13 +5,16 @@ Monorepo with a Go backend (`backend/`) and a React frontend (`frontend/`).
 ## Getting started
 
 ```sh
-just backend setup           # copy config.example.yaml -> config.yaml for gateway + users + orders + securities
+just backend setup           # copy config.example.yaml -> config.yaml for gateway + users + orders + securities + calculator
 just infra-up                # start Postgres (docker compose)
 just backend migrate users   # apply migrations (dbmate)
 just backend run users       # run the users service (gRPC, :3030)
 just backend orders migrate     # apply orders migrations (dbmate)
+just backend migrate securities # apply securities and UDI quote migrations
+just backend run securities  # run the securities service (gRPC, :3031)
 just backend orders run-service # run the orders service (gRPC)
 just backend orders run-worker  # run the orders expiration worker
+just backend run calculator  # run the calculator service (gRPC, :3034)
 just backend run gateway     # run the gateway (HTTP, :3001)
 just web                     # run the frontend (Vite, :8000)
 ```
@@ -75,3 +78,7 @@ just backend schema users       # regenerate schema.sql (dbmate + pg_dump)
 cd backend/users/internal/adapters/secondary_adapter/postgres && sqlc generate
 just backend gen-proto          # regenerate backend/gen/ from backend/proto (buf)
 ```
+
+Calculator exposes price, yield and cashflow calculations through the gateway at `/api/v0/calculator`. It depends on the securities service and its database for UDI quotes; apply the securities migrations and run both services before using the order form. Configure the calculator gRPC address in the gateway and orders service configuration.
+
+The calculator infers the coupon rate from the security name, defaulting to 5% when no rate is present, and assumes a 182-day coupon period and a 360-day basis. UDI calculations require a quote for the settlement date in the `udi_values` table.

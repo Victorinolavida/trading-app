@@ -15,6 +15,7 @@ import (
 
 	"github.com/victorinolavida/gateway/config"
 	authhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/auth_handler"
+	calculatorhandler "github.com/victorinolavida/gateway/internal/adapters/in/http/calculator_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	ordershandler "github.com/victorinolavida/gateway/internal/adapters/in/http/orders_handler"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
@@ -23,6 +24,8 @@ import (
 	authservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/auth_service"
 	ordersservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/orders_service"
 	securityservice "github.com/victorinolavida/gateway/internal/adapters/out/grpc/security_service"
+	grpcclient "github.com/victorinolavida/pkg/grpc_client"
+	calculatorpb "github.com/victorinolavida/proto/calculator"
 )
 
 const (
@@ -87,7 +90,18 @@ func main() {
 		logger.Fatal("error creating orders handler", slog.Any("error", err))
 	}
 
+	calcConn, err := grpcclient.NewGRPCClient(conf.CalculatorService)
+	if err != nil {
+		logger.Fatal("error connecting calculator", slog.Any("error", err))
+	}
+	defer calcConn.Close()
+	calcHandler, err := calculatorhandler.New(conf, calculatorpb.NewCalculatorServiceClient(calcConn.Client))
+	if err != nil {
+		logger.Fatal("error creating calculator handler", slog.Any("error", err))
+	}
+
 	modules := []module.Module{
+		calcHandler,
 		authHandler,
 		secHandler,
 		ordHandler,

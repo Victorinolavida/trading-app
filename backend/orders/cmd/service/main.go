@@ -9,6 +9,7 @@ import (
 
 	"github.com/victorinolavida/orders/config"
 	grpcAdapter "github.com/victorinolavida/orders/internal/adapters/in/grpc"
+	"github.com/victorinolavida/orders/internal/adapters/out/grpc/calculator"
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/securities"
 	"github.com/victorinolavida/orders/internal/adapters/out/grpc/users"
 	"github.com/victorinolavida/orders/internal/adapters/out/postgres"
@@ -86,6 +87,12 @@ func main() {
 		logger.Fatal("error connecting to securities service", slog.Any("error", err))
 	}
 
+	calculatorConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Calculator.Host, cfg.Services.Calculator.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Fatal("error connecting to calculator service", slog.Any("error", err))
+	}
+	defer calculatorConn.Close()
+
 	userSvc := users.New(usersConn)
 	securitySvc := securities.New(securitiesConn)
 
@@ -96,7 +103,7 @@ func main() {
 	}
 
 	matchingEngine := matchingengine.New(orderRepo, internalCrossinPolicy)
-	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher)
+	createUC := create_order.New(orderRepo, tradeRepo, securitySvc, userSvc, matchingEngine, txManager, eventPublisher, calculator.New(calculatorConn))
 	cancelUC := cancel_order.New(orderRepo, eventPublisher, txManager)
 	activeUc := active_orders.New(orderRepo)
 	listUc := list_orders.New(orderRepo)

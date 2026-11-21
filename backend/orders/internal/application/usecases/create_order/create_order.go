@@ -16,9 +16,10 @@ type Usecase struct {
 	matchingEngine ports.MatchingEngine
 	txManager      ports.TxManager
 	publisher      ports.EventPublisher
+	calculator     Calculator
 }
 
-func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager, publisher ports.EventPublisher) *Usecase {
+func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, securitySvc ports.SecurityService, userSvc ports.UserService, me ports.MatchingEngine, tx ports.TxManager, publisher ports.EventPublisher, calculator Calculator) *Usecase {
 	return &Usecase{
 		orderRepo:      orderRepo,
 		tradeRepo:      tradeRepo,
@@ -27,6 +28,7 @@ func New(orderRepo ports.OrderRepository, tradeRepo ports.TradeRepository, secur
 		matchingEngine: me,
 		txManager:      tx,
 		publisher:      publisher,
+		calculator:     calculator,
 	}
 }
 
@@ -49,6 +51,10 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	// Get security
 	sec, err := u.securitySvc.GetByID(ctx, cmd.SecurityID)
 	if err != nil {
+		return Result{}, err
+	}
+
+	if err := u.completeLimitOrder(ctx, &cmd); err != nil {
 		return Result{}, err
 	}
 
