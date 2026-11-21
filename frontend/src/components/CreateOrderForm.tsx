@@ -1,24 +1,31 @@
+import { Button } from "./ui/button";
+import { Check } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardTitle } from "./ui/card";
 import { useEffect, useRef, useState } from "react";
 import { useCreateOrder } from "../features/orders/hooks";
+import {
+  useCalculatePrice,
+  useCalculateYield,
+} from "../features/calculator/hooks";
 
-const optionalPositiveNumber = (message: string) =>
-  z.preprocess(
-    (value) =>
-      value === "" || value === null || value === undefined ? undefined : value,
-    z.coerce.number().positive(message).optional(),
-  );
+const calculationFields = ["price", "yield"] as const;
+const calculationLabels = { price: "Price", yield: "Yield" };
+
+function isPositiveNumber(value: string): boolean {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0;
+}
 
 const createOrderSchema = z
   .object({
     securityId: z.uuid(),
     side: z.enum(["bid", "ask"]),
     orderType: z.enum(["limit", "market"]),
-    price: optionalPositiveNumber("price must be greater than 0"),
-    yield: optionalPositiveNumber("yield must be greater than 0"),
+    calculationField: z.enum(calculationFields),
+    calculationValue: z.string(),
     quantity: z.coerce
       .number()
       .int()
@@ -43,11 +50,14 @@ const createOrderSchema = z
       });
     }
 
-    if (values.orderType === "limit" && values.price === undefined) {
+    if (
+      values.orderType === "limit" &&
+      !isPositiveNumber(values.calculationValue)
+    ) {
       ctx.addIssue({
         code: "custom",
-        path: ["price"],
-        message: "price must be greater than 0",
+        path: ["calculationValue"],
+        message: `${calculationLabels[values.calculationField]} must be greater than 0`,
       });
     }
   });
@@ -62,11 +72,15 @@ const EXPIRATION_UNIT_SUFFIX: Record<string, string> = {
 };
 
 const labelClass = "mb-1 block text-xs text-fg-muted";
-const inputClass = "w-full rounded bg-surface-hover p-2 text-sm";
+const inputClass = "ui-field w-full";
 const errorClass = "mt-1 text-sm text-danger";
 
 export function CreateOrderForm({ securityId }: { securityId: string }) {
   const [defaultExpiration, setDefaultExpiration] = useState<boolean>(true);
+  const [previewInput, setPreviewInput] = useState<{
+    field: (typeof calculationFields)[number];
+    value: string;
+  } | null>(null);
 
   const previousUnit = useRef<CreateOrderFormInput["expirationUnit"] | null>(
     null,
@@ -84,7 +98,9 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
     formState: { isValid, errors },
   } = useForm<CreateOrderFormInput, unknown, CreateOrderFormOutput>({
     defaultValues: {
-      securityId: securityId,
+      securityId,
+      calculationField: "price",
+      calculationValue: "",
       expirationValue: 24,
       expirationUnit: "hour",
     },
@@ -101,15 +117,65 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
       security_id: securityId,
       direction: values.side,
       order_type: values.orderType,
-      price: values.orderType === "market" ? undefined : String(values.price),
-      yield: values.yield != null ? String(values.yield) : undefined,
+      ...(values.orderType === "limit"
+        ? { [values.calculationField]: values.calculationValue }
+        : {}),
       quantity: values.quantity,
       expiration,
     });
+    setPreviewInput(null);
     reset();
   });
 
+  function clearCalculation() {
+    setPreviewInput(null);
+    setValue("calculationValue", "", { shouldValidate: true });
+  }
+
   const orderType = watch("orderType");
+  const calculationField = watch("calculationField");
+  const calculationValue = watch("calculationValue");
+  const derivedField = calculationField === "price" ? "yield" : "price";
+  const settlementDate = new Date().toISOString().slice(0, 10) + "T00:00:00Z";
+
+  useEffect(() => {
+    if (orderType !== "limit" || !isPositiveNumber(calculationValue)) return;
+
+    const timeout = setTimeout(() => {
+      setPreviewInput({ field: calculationField, value: calculationValue });
+    }, 350);
+    return () => clearTimeout(timeout);
+  }, [orderType, calculationField, calculationValue]);
+
+  const canPreview =
+    orderType === "limit" &&
+    previewInput?.field === calculationField &&
+    previewInput.value === calculationValue;
+  const cleanPrice =
+    canPreview && calculationField === "price" ? calculationValue : "";
+  const yieldValue =
+    canPreview && calculationField === "yield" ? calculationValue : "";
+
+  const yieldQuery = useCalculateYield({
+    securityId,
+    settlementDate,
+    cleanPrice,
+    enabled: cleanPrice !== "",
+  });
+  const priceQuery = useCalculatePrice({
+    securityId,
+    settlementDate,
+    yield: yieldValue,
+    enabled: yieldValue !== "",
+  });
+
+  const previewQuery = calculationField === "price" ? yieldQuery : priceQuery;
+  const previewValue = canPreview
+    ? calculationField === "price"
+      ? yieldQuery.data?.toString()
+      : priceQuery.data?.clean_price
+    : undefined;
+  const previewError = canPreview && previewQuery.isError;
 
   useEffect(() => {
     if (orderType == "market") {
@@ -126,7 +192,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
       setValue("expirationValue", previousValue.current);
       return;
     }
-  }, [orderType]);
+  }, [orderType, setValue, watch]);
 
   return (
     <Card>
@@ -140,17 +206,11 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
           <label className={labelClass} htmlFor="side">
             Side
           </label>
-          <select
-            id="side"
-            className={inputClass}
-            {...register("side")}
-          >
+          <select id="side" className={inputClass} {...register("side")}>
             <option value="bid">Bid</option>
             <option value="ask">Ask</option>
           </select>
-          {errors.side && (
-            <p className={errorClass}>{errors.side.message}</p>
-          )}
+          {errors.side && <p className={errorClass}>{errors.side.message}</p>}
         </div>
         <div>
           <label className={labelClass} htmlFor="orderType">
@@ -159,7 +219,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
           <select
             id="orderType"
             className={inputClass}
-            {...register("orderType")}
+            {...register("orderType", { onChange: clearCalculation })}
           >
             <option value="limit">Limit</option>
             <option value="market">Market</option>
@@ -168,41 +228,68 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
             <p className={errorClass}>{errors.orderType.message}</p>
           )}
         </div>
-        {orderType == "limit" && (
+        {orderType === "limit" && (
           <>
+            <fieldset className="col-span-2">
+              <legend className={labelClass}>Enter by</legend>
+              <div className="relative inline-grid grid-cols-2 border border-border-strong bg-surface p-1">
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] bg-surface-hover transition-transform duration-200 motion-reduce:transition-none ${calculationField === "yield" ? "translate-x-full" : ""}`}
+                />
+                {calculationFields.map((field) => (
+                  <label key={field} className="relative cursor-pointer">
+                    <input
+                      type="radio"
+                      value={field}
+                      className="peer sr-only"
+                      {...register("calculationField", { onChange: clearCalculation })}
+                    />
+                    <span className="block min-w-24 px-4 py-1.5 text-center text-sm font-medium text-fg-muted transition-colors peer-checked:text-fg-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                      {calculationLabels[field]}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <div>
-              <label className={labelClass} htmlFor="price">
-                Price
+              <label className={labelClass} htmlFor="calculationValue">
+                {calculationLabels[calculationField]}
               </label>
               <input
-                id="price"
+                id="calculationValue"
                 type="number"
                 step="any"
                 min="0"
                 className={inputClass}
-                {...register("price")}
+                {...register("calculationValue")}
               />
-              {errors.price && (
-                <p className={errorClass}>{errors.price.message}</p>
+              {errors.calculationValue && (
+                <p className={errorClass}>{errors.calculationValue.message}</p>
               )}
             </div>
             <div>
-              <label className={labelClass} htmlFor="yield">
-                Yield
+              <label className={labelClass} htmlFor="calculationPreview">
+                {calculationLabels[derivedField]} (calculated)
               </label>
               <input
-                id="yield"
-                type="number"
-                step="any"
-                min="0"
-                className={inputClass}
-                {...register("yield")}
+                id="calculationPreview"
+                className={`${inputClass} text-fg-muted`}
+                value={previewValue ?? ""}
+                placeholder={
+                  canPreview && previewQuery.isFetching ? "Calculating…" : "—"
+                }
+                readOnly
               />
-              {errors.yield && (
-                <p className={errorClass}>{errors.yield.message}</p>
-              )}
             </div>
           </>
+        )}
+
+        {previewError && (
+          <p className="col-span-2 text-sm text-danger" role="alert">
+            Could not preview the calculation. You can still submit the order
+            using the value you entered.
+          </p>
         )}
 
         <div>
@@ -224,21 +311,26 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         {orderType == "limit" && (
           <>
             <div className="col-span-2">
-              <div className="flex items-center gap-2">
-                <input
-                  id="expirationEnabled"
-                  type="checkbox"
-                  className="h-5 w-5 cursor-pointer rounded border-border-strong bg-surface-hover text-accent-strong focus:ring-2 focus:ring-accent-strong"
-                  onChange={(e) => setDefaultExpiration(e.target.checked)}
-                  checked={defaultExpiration}
-                />
-                <label
-                  className="text-sm text-fg-muted"
-                  htmlFor="expirationEnabled"
-                >
-                  day expiration
-                </label>
-              </div>
+              <label className="group inline-flex cursor-pointer items-center gap-3 text-sm text-fg-soft" htmlFor="expirationEnabled">
+                <span className="relative flex items-center">
+                  <input
+                    id="expirationEnabled"
+                    type="checkbox"
+                    className="peer h-5 w-5 cursor-pointer appearance-none border border-border-strong bg-surface transition-colors checked:border-accent checked:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setDefaultExpiration(checked);
+                      if (checked) {
+                        setValue("expirationValue", 24, { shouldValidate: true });
+                        setValue("expirationUnit", "hour", { shouldValidate: true });
+                      }
+                    }}
+                    checked={defaultExpiration}
+                  />
+                  <Check aria-hidden="true" strokeWidth={3} className="pointer-events-none absolute left-0.5 h-4 w-4 text-surface opacity-0 peer-checked:opacity-100" />
+                </span>
+                Use 24-hour expiration
+              </label>
             </div>
             <div className="col-span-2 grid grid-cols-2 gap-3">
               <div>
@@ -251,13 +343,11 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                   min="1"
                   step="1"
                   disabled={defaultExpiration}
-                  className={`${inputClass} disabled:opacity-60`}
+                  className={inputClass}
                   {...register("expirationValue")}
                 />
                 {errors.expirationValue && (
-                  <p className={errorClass}>
-                    {errors.expirationValue.message}
-                  </p>
+                  <p className={errorClass}>{errors.expirationValue.message}</p>
                 )}
               </div>
               <div>
@@ -266,7 +356,7 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
                 </label>
                 <select
                   id="expirationUnit"
-                  className={`${inputClass} disabled:opacity-60`}
+                  className={inputClass}
                   {...register("expirationUnit")}
                   disabled={defaultExpiration}
                 >
@@ -280,13 +370,14 @@ export function CreateOrderForm({ securityId }: { securityId: string }) {
         )}
 
         <div className="col-span-2">
-          <button
-            className="w-full cursor-pointer rounded-md bg-accent-strong px-4 py-2.5 text-base text-fg-strong disabled:opacity-60"
+          <Button
+            variant="secondary"
+            className="w-full border-fg-strong bg-fg-strong py-3 text-surface enabled:hover:border-fg-soft enabled:hover:bg-fg-soft"
             type="submit"
             disabled={createOrderMutation.isPending || !isValid}
           >
             {createOrderMutation.isPending ? "Creating..." : "Create Order"}
-          </button>
+          </Button>
         </div>
       </form>
     </Card>

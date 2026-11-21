@@ -14,13 +14,14 @@ mod gateway "gateway"
 mod users "users"
 mod securities "securities"
 mod orders "orders"
+mod calculator "calculator"
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
 # Every backend service. Used by the `all` target of the dispatch helpers.
-services := "gateway users securities orders"
+services := "gateway users securities orders calculator"
 
 # Services that own database migrations. Used by the `all` target of DB recipes.
 db_services := "users securities orders"
@@ -56,8 +57,9 @@ setup:
 # Service lifecycle
 # =============================================================================
 
-# Run a service: `just run users` or `just run all`.
+# Run one service; orders runs its service, with the worker started separately.
 run service:
+    @if [[ "{{service}}" == "all" ]]; then echo "Run services in separate terminals; start the orders worker with just orders run-worker." >&2; exit 2; fi
     just _each run {{service}}
 
 # Build a service binary: `just build users` or `just build all`.
@@ -114,6 +116,10 @@ tidy service="all":
 # Apply pending DB migrations: `just migrate users` or `just migrate all`.
 migrate service:
     just _db migrate {{service}}
+
+# Apply pending migrations: `just up users` or `just up all`.
+up service:
+    just _db up {{service}}
 
 # Roll back the last migration batch: `just down users` or `just down all`.
 down service:

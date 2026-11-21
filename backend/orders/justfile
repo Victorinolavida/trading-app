@@ -26,6 +26,9 @@ schema_file := "internal/adapters/out/postgres/schema.sql"
 # Service lifecycle
 # =============================================================================
 
+# Run the orders service (the worker runs separately).
+run: run-service
+
 # Run the orders service.
 run-service:
     go run ./cmd/service
@@ -34,13 +37,20 @@ run-service:
 run-worker:
     go run ./cmd/worker
 
-# Build the orders binary into ./bin/orders.
-build:
-    go build -o bin/orders ./cmd
+# Build both orders binaries.
+build: build-service build-worker
+
+# Build the orders service.
+build-service:
+    go build -o bin/orders ./cmd/service
+
+# Build the expiration worker.
+build-worker:
+    go build -o bin/orders-worker ./cmd/worker
 
 # Run the test suite, starting from a clean test cache.
-test: cache-clean
-    go test ./...
+test:
+    go test -count=1 ./...
 
 # =============================================================================
 # Code quality
@@ -65,6 +75,9 @@ tidy:
 # Apply all pending DB migrations.
 migrate: db-create
     dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
+
+# Apply pending migrations (alias for migrate).
+up: migrate
 
 # Regenerate sqlc schema.sql from the migrated database.
 schema: migrate
@@ -91,11 +104,6 @@ status: db-create
 # =============================================================================
 # Private helpers
 # =============================================================================
-
-# Clear the Go test cache so `just test` always runs the full suite.
-[private]
-cache-clean:
-    go clean -testcache
 
 # Create the database if it does not exist yet.
 [private]

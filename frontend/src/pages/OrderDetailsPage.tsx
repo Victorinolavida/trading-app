@@ -1,3 +1,4 @@
+import { Button } from "../components/ui/button";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -5,9 +6,11 @@ import {
   OrderTypeBadge,
   StatusBadge,
 } from "../components/Badge";
-import { Card, DetailItem, Section } from "../components/ui/card";
+import { Card, cn, DetailItem, Section } from "../components/ui/card";
+import { allocationStatusClasses } from "../features/orders/constants";
 import { useCancelOrder } from "../features/orders/hooks";
 import { OrderQueries } from "../features/orders/query";
+import { securityQueries } from "../features/securities/queries";
 import { getErrorMessage } from "../lib/apiError";
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -66,6 +69,9 @@ function formatPercentage(value: string): string {
 export default function OrderDetailsPage() {
   const { orderId } = useParams();
   const orderQuery = useQuery(OrderQueries.detail(orderId ?? ""));
+  const securityQuery = useQuery(
+    securityQueries.detail({ id: orderQuery.data?.security_id }),
+  );
   const cancelOrder = useCancelOrder();
 
   if (!orderId) {
@@ -79,6 +85,7 @@ export default function OrderDetailsPage() {
   if (orderQuery.isError) {
     return (
       <OrderMessage
+        isError
         message={getErrorMessage(orderQuery.error) ?? "Could not load order."}
       />
     );
@@ -91,43 +98,36 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <Link
-        to="/blotter"
-        className="text-sm text-accent-soft hover:text-accent-subtle hover:underline"
-      >
+      <Link to="/blotter" className="text-sm ui-link">
         ← Back to blotter
       </Link>
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-fg-strong">
-            Order details
-          </h1>
+          <h1 className="ui-title">Order details</h1>
         </div>
 
         {order.status === "active" && (
-          <button
-            type="button"
+          <Button
             disabled={cancelOrder.isPending}
             onClick={() => cancelOrder.mutate(order.id)}
-            className="rounded border border-danger-border/70 bg-danger-surface/40 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-danger-soft hover:border-danger-strong hover:bg-danger-surface/50 disabled:cursor-not-allowed disabled:opacity-50"
+            variant="danger"
+            size="sm"
           >
             {cancelOrder.isPending ? "Cancelling..." : "Cancel order"}
-          </button>
+          </Button>
         )}
       </header>
 
-      <Card className="mb-0">
+      <Card>
         <Section title="Identification">
           <DetailItem label="Order ID" mono className="sm:col-span-2">
             {order.id}
           </DetailItem>
-          <DetailItem label="Security ID" mono>
-            <Link
-              to={`/securities/${order.security_id}`}
-              className="text-accent-soft hover:text-accent-subtle hover:underline"
-            >
-              {order.security_id}
+          <DetailItem label="Security">
+            <Link to={`/securities/${order.security_id}`} className="ui-link">
+              {securityQuery.data?.name || securityQuery.data?.isin ||
+                (securityQuery.isFetching ? "Loading security…" : "View security")}
             </Link>
           </DetailItem>
           <DetailItem label="Status">
@@ -168,10 +168,22 @@ export default function OrderDetailsPage() {
             {quantityFormatter.format(order.allocated_quantity)}
           </DetailItem>
           <DetailItem label="Allocation">
-            {formatPercentage(order.allocation_ptc)}
+            <span
+              className={cn(
+                "tabular-nums",
+                allocationStatusClasses[order.allocation_status],
+              )}
+            >
+              {formatPercentage(order.allocation_ptc)}
+            </span>
           </DetailItem>
           <DetailItem label="Allocation status">
-            <span className="capitalize">
+            <span
+              className={cn(
+                "capitalize",
+                allocationStatusClasses[order.allocation_status],
+              )}
+            >
               {order.allocation_status.replace(/_/g, " ")}
             </span>
           </DetailItem>
@@ -193,16 +205,25 @@ export default function OrderDetailsPage() {
   );
 }
 
-function OrderMessage({ message }: { message: string }) {
+function OrderMessage({
+  message,
+  isError = false,
+}: {
+  message: string;
+  isError?: boolean;
+}) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <Link
-        to="/blotter"
-        className="text-sm text-accent-soft hover:text-accent-subtle hover:underline"
-      >
+      <Link to="/blotter" className="text-sm ui-link">
         ← Back to blotter
       </Link>
-      <div className="rounded-lg border border-border bg-surface-raised/70 p-6 text-sm text-fg-subtle">
+      <div
+        role={isError ? "alert" : "status"}
+        className={cn(
+          "p-4 text-sm",
+          isError ? "ui-alert-danger" : "ui-panel text-fg-muted",
+        )}
+      >
         {message}
       </div>
     </div>

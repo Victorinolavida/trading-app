@@ -1,3 +1,5 @@
+import type { AllocationStatus } from "./types";
+
 export const ACTIVE_STATUS = "active" as const;
 
 export const HISTORY_STATUSES = [
@@ -16,3 +18,9 @@ export const ORDER_TYPES = ["limit", "market"] as const;
 export const ALLOCATION_STATUSES = ["none", "partial", "allocated"] as const;
 
 export const HISTORY_PAGE_SIZE = 25;
+
+export const allocationStatusClasses: Record<AllocationStatus, string> = {
+  none: "text-fg-muted",
+  partial: "text-warning",
+  allocated: "text-success",
+};

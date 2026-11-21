@@ -24,6 +24,10 @@ services:
     host: localhost
     port: 3031
 
+  calculator:
+    host: localhost
+    port: 3034
+
 allow_internal_crossing: true
 
 redis:

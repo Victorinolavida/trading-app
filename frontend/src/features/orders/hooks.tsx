@@ -12,7 +12,7 @@ export const useCreateOrder = () => {
     onError: (error) => toast.error(getErrorMessage(error)),
     onSuccess: (res) => {
       toast.success(
-        `Order created: quantity ${res.quantity},, status ${res.status}`,
+        `Order created: quantity ${res.quantity}, status ${res.status}`,
       );
       queryClient.invalidateQueries({
         queryKey: orderKeys.events(res.security_id),

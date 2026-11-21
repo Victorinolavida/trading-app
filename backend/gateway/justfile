@@ -18,8 +18,8 @@ build:
     go build -o bin/gateway ./cmd
 
 # Run the test suite, starting from a clean test cache.
-test: cache-clean
-    go test -v ./...
+test:
+    go test -count=1 ./...
 
 # =============================================================================
 # Code quality
@@ -36,10 +36,6 @@ vet:
 # Tidy dependencies with the workspace disabled so go.mod/go.sum stay self-sufficient.
 tidy:
     GOWORK=off go mod tidy
-
-# =============================================================================
-# Private helpers
-# =============================================================================
 
 # Clear the Go test cache so `just test` always runs the full suite.
 [private]

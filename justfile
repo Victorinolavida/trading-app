@@ -34,6 +34,26 @@ infra-down:
     docker compose down
 
 # =============================================================================
+# Database migrations
+# =============================================================================
+
+# Apply pending migrations for one database-owning service or all.
+migrate service:
+    just backend migrate {{service}}
+
+# Apply pending migrations for one database-owning service or all.
+up service:
+    just backend up {{service}}
+
+# Roll back the last migration batch for one database-owning service or all.
+down service:
+    just backend down {{service}}
+
+# Drop and recreate one service database or all service databases.
+clean service:
+    just backend clean {{service}}
+
+# =============================================================================
 # Frontend
 # =============================================================================
 

@@ -8,7 +8,7 @@ const typeLabel: Record<string, string> = {
 
 export function SecurityInfoCard({ security }: { security: Security }) {
   return (
-    <Card className="w-full p-4">
+    <Card>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <CardTitle className="mb-1">

@@ -1,12 +1,11 @@
 import type { ReactNode } from "react";
 
-export type BadgeTone = "green" | "red" | "blue" | "purple" | "amber" | "zinc";
+export type BadgeTone = "green" | "red" | "blue" | "amber" | "zinc";
 
 const tones: Record<BadgeTone, string> = {
   green: "border-success/30 bg-success/15 text-success",
   red: "border-danger/30 bg-danger/15 text-danger",
   blue: "border-accent/30 bg-accent/15 text-accent-soft",
-  purple: "border-special/30 bg-special/15 text-special",
   amber: "border-warning/30 bg-warning/15 text-warning",
   zinc: "border-fg-muted/30 bg-fg-muted/15 text-fg-soft",
 };
@@ -32,11 +31,6 @@ const directionTones: Record<string, BadgeTone> = {
   ask: "red",
 };
 
-const orderTypeTones: Record<string, BadgeTone> = {
-  limit: "blue",
-  market: "purple",
-};
-
 const statusTones: Record<string, BadgeTone> = {
   active: "green",
   fully_allocated: "blue",
@@ -52,7 +46,7 @@ export function DirectionBadge({ direction }: { direction?: string }) {
 
 export function OrderTypeBadge({ orderType }: { orderType?: string }) {
   const value = (orderType ?? "-").toLowerCase();
-  return <Badge tone={orderTypeTones[value] ?? "zinc"}>{value}</Badge>;
+  return <Badge tone="zinc">{value}</Badge>;
 }
 
 export function StatusBadge({ status }: { status?: string }) {

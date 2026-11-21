@@ -5,34 +5,15 @@ import { twMerge } from "tailwind-merge";
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export function Card({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      className={cn(
-        "mb-6 rounded-lg border border-border bg-surface-raised p-6",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <div className={cn("ui-panel p-4 sm:p-6", className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: ComponentProps<"h1">) {
-  return (
-    <h1 className={cn("mb-2 text-2xl font-semibold", className)} {...props} />
-  );
+  return <h1 className={cn("ui-title mb-2", className)} {...props} />;
 }
 
 export function CardSubtitle({ className, ...props }: ComponentProps<"p">) {
   return <p className={cn("mb-4 text-fg-muted", className)} {...props} />;
-}
-
-export function DetailList({ className, ...props }: ComponentProps<"dl">) {
-  return (
-    <dl
-      className={cn("grid grid-cols-2 gap-4 text-sm", className)}
-      {...props}
-    />
-  );
 }
 
 export function Section({
@@ -51,9 +32,7 @@ export function Section({
         className,
       )}
     >
-      <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-fg-subtle">
-        {title}
-      </h2>
+      <h2 className="ui-section-title mb-3">{title}</h2>
       <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
         {children}
       </dl>

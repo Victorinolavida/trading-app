@@ -1,0 +1,27 @@
+# Task runner for the calculator gRPC service.
+
+set shell := ["zsh", "-cu"]
+
+# Run the calculator service.
+run:
+    go run ./cmd
+
+# Build the calculator binary into ./bin/calculator.
+build:
+    go build -o bin/calculator ./cmd
+
+# Run the test suite without using cached test results.
+test:
+    go test -count=1 ./...
+
+# Format Go code with gofmt.
+fmt:
+    gofmt -w .
+
+# Vet Go code with the standard vet tool.
+vet:
+    go vet ./...
+
+# Tidy dependencies with the workspace disabled.
+tidy:
+    GOWORK=off go mod tidy

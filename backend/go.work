@@ -1,10 +1,11 @@
 go 1.26.5
 
 use (
+	./calculator
 	./gateway
-	./pkg
-	./users
 	./gen
-	./securities
 	./orders
+	./pkg
+	./securities
+	./users
 )

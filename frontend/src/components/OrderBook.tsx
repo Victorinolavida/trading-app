@@ -1,4 +1,12 @@
-import { cn } from "./ui/card"; // or wherever your cn lives
+import { cn } from "./ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
 export type BookLevel = {
   price: number | string;
@@ -31,63 +39,51 @@ function BookSide({
   const rows = levels.slice(0, depth);
 
   return (
-    <section className="flex-1 m-4">
-      <h3 className={cn("mb-2 text-sm font-semibold", s.color)}>{s.title}</h3>
-      <table className="w-full tabular-nums">
-        <thead className="text-xs text-fg-muted">
+    <section className="min-w-0">
+      <h3 className={cn("ui-section-title mb-2", s.color)}>{s.title}</h3>
+      <Table className="tabular-nums">
+        <TableHeader>
           <tr>
-            <th scope="col" className="pb-1 text-left font-normal">
-              Level
-            </th>
-            <th
-              scope="col"
-              title={`${s.noun} price`}
-              className="pb-1 text-right font-normal"
-            >
+            <TableHead className="text-left">Level</TableHead>
+            <TableHead title={`${s.noun} price`} className="text-right">
               Price
-            </th>
-            <th
-              scope="col"
-              title={`${s.noun} quantity`}
-              className="pb-1 text-right font-normal"
-            >
+            </TableHead>
+            <TableHead title={`${s.noun} quantity`} className="text-right">
               Quantity
-            </th>
-            <th
-              scope="col"
-              title={`${s.noun} nominal value`}
-              className="pb-1 text-right font-normal"
-            >
+            </TableHead>
+            <TableHead title={`${s.noun} nominal value`} className="text-right">
               Nominal Value
-            </th>
+            </TableHead>
           </tr>
-        </thead>
+        </TableHeader>
 
-        <tbody>
+        <TableBody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={4} className="py-1 text-fg-muted">
+              <TableCell colSpan={4} className="py-6 text-center text-fg-muted">
                 {s.empty}
-              </td>
+              </TableCell>
             </tr>
           ) : (
             rows.map((l, i) => (
-              <tr key={l.price}>
-                <td className="py-0.5 text-left text-fg-muted">{i + 1}</td>
-                <td className={cn("py-0.5 text-right", s.color)}>
+              <TableRow key={l.price}>
+                <TableCell className="text-left text-fg-muted">
+                  {i + 1}
+                </TableCell>
+                <TableCell className={cn("text-right", s.color)}>
                   {Number(l.price).toFixed(2)}
-                </td>
-                <td className="py-0.5 text-right text-fg-muted">
+                </TableCell>
+                <TableCell className="text-right text-fg-muted">
                   {l.quantity}
-                </td>
-                <td className="py-0.5 text-right text-fg-muted">
+                </TableCell>
+                <TableCell className="text-right text-fg-muted">
                   {l.nominal_value}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </section>
   );
 }
@@ -98,9 +94,9 @@ export function OrderBook({
   book: { bids: BookLevel[]; asks: BookLevel[] };
 }) {
   return (
-    <div className="rounded-t-lg border border-b-0 border-border bg-surface-raised p-4">
-      <h2 className="text-lg font-semibold p-4">Order Book</h2>
-      <div className="gap-16 flex flex-row justify-evenly">
+    <div className="ui-panel p-4">
+      <h2 className="ui-section-title mb-3">Order Book</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
         <BookSide side="bid" levels={book.bids} />
         <BookSide side="ask" levels={book.asks} />
       </div>

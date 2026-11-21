@@ -1,35 +1,18 @@
 import type { ComponentProps } from "react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { cn } from "../card";
 
-export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
-
-export function Table({ className, ...props }: ComponentProps<"table">) {
+export function Table({
+  className,
+  containerClassName,
+  ...props
+}: ComponentProps<"table"> & { containerClassName?: string }) {
   return (
-    <div className="relative overflow-x-auto bg-surface-raised shadow-xs rounded-base border border-border">
+    <div className={cn("ui-panel overflow-auto", containerClassName)}>
       <table
-        className={cn(
-          "w-full text-sm text-left rtl:text-right text-fg",
-          className,
-        )}
+        className={cn("w-full border-collapse text-left text-xs", className)}
         {...props}
       />
     </div>
-  );
-}
-
-export function TableCaption({
-  className,
-  ...props
-}: ComponentProps<"caption">) {
-  return (
-    <caption
-      className={cn(
-        "p-5 text-lg font-medium text-left rtl:text-right text-fg-strong",
-        className,
-      )}
-      {...props}
-    />
   );
 }
 
@@ -37,7 +20,7 @@ export function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   return (
     <thead
       className={cn(
-        "text-sm text-fg bg-surface-hover border-y border-border-strong",
+        "border-b border-border-strong bg-surface-raised",
         className,
       )}
       {...props}
@@ -53,7 +36,7 @@ export function TableRow({ className, ...props }: ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "bg-surface-raised border-b border-border last:border-b-0",
+        "border-b border-border/70 transition-colors last:border-b-0 hover:bg-surface-hover/40",
         className,
       )}
       {...props}
@@ -66,19 +49,8 @@ export function TableHead({ className, ...props }: ComponentProps<"th">) {
   return (
     <th
       scope="col"
-      className={cn("px-6 py-3 font-medium", className)}
-      {...props}
-    />
-  );
-}
-
-// First cell of a row (<th scope="row">), used for the row title
-export function TableRowHeader({ className, ...props }: ComponentProps<"th">) {
-  return (
-    <th
-      scope="row"
       className={cn(
-        "px-6 py-4 font-medium text-fg-strong whitespace-nowrap",
+        "whitespace-nowrap px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-fg-muted",
         className,
       )}
       {...props}
@@ -87,5 +59,7 @@ export function TableRowHeader({ className, ...props }: ComponentProps<"th">) {
 }
 
 export function TableCell({ className, ...props }: ComponentProps<"td">) {
-  return <td className={cn("px-6 py-4", className)} {...props} />;
+  return (
+    <td className={cn("whitespace-nowrap px-2 py-1.5", className)} {...props} />
+  );
 }

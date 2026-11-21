@@ -1,0 +1,9 @@
+syntax = "proto3";
+package calculator;
+option go_package = "github.com/victorinolavida/proto/calculator";
+import "google/protobuf/struct.proto";
+service CalculatorService {
+  rpc Price(google.protobuf.Struct) returns (google.protobuf.Struct);
+  rpc Yield(google.protobuf.Struct) returns (google.protobuf.Struct);
+  rpc Cashflows(google.protobuf.Struct) returns (google.protobuf.Struct);
+}

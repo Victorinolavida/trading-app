@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BookLevel } from "./OrderBook";
+import type { BookLevel } from "./OrderBook";
 import { chartColors } from "./ui/theme";
 
 type DepthPoint = {
@@ -94,11 +94,15 @@ function buildDepth(
     Math.abs(ref) * 0.005,
     0.01,
   );
-  const domain: [number, number] = [min - pad, max + pad];
+  let domain: [number, number] = [min - pad, max + pad];
+  if (mid !== undefined) {
+    const radius = Math.max(mid - min, max - mid) + pad;
+    domain = [mid - radius, mid + radius];
+  }
 
   const bidPts: DepthPoint[] = bidCum
     .map(({ price, total }) => ({ price, bid: total }))
-    .reverse(); 
+    .reverse();
 
   const askPts: DepthPoint[] = askCum.map(({ price, total }) => ({
     price,
@@ -112,13 +116,25 @@ function buildDepth(
     askPts.push({ price: domain[1], ask: askPts[askPts.length - 1].ask! });
   }
 
-  const midRow: DepthPoint[] =
-    mid !== undefined
-      ? [{ price: mid, bid: bidCum[0].total, ask: askCum[0].total }]
-      : [];
+  if (
+    mid !== undefined &&
+    bestBid !== undefined &&
+    bestAsk !== undefined &&
+    spread > 0
+  ) {
+    // Depth stays constant between the best price and the midpoint.
+    const halfGap = spread * 0.05;
+    bidPts.push({ price: mid - halfGap, bid: bidCum[0].total });
+    askPts.unshift({ price: mid + halfGap, ask: askCum[0].total });
+  }
+
+  const points = new Map<number, DepthPoint>();
+  for (const point of [...bidPts, ...askPts]) {
+    points.set(point.price, { ...points.get(point.price), ...point });
+  }
 
   return {
-    data: [...bidPts, ...midRow, ...askPts],
+    data: [...points.values()].sort((a, b) => a.price - b.price),
     mid,
     domain,
   };
@@ -143,101 +159,110 @@ export function DepthChart({
   );
 
   return (
-    <div className="flex h-full w-full flex-col border border-t-0 border-border bg-surface-raised p-4 rounded-b-lg shadow-lg">
-      <h3 className="mb-2 text-sm font-semibold text-fg-soft">
-        Order Book Depth
-      </h3>
-      <div className="flex-1" style={{ minHeight: height }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={data}
-            margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-          >
-            <XAxis
-              dataKey="price"
-              type="number"
-              domain={domain}
-              allowDataOverflow
-              tickFormatter={(v) => Number(v).toFixed(2)}
-              tick={{ fill: chartColors.axis, fontSize: 11 }}
-              stroke={chartColors.grid}
-            />
-            <YAxis
-              type="number"
-              orientation="right"
-              width={55}
-              tick={{ fill: chartColors.axis, fontSize: 11 }}
-              stroke={chartColors.grid}
-              tickFormatter={(v) => Number(v).toLocaleString()}
-            />
+    <div className="ui-panel flex w-full flex-col p-4">
+      <h3 className="ui-section-title mb-3">Order Book Depth</h3>
+      {data.length === 0 ? (
+        <p className="py-6 text-center text-sm text-fg-muted">
+          No order book depth available
+        </p>
+      ) : (
+        <div className="min-w-0" style={{ height }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+            >
+              <XAxis
+                dataKey="price"
+                type="number"
+                domain={domain}
+                allowDataOverflow
+                tickFormatter={(v) => Number(v).toFixed(2)}
+                tick={{ fill: chartColors.axis, fontSize: 11 }}
+                stroke={chartColors.grid}
+              />
+              <YAxis
+                type="number"
+                orientation="right"
+                domain={[0, "auto"]}
+                width={55}
+                tick={{ fill: chartColors.axis, fontSize: 11 }}
+                stroke={chartColors.grid}
+                tickFormatter={(v) => Number(v).toLocaleString()}
+              />
 
-            <Tooltip
-              contentStyle={{
-                background: chartColors.tooltipSurface,
-                border: `1px solid ${chartColors.tooltipBorder}`,
-                borderRadius: 8,
-              }}
-              labelStyle={{ color: chartColors.tooltipText }}
-              labelFormatter={(label) => `Price: ${Number(label)}`}
-              formatter={(value, name) => {
-                const key = String(name);
-                return [
-                  Number(value ?? 0).toLocaleString(),
-                  isSeriesKey(key) ? `${SERIES_LABEL[key]} (acum.)` : key,
-                ];
-              }}
-            />
-
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="plainline"
-              wrapperStyle={{ paddingBottom: 16 }}
-              formatter={(v) => (isSeriesKey(v) ? SERIES_LABEL[v] : v)}
-            />
-
-            <Area
-              type="stepAfter"
-              dataKey="bid"
-              name="bid"
-              stroke={chartColors.bid}
-              fill={chartColors.bid}
-              fillOpacity={0.2}
-              strokeWidth={2}
-              isAnimationActive={false}
-              connectNulls={false}
-            />
-
-            <Area
-              type="stepBefore"
-              dataKey="ask"
-              name="ask"
-              stroke={chartColors.ask}
-              fill={chartColors.ask}
-              fillOpacity={0.2}
-              strokeWidth={2}
-              isAnimationActive={false}
-              connectNulls={false}
-            />
-
-            {mid !== undefined && (
-              <ReferenceLine
-                x={mid}
-                stroke={chartColors.mid}
-                strokeDasharray="4 4"
-                strokeWidth={1.5}
-                label={{
-                  value: `Mid ${mid.toFixed(2)}`,
-                  fill: chartColors.mid,
-                  fontSize: 11,
-                  position: "insideTop",
-                  offset: 8,
+              <Tooltip
+                contentStyle={{
+                  background: chartColors.tooltipSurface,
+                  border: `1px solid ${chartColors.tooltipBorder}`,
+                  borderRadius: 8,
+                }}
+                labelStyle={{ color: chartColors.tooltipText }}
+                labelFormatter={(label) => `Price: ${Number(label)}`}
+                formatter={(value, name) => {
+                  const key = String(name);
+                  return [
+                    Number(value ?? 0).toLocaleString(),
+                    isSeriesKey(key)
+                      ? `${SERIES_LABEL[key]} (cumulative)`
+                      : key,
+                  ];
                 }}
               />
-            )}
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+
+              <Legend
+                verticalAlign="top"
+                align="right"
+                iconType="plainline"
+                wrapperStyle={{ paddingBottom: 16 }}
+                formatter={(v) => (isSeriesKey(v) ? SERIES_LABEL[v] : v)}
+              />
+
+              <Area
+                type="stepBefore"
+                dataKey="bid"
+                name="bid"
+                stroke={chartColors.bid}
+                fill={chartColors.bid}
+                fillOpacity={0.2}
+                strokeWidth={2}
+                isAnimationActive={false}
+                baseValue={0}
+                connectNulls
+              />
+
+              <Area
+                type="stepAfter"
+                dataKey="ask"
+                name="ask"
+                stroke={chartColors.ask}
+                fill={chartColors.ask}
+                fillOpacity={0.2}
+                strokeWidth={2}
+                isAnimationActive={false}
+                baseValue={0}
+                connectNulls
+              />
+
+              {mid !== undefined && (
+                <ReferenceLine
+                  x={mid}
+                  stroke={chartColors.mid}
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `Mid ${mid.toFixed(2)}`,
+                    fill: chartColors.mid,
+                    fontSize: 11,
+                    position: "insideTop",
+                    offset: 8,
+                  }}
+                />
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

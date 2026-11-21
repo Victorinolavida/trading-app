@@ -1,3 +1,4 @@
+import { Button } from "./ui/button";
 // components/Sidebar.tsx
 import { Link, NavLink } from "react-router";
 import {
@@ -44,21 +45,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
-        <div className="mb-6 flex items-center justify-between px-2">
+        <div className="mb-8 flex items-center justify-between border-b border-fg-strong px-2 pb-5">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex gap-x-2 items-center">
-              <img src="/favicon.svg" alt="" className="h-8 w-8" />
-              <h2 className="text-lg font-semibold text-fg-strong">Trading</h2>
+              <span aria-hidden="true" className="h-8 w-1.5 bg-accent" />
+              <h2 className="text-xl font-semibold tracking-tight text-fg-strong">Trading</h2>
             </Link>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={onClose}
             aria-label="Close menu"
-            className="rounded-md p-1.5 text-fg-muted hover:bg-surface-hover hover:text-fg-strong md:hidden"
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
@@ -69,10 +71,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               end={end}
               className={({ isActive }) =>
                 [
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 border-l-2 px-3 py-3 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-surface-hover text-fg-strong"
-                    : "text-fg-muted hover:bg-surface-hover/60 hover:text-fg-strong",
+                    ? "border-accent bg-surface text-accent"
+                    : "border-transparent text-fg-muted hover:bg-surface hover:text-fg-strong",
                 ].join(" ")
               }
             >
@@ -83,15 +85,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="border-t border-border pt-4">
-          <button
-            type="button"
+          <Button
             onClick={() => logout.mutate()}
             disabled={logout.isPending}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-surface-hover px-4 py-2 text-sm text-fg-soft transition-colors hover:bg-danger-strong hover:text-fg-strong disabled:cursor-default disabled:opacity-60"
+            className="w-full enabled:hover:border-danger-border enabled:hover:bg-danger-surface enabled:hover:text-danger-soft"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             {logout.isPending ? "Signing out..." : "Logout"}
-          </button>
+          </Button>
         </div>
       </aside>
     </>

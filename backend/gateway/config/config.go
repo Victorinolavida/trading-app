@@ -27,6 +27,7 @@ type Config struct {
 	Server            Server              `koanf:"server"`
 	AuthService       config.GRPCClient   `koanf:"auth_service"`
 	SecuritiesService config.GRPCClient   `koanf:"securities_service"`
+	CalculatorService config.GRPCClient   `koanf:"calculator_service"`
 	OrdersService     config.GRPCClient   `koanf:"orders_service"`
 	Token             config.TokenConfig  `koanf:"token"`
 	Cookie            config.CookieConfig `koanf:"cookie"`

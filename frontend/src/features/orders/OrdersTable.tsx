@@ -1,3 +1,4 @@
+import { Button, buttonStyles } from "../../components/ui/button";
 import {
   FlexRender,
   useTable,
@@ -9,6 +10,14 @@ import {
   type ReactTable,
 } from "@tanstack/react-table";
 import { cn } from "../../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import { orderTableFeatures, orderGlobalFilter } from "./columns";
 import {
   HISTORY_PAGE_SIZE,
@@ -90,7 +99,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-7 rounded border border-border-strong bg-surface-raised px-1.5 text-xs text-fg outline-none focus:border-accent"
+        className="ui-field h-7 px-1.5 py-0 text-xs"
       >
         <option value="">All</option>
         {options.map((option) => (
@@ -110,10 +119,16 @@ function ColumnVisibilityMenu<TData extends RowData>({
 }) {
   return (
     <details className="relative">
-      <summary className="list-none cursor-pointer select-none rounded border border-border-strong bg-surface-raised px-2 py-1 text-xs text-fg-soft hover:bg-surface-hover [&::-webkit-details-marker]:hidden">
+      <summary
+        className={buttonStyles({
+          size: "sm",
+          className:
+            "list-none select-none hover:bg-surface-hover [&::-webkit-details-marker]:hidden",
+        })}
+      >
         Columns
       </summary>
-      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto rounded-md border border-border-strong bg-surface-raised p-2 shadow-xl">
+      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto border border-border-strong bg-surface-raised p-2">
         <label className="flex items-center gap-2 border-b border-border px-1 py-1.5 text-xs text-fg-soft">
           <input
             type="checkbox"
@@ -169,7 +184,7 @@ function TableToolbar<TData extends RowData>({
           value={globalFilter}
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           placeholder="Search order ID or security ID"
-          className="h-7 min-w-56 flex-1 rounded border border-border-strong bg-surface-raised px-2 text-xs text-fg placeholder:text-fg-faint outline-none focus:border-accent sm:max-w-xs"
+          className="ui-field h-7 min-w-56 flex-1 px-2 py-0 text-xs sm:max-w-xs"
         />
       )}
 
@@ -220,41 +235,37 @@ function Pagination<TData extends RowData>({
         {rowCount} {rowCount === 1 ? "row" : "rows"}
       </span>
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
+        <Button
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
-          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          size="sm"
         >
           First
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          size="sm"
         >
           Prev
-        </button>
+        </Button>
         <span className="tabular-nums text-fg-muted">
           Page {pageIndex + 1} / {pageCount}
         </span>
-        <button
-          type="button"
+        <Button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
-          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          size="sm"
         >
           Next
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
-          className="rounded border border-border-strong px-2 py-1 text-fg-soft hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+          size="sm"
         >
           Last
-        </button>
+        </Button>
         <span className="tabular-nums">({pageSize}/page)</span>
       </div>
     </div>
@@ -271,28 +282,22 @@ function OrdersTableRow<TData extends RowData>({
   const stale = useIsExpired(getRowExpiry?.(row.original));
 
   return (
-    <tr
-      className={cn(
-        "border-b border-border/70 transition-colors hover:bg-surface-hover/40",
-        stale && "bg-danger/5 opacity-60",
-      )}
-    >
+    <TableRow className={stale ? "bg-danger/5 opacity-60" : undefined}>
       {row.getVisibleCells().map((cell) => {
         const align = cell.column.columnDef.meta?.align;
         return (
-          <td
+          <TableCell
             key={cell.id}
             className={cn(
-              "whitespace-nowrap px-2 py-1.5",
               alignClass(align),
               align === "right" && "tabular-nums",
             )}
           >
             <FlexRender cell={cell} />
-          </td>
+          </TableCell>
         );
       })}
-    </tr>
+    </TableRow>
   );
 }
 
@@ -341,95 +346,89 @@ export function OrdersTable<TData extends RowData>({
         showColumnVisibility={showColumnVisibility}
       />
 
-      <div className="max-h-[min(58vh,42rem)] overflow-auto rounded-lg border border-border bg-surface-raised/70">
-        <table className="w-full border-collapse text-xs">
-          <thead className="sticky top-0 z-10 bg-surface-raised">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-border-strong">
-                {headerGroup.headers.map((header) => {
-                  const sorted = header.column.getIsSorted();
-                  const canSort = header.column.getCanSort();
-                  const align = header.column.columnDef.meta?.align;
+      <Table containerClassName="max-h-[min(58vh,42rem)]">
+        <TableHeader className="sticky top-0 z-10">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id} className="border-b border-border-strong">
+              {headerGroup.headers.map((header) => {
+                const sorted = header.column.getIsSorted();
+                const canSort = header.column.getCanSort();
+                const align = header.column.columnDef.meta?.align;
 
-                  return (
-                    <th
-                      key={header.id}
-                      scope="col"
-                      aria-sort={
-                        sorted === "asc"
-                          ? "ascending"
-                          : sorted === "desc"
-                            ? "descending"
-                            : "none"
-                      }
-                      className={cn(
-                        "whitespace-nowrap px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-fg-subtle",
-                        alignClass(align),
-                      )}
-                    >
-                      {header.isPlaceholder ? null : canSort ? (
-                        <button
-                          type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                          className={cn(
-                            "inline-flex items-center gap-1 hover:text-fg",
-                            align === "right" && "w-full justify-end",
-                          )}
-                        >
-                          <FlexRender header={header} />
-                          <span className="text-[9px] text-fg-faint">
-                            {sorted === "asc"
-                              ? "▲"
-                              : sorted === "desc"
-                                ? "▼"
-                                : "↕"}
-                          </span>
-                        </button>
-                      ) : (
+                return (
+                  <TableHead
+                    key={header.id}
+                    aria-sort={
+                      sorted === "asc"
+                        ? "ascending"
+                        : sorted === "desc"
+                          ? "descending"
+                          : "none"
+                    }
+                    className={alignClass(align)}
+                  >
+                    {header.isPlaceholder ? null : canSort ? (
+                      <Button
+                        variant="plain"
+                        size="inline"
+                        onClick={header.column.getToggleSortingHandler()}
+                        className={cn(
+                          align === "right" && "w-full justify-end",
+                        )}
+                      >
                         <FlexRender header={header} />
-                      )}
-                    </th>
-                  );
-                })}
+                        <span className="text-[9px] text-fg-faint">
+                          {sorted === "asc"
+                            ? "▲"
+                            : sorted === "desc"
+                              ? "▼"
+                              : "↕"}
+                        </span>
+                      </Button>
+                    ) : (
+                      <FlexRender header={header} />
+                    )}
+                  </TableHead>
+                );
+              })}
+            </tr>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            Array.from({ length: 6 }, (_, index) => (
+              <tr
+                key={`skeleton-${index}`}
+                className="border-b border-border/70"
+              >
+                <TableCell colSpan={visibleColumnCount} className="px-2 py-2">
+                  <div
+                    className="h-4 animate-pulse rounded bg-surface-hover"
+                    style={{ width: `${45 + ((index * 11) % 45)}%` }}
+                  />
+                </TableCell>
               </tr>
-            ))}
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 6 }, (_, index) => (
-                <tr
-                  key={`skeleton-${index}`}
-                  className="border-b border-border/70"
-                >
-                  <td colSpan={visibleColumnCount} className="px-2 py-2">
-                    <div
-                      className="h-4 animate-pulse rounded bg-surface-hover"
-                      style={{ width: `${45 + ((index * 11) % 45)}%` }}
-                    />
-                  </td>
-                </tr>
-              ))
-            ) : rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={visibleColumnCount}
-                  className="px-4 py-10 text-center text-xs text-fg-subtle"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <OrdersTableRow
-                  key={row.id}
-                  row={row}
-                  getRowExpiry={getRowExpiry}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))
+          ) : rows.length === 0 ? (
+            <tr>
+              <TableCell
+                colSpan={visibleColumnCount}
+                className="px-4 py-10 text-center text-xs text-fg-subtle"
+              >
+                {emptyMessage}
+              </TableCell>
+            </tr>
+          ) : (
+            rows.map((row) => (
+              <OrdersTableRow
+                key={row.id}
+                row={row}
+                getRowExpiry={getRowExpiry}
+              />
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {showPagination && !isLoading && <Pagination table={table} />}
     </div>
