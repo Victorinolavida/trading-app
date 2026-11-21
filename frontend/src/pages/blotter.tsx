@@ -69,7 +69,7 @@ export default function BlotterRoute() {
 
   return (
     <div className="mx-auto flex w-full max-w-[110rem] flex-col gap-6">
-      <header>
+      <header className="page-heading">
         <h1 className="ui-title">Order Blotter</h1>
         <p className="mt-1 text-sm text-fg-muted">
           Working orders and execution history.

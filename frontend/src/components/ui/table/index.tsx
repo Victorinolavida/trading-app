@@ -16,21 +16,6 @@ export function Table({
   );
 }
 
-export function TableCaption({
-  className,
-  ...props
-}: ComponentProps<"caption">) {
-  return (
-    <caption
-      className={cn(
-        "p-5 text-lg font-medium text-left rtl:text-right text-fg-strong",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
 export function TableHeader({ className, ...props }: ComponentProps<"thead">) {
   return (
     <thead
@@ -66,20 +51,6 @@ export function TableHead({ className, ...props }: ComponentProps<"th">) {
       scope="col"
       className={cn(
         "whitespace-nowrap px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-fg-muted",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-// First cell of a row (<th scope="row">), used for the row title
-export function TableRowHeader({ className, ...props }: ComponentProps<"th">) {
-  return (
-    <th
-      scope="row"
-      className={cn(
-        "whitespace-nowrap px-2 py-1.5 font-medium text-fg-strong",
         className,
       )}
       {...props}

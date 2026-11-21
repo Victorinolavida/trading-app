@@ -16,15 +16,6 @@ export function CardSubtitle({ className, ...props }: ComponentProps<"p">) {
   return <p className={cn("mb-4 text-fg-muted", className)} {...props} />;
 }
 
-export function DetailList({ className, ...props }: ComponentProps<"dl">) {
-  return (
-    <dl
-      className={cn("grid grid-cols-2 gap-4 text-sm", className)}
-      {...props}
-    />
-  );
-}
-
 export function Section({
   title,
   className,

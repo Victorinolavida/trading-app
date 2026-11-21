@@ -5,9 +5,9 @@ const variants = {
   secondary:
     "border border-border-strong text-fg-soft enabled:hover:bg-surface-hover",
   primary:
-    "border border-accent-strong bg-accent-strong text-white enabled:hover:border-accent enabled:hover:bg-accent-strong/80",
+    "border border-accent-strong bg-accent-strong text-surface enabled:hover:border-accent enabled:hover:bg-accent-strong/80",
   dark:
-    "border border-border-strong bg-surface-hover text-fg-strong enabled:hover:border-fg-subtle enabled:hover:bg-border-strong",
+    "border border-accent bg-accent text-surface enabled:hover:bg-accent-subtle",
   danger:
     "border border-danger-border/70 bg-danger-surface/40 text-danger-soft enabled:hover:border-danger-strong enabled:hover:bg-danger-surface/60",
   ghost:
@@ -36,7 +36,7 @@ export function buttonStyles({
   className,
 }: ButtonStyleProps = {}) {
   return cn(
-    "inline-flex cursor-pointer items-center justify-center gap-2 rounded font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50",
+    "inline-flex cursor-pointer items-center justify-center gap-2 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50",
     variants[variant],
     sizes[size],
     className,

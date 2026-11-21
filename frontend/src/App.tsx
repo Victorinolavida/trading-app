@@ -35,7 +35,7 @@ export default function App() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <img src="/favicon.svg" alt="" className="h-6 w-6" />
+        <span aria-hidden="true" className="h-6 w-1.5 bg-accent" />
         <span className="font-semibold text-fg-strong">Trading</span>
       </header>
 
@@ -44,7 +44,7 @@ export default function App() {
       <Sidebar open={open} onClose={() => setOpen(false)} />
 
       {/* min-w-0 lets wide children (tables) scroll inside their own container */}
-      <main className="min-w-0 p-4 md:ml-64 md:p-8">
+      <main className="min-w-0 p-4 md:ml-64 md:p-10">
         <Outlet />
       </main>
     </div>

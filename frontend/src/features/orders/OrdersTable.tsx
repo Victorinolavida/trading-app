@@ -128,7 +128,7 @@ function ColumnVisibilityMenu<TData extends RowData>({
       >
         Columns
       </summary>
-      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto rounded-md border border-border-strong bg-surface-raised p-2 shadow-xl">
+      <div className="absolute right-0 z-20 mt-1 max-h-72 w-48 overflow-auto border border-border-strong bg-surface-raised p-2">
         <label className="flex items-center gap-2 border-b border-border px-1 py-1.5 text-xs text-fg-soft">
           <input
             type="checkbox"

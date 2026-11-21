@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useCallback } from "react";
 import { redirect, useNavigate, useParams } from "react-router";
@@ -40,7 +41,7 @@ export default function SecurityDetailPage() {
         className="self-start text-sm"
         onClick={handleGoBack}
       >
-        ← Back
+        <ArrowLeft className="h-4 w-4" aria-hidden /> Back
       </Button>
 
       {isLoading || !security ? (

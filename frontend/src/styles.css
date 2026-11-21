@@ -1,75 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #09090b;
-  --color-surface-raised: #18181b;
-  --color-surface-hover: #27272a;
+  --font-sans: "IBM Plex Mono", "JetBrains Mono", monospace;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", monospace;
+  --color-surface: #0b0c0a;
+  --color-surface-raised: #141614;
+  --color-surface-hover: #252925;
   --color-overlay: #000000;
-
-  --color-border: #27272a;
-  --color-border-strong: #3f3f46;
-  --color-border-subtle: #18181b;
-
-  --color-fg: #e4e4e7;
-  --color-fg-strong: #f4f4f5;
-  --color-fg-soft: #d4d4d8;
-  --color-fg-muted: #a1a1aa;
-  --color-fg-subtle: #71717a;
-  --color-fg-faint: #52525b;
-
-  --color-accent: #3b82f6;
-  --color-accent-strong: #2563eb;
-  --color-accent-soft: #60a5fa;
-  --color-accent-subtle: #93c5fd;
-
-  --color-success: #4ade80;
-  --color-success-strong: #22c55e;
-
-  --color-danger: #f87171;
-  --color-danger-soft: #fca5a5;
-  --color-danger-strong: #dc2626;
-  --color-danger-border: #7f1d1d;
-  --color-danger-surface: #450a0a;
-
-  --color-warning: #fbbf24;
-  --color-warning-strong: #f59e0b;
-
-  --color-special: #c084fc;
+  --color-border: #343a34;
+  --color-border-strong: #596159;
+  --color-border-subtle: #252925;
+  --color-fg: #d6ddd6;
+  --color-fg-strong: #f1f5f1;
+  --color-fg-soft: #c4ccc4;
+  --color-fg-muted: #a3afa3;
+  --color-fg-subtle: #8d9a8d;
+  --color-fg-faint: #818e81;
+  --color-accent: #00e676;
+  --color-accent-strong: #00e676;
+  --color-accent-soft: #00e676;
+  --color-accent-subtle: #00b85e;
+  --color-success: #00e676;
+  --color-success-strong: #00c767;
+  --color-danger: #ff6b67;
+  --color-danger-soft: #ffaaa7;
+  --color-danger-strong: #ff817c;
+  --color-danger-border: #813d3b;
+  --color-danger-surface: #321a19;
+  --color-warning: #f1c66c;
+  --color-warning-strong: #dbad4f;
+  --color-special: #00e676;
 }
 
 @layer base {
-  html {
-    color-scheme: dark;
-  }
-
-  html,
-  body {
-    @apply bg-surface text-fg overflow-x-hidden;
-  }
+  html { color-scheme: dark; }
+  html, body { @apply overflow-x-hidden bg-surface text-fg; }
+  body { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+  ::selection { background: #00e676; color: #0b0c0a; }
 }
 
 @layer components {
-  .ui-panel {
-    @apply rounded-lg border border-border bg-surface-raised/70;
-  }
-
-  .ui-alert-danger {
-    @apply rounded-lg border border-danger-border/60 bg-danger-surface/30 text-danger-soft;
-  }
-
-  .ui-title {
-    @apply text-2xl font-semibold text-fg-strong;
-  }
-
-  .ui-section-title {
-    @apply text-xs font-medium uppercase tracking-wider text-fg-muted;
-  }
-
-  .ui-link {
-    @apply cursor-pointer text-accent-soft hover:text-accent-subtle hover:underline;
-  }
-
-  .ui-field {
-    @apply rounded border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60;
-  }
+  .ui-panel { @apply border border-border bg-surface-raised; }
+  .ui-alert-danger { @apply border border-danger-border bg-danger-surface text-danger-soft; }
+  .ui-title { @apply text-3xl font-semibold tracking-tight text-fg-strong; }
+  .ui-section-title { @apply text-xs font-semibold uppercase tracking-wider text-fg-muted; }
+  .ui-link { @apply cursor-pointer text-accent hover:text-accent-subtle hover:underline; }
+  .ui-field { @apply border border-border-strong bg-surface-raised px-3 py-2.5 text-sm text-fg outline-none placeholder:text-fg-subtle focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60; }
+  .page-heading { @apply border-b border-fg-strong pb-5; }
 }
