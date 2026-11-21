@@ -6,7 +6,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router";
 import { useRedirectTo } from "../hooks/useRedirectTo";
-import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.email("Invalid email"),
@@ -65,14 +64,9 @@ export function LoginPage() {
           <p className="mt-1 text-sm text-danger">{errors.password.message}</p>
         )}
 
-        <Button
-          variant="link"
-          size="inline"
-          className="mt-2 self-end text-sm"
-          onClick={() => toast.info("Password reset is not available yet.")}
-        >
+        <Link className="ui-link mt-2 self-end text-sm" to="/forgot-password">
           Reset password
-        </Button>
+        </Link>
 
         <Button
           variant="primary"

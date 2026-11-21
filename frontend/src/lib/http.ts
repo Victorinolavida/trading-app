@@ -21,12 +21,15 @@ export interface ApiClientOptions {
   adapter?: AxiosAdapter; // injectable for tests
   timeoutMs?: number;
   csrfHeaderName?: string;
+  retryServerErrors?: boolean;
 }
 
 export class ApiClient {
   private readonly http: AxiosInstance;
+  private readonly retryServerErrors: boolean;
 
   constructor(opts: ApiClientOptions = {}) {
+    this.retryServerErrors = opts.retryServerErrors ?? true;
     this.http = axios.create({
       baseURL: "/api",
       withCredentials: true, // send the httpOnly session cookie
@@ -80,7 +83,7 @@ export class ApiClient {
 
   private async request<T>(config: AxiosRequestConfig): Promise<T> {
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = this.retryServerErrors ? 2 : 1;
 
     while (attempts < maxAttempts) {
       attempts++;

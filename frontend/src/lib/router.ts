@@ -14,6 +14,10 @@ import { toast } from "sonner";
 import { queryClient } from "./queryClient";
 import { securityQueries } from "../features/securities/queries";
 import NotificationsPage from "../pages/NotificationsPage";
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+} from "../pages/PasswordResetPage";
 
 export function navigate(path: string) {
   window.history.pushState({}, "", path);
@@ -64,6 +68,13 @@ export const router = createBrowserRouter([
           return security;
         },
       },
+    ],
+  },
+  {
+    Component: AuthLayout,
+    children: [
+      { path: "/forgot-password", Component: ForgotPasswordPage },
+      { path: "/reset-password", Component: ResetPasswordPage },
     ],
   },
   {
