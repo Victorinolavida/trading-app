@@ -8,6 +8,7 @@ require (
 	github.com/knadh/koanf/parsers/yaml v1.1.1
 	github.com/knadh/koanf/providers/file v1.2.1
 	github.com/knadh/koanf/v2 v2.4.0
+	github.com/rabbitmq/amqp091-go v1.16.0
 	github.com/victorinolavida/pkg v0.0.0
 )
 
