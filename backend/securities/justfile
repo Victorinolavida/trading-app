@@ -65,6 +65,9 @@ tidy:
 migrate: db-create
     dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" up
 
+# Apply pending migrations (alias for migrate).
+up: migrate
+
 # Regenerate sqlc schema.sql from the migrated database.
 schema: migrate
     docker exec {{pg_container}} pg_dump --schema-only --no-owner --no-privileges \

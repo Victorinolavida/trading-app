@@ -117,6 +117,10 @@ tidy service="all":
 migrate service:
     just _db migrate {{service}}
 
+# Apply pending migrations: `just up users` or `just up all`.
+up service:
+    just _db up {{service}}
+
 # Roll back the last migration batch: `just down users` or `just down all`.
 down service:
     just _db down {{service}}

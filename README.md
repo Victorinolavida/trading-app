@@ -87,3 +87,5 @@ The calculator infers the coupon rate from the security name, defaulting to 5% w
 The securities seed includes test bonds. Udibono seed rows are skipped until a UDI quote dated today or earlier is present; rerun `just backend securities seed` after loading a quote. The calculator requires a quote for the exact settlement date.
 
 Each service supports `run`, `build`, `test`, `fmt`, `vet`, and `tidy` through its justfile. `just backend build orders` builds both the orders service and worker; use `just backend orders build-service` or `build-worker` to build one.
+
+Database migrations are owned by users, securities, and orders. Run `just migrate orders` or `just up orders` from the repository root to apply pending migrations; replace `orders` with another service or `all`. Use `just down orders` to roll back the last batch and `just clean orders` to drop and recreate that database. Each service also provides these recipes directly, such as `just backend orders up`.
