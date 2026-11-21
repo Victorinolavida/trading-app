@@ -84,7 +84,7 @@ Calculator exposes price, yield and cashflow calculations through the gateway at
 
 The calculator infers the coupon rate from the security name, defaulting to 5% when no rate is present, and assumes a 182-day coupon period and a 360-day basis. UDI calculations require a quote for the settlement date in the `udi_values` table.
 
-The securities seed includes test bonds. Udibono seed rows are skipped until a UDI quote dated today or earlier is present; rerun `just backend securities seed` after loading a quote. The calculator requires a quote for the exact settlement date.
+The securities seed imports historical UDI quotes from the supplied CSV without overwriting existing quotes, then loads reference and synthetic bonds. The CSV currently ends on 2026-11-19. Udibono rows require a quote dated today or earlier, and the calculator requires a quote for the exact settlement date; update the CSV or load newer quotes as needed.
 
 Each service supports `run`, `build`, `test`, `fmt`, `vet`, and `tidy` through its justfile. `just backend build orders` builds both the orders service and worker; use `just backend orders build-service` or `build-worker` to build one.
 

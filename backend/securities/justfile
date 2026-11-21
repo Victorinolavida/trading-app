@@ -90,8 +90,12 @@ new name:
 status: db-create
     dbmate --url "{{db_url}}" --migrations-dir "{{migrations}}" status
 
-# Seed reference securities (e.g. Mexico M-Bono 7.75% 2034). Idempotent.
-seed: migrate
+# Import supplied historical UDI quotes without overwriting existing values.
+seed-udi: migrate
+    docker exec -i {{pg_container}} psql -U postgres -d trading_securities -v ON_ERROR_STOP=1 -c 'CREATE TEMP TABLE udi_seed (date date, value numeric)' -c '\copy udi_seed (date, value) FROM STDIN WITH (FORMAT csv, HEADER true)' -c 'INSERT INTO udi_values (date, value) SELECT date, value FROM udi_seed ON CONFLICT (date) DO NOTHING' < internal/adapters/out/postgres/seed_data/udi.csv
+
+# Seed UDI quotes and reference securities. Idempotent.
+seed: seed-udi
     for f in {{seeds}}/*.sql; do docker exec -i {{pg_container}} psql -U postgres -d trading_securities -v ON_ERROR_STOP=1 < "$f"; done
 
 # =============================================================================
