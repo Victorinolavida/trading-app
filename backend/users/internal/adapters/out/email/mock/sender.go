@@ -12,6 +12,12 @@ import (
 type Sender struct {
 	mu       sync.Mutex
 	messages []ports.Email
+	onSend   func(ports.Email)
+}
+
+// NewSender optionally reports captured messages to a local development inbox.
+func NewSender(onSend func(ports.Email)) *Sender {
+	return &Sender{onSend: onSend}
 }
 
 var _ ports.EmailSender = (*Sender)(nil)
@@ -21,8 +27,11 @@ func (s *Sender) Send(ctx context.Context, email ports.Email) error {
 		return err
 	}
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.messages = append(s.messages, email)
+	s.mu.Unlock()
+	if s.onSend != nil {
+		s.onSend(email)
+	}
 	return nil
 }
 

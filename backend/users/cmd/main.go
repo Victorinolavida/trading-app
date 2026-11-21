@@ -13,6 +13,7 @@ import (
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
 	emailmock "github.com/victorinolavida/auth/internal/adapters/out/email/mock"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
+	"github.com/victorinolavida/auth/internal/application/ports"
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
 	"github.com/victorinolavida/auth/internal/application/usecases/passwordreset"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
@@ -56,7 +57,10 @@ func main() {
 		if cfg.PasswordReset.Provider != "mock" || !strings.EqualFold(cfg.Env, "development") {
 			logger.Fatal("unsupported password reset email provider or environment")
 		}
-		resetHandler, err := passwordreset.New(userRepo, postgres.NewPasswordResetRepository(pool), &emailmock.Sender{}, cfg.PasswordReset.URL, cfg.PasswordReset.TTL)
+		inbox := emailmock.NewSender(func(message ports.Email) {
+			logs.Info("development email captured", slog.String("to", message.To), slog.String("subject", message.Subject), slog.String("body", message.Text))
+		})
+		resetHandler, err := passwordreset.New(userRepo, postgres.NewPasswordResetRepository(pool), inbox, cfg.PasswordReset.URL, cfg.PasswordReset.TTL)
 		if err != nil {
 			logger.Fatal("invalid password reset configuration", slog.Any("error", err))
 		}

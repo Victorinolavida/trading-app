@@ -5,7 +5,8 @@
 env: development
 
 # Reset is disabled until delivery is configured. The mock is local-only and
-# stores messages in memory; it does not deliver email outside the process.
+# stores messages in memory and logs their contents in the users service.
+# It does not deliver email outside the process.
 password_reset:
   enabled: false
   provider: mock
