@@ -3,18 +3,25 @@ import { Button } from "./ui/button";
 import { Link, NavLink } from "react-router";
 import {
   ClipboardList,
+  Bell,
   LogOut,
   Search,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { useLogout } from "../features/auth/hooks";
+import { useQuery } from "@tanstack/react-query";
+import {
+  notificationKeys,
+  notificationsApi,
+} from "../features/notifications/api";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Securities", icon: Search, end: true },
   { to: "/blotter", label: "Blotter", icon: ClipboardList },
+  { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
 type SidebarProps = {
@@ -24,6 +31,11 @@ type SidebarProps = {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const logout = useLogout();
+  const unread = useQuery({
+    queryKey: notificationKeys.count,
+    queryFn: ({ signal }) => notificationsApi.unreadCount(signal),
+    refetchInterval: 60_000,
+  });
 
   return (
     <>
@@ -49,7 +61,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="flex items-center gap-3">
             <Link to="/" className="flex gap-x-2 items-center">
               <span aria-hidden="true" className="h-8 w-1.5 bg-accent" />
-              <h2 className="text-xl font-semibold tracking-tight text-fg-strong">Trading</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-fg-strong">
+                Trading
+              </h2>
             </Link>
           </div>
           <Button
@@ -80,6 +94,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
               {label}
+              {to === "/notifications" && (unread.data?.count ?? 0) > 0 && (
+                <span
+                  className="ml-auto min-w-6 bg-accent px-1.5 py-0.5 text-center font-mono text-xs font-semibold text-surface"
+                  aria-label={`${unread.data?.count} unread notifications`}
+                >
+                  {(unread.data?.count ?? 0) > 99 ? "99+" : unread.data?.count}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

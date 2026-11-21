@@ -1,0 +1,35 @@
+# Copy this file to config.yaml and adjust the values.
+#   cp config/config.example.yaml config/config.yaml
+# Every key can be overridden with an env var (SERVER_HOST, SERVER_PORT, ...).
+
+env: development
+
+server:
+  host: localhost
+  port: 8080
+
+grpc:
+  protocol: tcp
+  host: localhost
+  port: 3035
+  service: notifications
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  name: trading_notifications
+  max_conns: 20
+  min_conns: 2
+
+rabbitmq:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+consumer:
+  exchange: orders.events
+  queue: notifications.orders

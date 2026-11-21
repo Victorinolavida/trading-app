@@ -49,6 +49,10 @@ orders_service:
   host: localhost
   port: 3033
 
+notification_service:
+  host: localhost
+  port: 3035
+
 rabbitmq:
   host: localhost
   port: 5672

@@ -13,6 +13,24 @@ import (
 
 var expiration = time.Duration(1 * time.Hour)
 
+func TestInternalCrossingDiscardsIncomingLimitOrder(t *testing.T) {
+	repo := mocks.NewMockOrderRepo()
+	trader, security := uuid.New(), uuid.New()
+	maker, err := domain.NewOrder(trader, security, "ask", "limit", 10, 100, 10, domain.Decimal(100), domain.Decimal(1), expiration)
+	assert.NoError(t, err)
+	taker, err := domain.NewOrder(trader, security, "bid", "limit", 10, 100, 10, domain.Decimal(100), domain.Decimal(1), expiration)
+	assert.NoError(t, err)
+	repo.On("GetOrdersToTrade", mock.Anything, mock.Anything).Return([]*domain.Order{maker}, nil)
+	engine := New(repo, domain.SameTraderCrossingPolicy{Action: domain.CrossingCancelTaker})
+	matches, trades, discarded, err := engine.ExecuteIncomingOrder(t.Context(), taker)
+	assert.NoError(t, err)
+	assert.True(t, discarded)
+	assert.Empty(t, matches)
+	assert.Empty(t, trades)
+	assert.Equal(t, domain.OrderStatusKilled, taker.Status())
+	assert.True(t, maker.IsActive())
+}
+
 func Test_SingleMatchExact(t *testing.T) {
 	repo := mocks.NewMockOrderRepo()
 	// script matching for
@@ -51,7 +69,7 @@ func Test_SingleMatchExact(t *testing.T) {
 		expiration,
 	)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 
@@ -117,7 +135,7 @@ func Test_SingleMatchTakerMoreQty(t *testing.T) {
 		expiration,
 	)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 
@@ -182,7 +200,7 @@ func Test_SingleMatchMakerMoreQty(t *testing.T) {
 		expiration,
 	)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 
@@ -249,7 +267,7 @@ func Test_SingleMatchMarketTakerUsesMakerPrice(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, taker.Price())
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 
@@ -295,7 +313,7 @@ func Test_MultipleMatchesExact(t *testing.T) {
 	taker, err := domain.NewOrder(uuid.New(), uuid.New(), "bid", "market", 100, 0, 0, domain.Decimal(100), domain.Decimal(1), expiration)
 	assert.NoError(t, err)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 	assert.Len(t, matches, 2)
@@ -336,7 +354,7 @@ func Test_MultipleMatchesLastMakerHasMoreQty(t *testing.T) {
 	taker, err := domain.NewOrder(uuid.New(), uuid.New(), "bid", "limit", 100, 982, 100, domain.Decimal(100), domain.Decimal(1), expiration)
 	assert.NoError(t, err)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 	assert.Len(t, matches, 2)
@@ -377,7 +395,7 @@ func Test_MarketTakerPartiallyFilledIsKilled(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, taker.Price())
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 	assert.Len(t, matches, 1)
@@ -406,7 +424,7 @@ func Test_MarketTakerEmptyBookIsKilled(t *testing.T) {
 	taker, err := domain.NewOrder(uuid.New(), uuid.New(), "ask", "market", 100, 0, 0, domain.Decimal(100), domain.Decimal(1), expiration)
 	assert.NoError(t, err)
 
-	matches, trades, err := me.ExecuteIncomingOrder(t.Context(), taker)
+	matches, trades, _, err := me.ExecuteIncomingOrder(t.Context(), taker)
 
 	assert.NoError(t, err)
 	assert.Empty(t, matches)
