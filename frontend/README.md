@@ -1,6 +1,6 @@
 # trading-app — Frontend
 
-This React frontend (v8, TypeScript, Vite, Tailwind CSS) connects to the Go modular monolith backend via `http://localhost:8000/api`.
+This React frontend (React 19, TypeScript, Vite, and Tailwind CSS) connects to the Go gateway via `http://localhost:8000/api`.
 
 ## Getting Started
 
@@ -28,7 +28,7 @@ Copy `frontend/.env.example` → `frontend/.env` and adjust:
 | --- | --- | --- |
 | `PORT` | `8000` | Vite dev server port |
 | `GATEWAY_URL` | `http://localhost:3001` | Backend gateway base URL (for proxy) |
-| `VITE_CSRF_COOKIE_NAME` | `auth_token` | CSRF cookie name (must match gateway config) |
+| `VITE_CSRF_COOKIE_NAME` | `csrf_token` | CSRF cookie name (must match gateway config) |
 
 ## Architecture
 
@@ -48,13 +48,12 @@ Copy `frontend/.env.example` → `frontend/.env` and adjust:
 
 ```
 src/
-  app.tsx          — Root component with Outlet + OfflineBanner
+  App.tsx          — Root component with Outlet + OfflineBanner
   lib/
     http.ts        — ApiClient with retry & error mapping
     apiError.ts    — getErrorMessage() utility
     router.ts      — React Router configuration + ErrorBoundary on routes
     queryClient.ts — TanStack Query config
-    useOnlineStatus.ts  — online/offline detection
     csrf.ts        — CSRF cookie handling
   components/
     ErrorBoundary.tsx    — catches React rendering errors, shows retry UI
@@ -65,7 +64,7 @@ src/
   pages/
     SecurityDetailPage.tsx   — security detail with ErrorBoundary + OrderBook + DepthChart
     OrderDetailsPage.tsx    — order detail page with ErrorBoundary
-    BlotterRoute.tsx       — orders blotter view with inline error handling
+    blotter.tsx             — orders blotter view with inline error handling
     HomePage.tsx           — home page
     LoginPage.tsx          — authentication
     RegisterPage.tsx       — registration
