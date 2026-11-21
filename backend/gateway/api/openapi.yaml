@@ -20,6 +20,41 @@ tags:
     description: Security listings and searches
 
 paths:
+  /api/v0/auth/password-reset/request:
+    post:
+      tags: [auth]
+      summary: Request a password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: {type: string, format: email}
+      responses:
+        "204": {description: Request accepted regardless of account existence}
+        "400": {description: Invalid request}
+        "429": {description: Too many requests}
+  /api/v0/auth/password-reset/confirm:
+    post:
+      tags: [auth]
+      summary: Set a new password using a reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, new_password]
+              properties:
+                token: {type: string}
+                new_password: {type: string, format: password}
+      responses:
+        "204": {description: Password changed}
+        "400": {description: Invalid token or password}
+        "429": {description: Too many requests}
   /health:
     get:
       tags: [health]

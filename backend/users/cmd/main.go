@@ -4,14 +4,17 @@ import (
 	"context"
 	"log/slog"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/victorinolavida/auth/config"
 	grpcAdapter "github.com/victorinolavida/auth/internal/adapters/in/grpc"
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/metadata"
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
+	emailmock "github.com/victorinolavida/auth/internal/adapters/out/email/mock"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
+	"github.com/victorinolavida/auth/internal/application/usecases/passwordreset"
 	"github.com/victorinolavida/auth/internal/application/usecases/register"
 	"github.com/victorinolavida/auth/internal/application/usecases/whoami"
 	conf "github.com/victorinolavida/pkg/config"
@@ -48,8 +51,19 @@ func main() {
 	registerHandler := register.New(userRepo, tokenServ)
 	loginHandler := login.New(userRepo, tokenServ)
 	whoamiHandler := whoami.New(userRepo)
-	// Reset remains disabled until email delivery and request safeguards are configured.
-	authHandler := grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler, nil)
+	var authHandler *grpcAdapter.AuthGRPCHandler
+	if cfg.PasswordReset.Enabled {
+		if cfg.PasswordReset.Provider != "mock" || !strings.EqualFold(cfg.Env, "development") {
+			logger.Fatal("unsupported password reset email provider or environment")
+		}
+		resetHandler, err := passwordreset.New(userRepo, postgres.NewPasswordResetRepository(pool), &emailmock.Sender{}, cfg.PasswordReset.URL, cfg.PasswordReset.TTL)
+		if err != nil {
+			logger.Fatal("invalid password reset configuration", slog.Any("error", err))
+		}
+		authHandler = grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler, resetHandler)
+	} else {
+		authHandler = grpcAdapter.NewAuthGRPCHandler(registerHandler, loginHandler, whoamiHandler, nil)
+	}
 
 	authpb.RegisterAuthServiceServer(grpcServer.Server(), authHandler)
 

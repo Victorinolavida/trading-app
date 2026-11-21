@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -15,6 +16,7 @@ import (
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/module"
 	"github.com/victorinolavida/gateway/internal/adapters/in/http/response"
 	"github.com/victorinolavida/gateway/internal/application/dtos"
+	"github.com/victorinolavida/gateway/internal/application/passwordreset"
 	"github.com/victorinolavida/gateway/internal/application/ports"
 	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	"github.com/victorinolavida/pkg/jwt"
@@ -34,10 +36,11 @@ func withRequestMeta(ctx context.Context, r *http.Request) context.Context {
 var ErrMissingValidator = errors.New("auth handler: validator is required")
 
 type AuthHandler struct {
-	service    ports.AuthService
-	validate   *validator.Validate
-	jwtService ports.TokenVerifier
-	cfg        *config.Config
+	service      ports.AuthService
+	validate     *validator.Validate
+	jwtService   ports.TokenVerifier
+	cfg          *config.Config
+	resetLimiter *passwordreset.Limiter
 }
 
 func (h *AuthHandler) SetTokenVerifier(v ports.TokenVerifier) { h.jwtService = v }
@@ -52,7 +55,58 @@ func NewAuthHandler(cfg *config.Config, service ports.AuthService, validate *val
 	if err != nil {
 		return nil, err
 	}
-	return &AuthHandler{service, validate, jwtService, cfg}, nil
+	return &AuthHandler{service: service, validate: validate, jwtService: jwtService, cfg: cfg, resetLimiter: passwordreset.NewLimiter()}, nil
+}
+
+func clientAddress(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+func (h *AuthHandler) RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
+	req, err := response.ParseBodyFromRequest[PasswordResetRequest](w, r)
+	if err != nil {
+		response.RenderBadRequest(w, "invalid request")
+		return
+	}
+	if err = h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
+	}
+	if !h.resetLimiter.Allow(clientAddress(r), req.Email) {
+		response.RenderError(w, http.StatusTooManyRequests, "too many requests")
+		return
+	}
+	if err = h.service.RequestPasswordReset(withRequestMeta(r.Context(), r), req.Email); err != nil {
+		response.RenderGRPCError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) ConfirmPasswordReset(w http.ResponseWriter, r *http.Request) {
+	req, err := response.ParseBodyFromRequest[PasswordResetConfirmation](w, r)
+	if err != nil {
+		response.RenderBadRequest(w, "invalid request")
+		return
+	}
+	if err = h.validate.Struct(req); err != nil {
+		response.RenderValidationError(w, err)
+		return
+	}
+	ip := clientAddress(r)
+	if !h.resetLimiter.Allow(ip, "confirm:"+ip) {
+		response.RenderError(w, http.StatusTooManyRequests, "too many requests")
+		return
+	}
+	if err = h.service.ConfirmPasswordReset(withRequestMeta(r.Context(), r), req.Token, req.NewPassword); err != nil {
+		response.RenderGRPCError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AuthHandler) BasePath() string {
@@ -168,6 +222,8 @@ func (h *AuthHandler) Routes() http.Handler {
 	r.Post("/login", h.Login)
 	r.Post("/register", h.Register)
 	r.Post("/logout", h.Logout)
+	r.Post("/password-reset/request", h.RequestPasswordReset)
+	r.Post("/password-reset/confirm", h.ConfirmPasswordReset)
 
 	protected := r.With(authmiddleware.AuthMiddleware(h.jwtService, &h.cfg.Cookie))
 	protected.Get("/whoami", h.Whoami)
