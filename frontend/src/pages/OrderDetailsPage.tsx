@@ -10,6 +10,7 @@ import { Card, cn, DetailItem, Section } from "../components/ui/card";
 import { allocationStatusClasses } from "../features/orders/constants";
 import { useCancelOrder } from "../features/orders/hooks";
 import { OrderQueries } from "../features/orders/query";
+import { securityQueries } from "../features/securities/queries";
 import { getErrorMessage } from "../lib/apiError";
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -68,6 +69,9 @@ function formatPercentage(value: string): string {
 export default function OrderDetailsPage() {
   const { orderId } = useParams();
   const orderQuery = useQuery(OrderQueries.detail(orderId ?? ""));
+  const securityQuery = useQuery(
+    securityQueries.detail({ id: orderQuery.data?.security_id }),
+  );
   const cancelOrder = useCancelOrder();
 
   if (!orderId) {
@@ -120,9 +124,10 @@ export default function OrderDetailsPage() {
           <DetailItem label="Order ID" mono className="sm:col-span-2">
             {order.id}
           </DetailItem>
-          <DetailItem label="Security ID" mono>
+          <DetailItem label="Security">
             <Link to={`/securities/${order.security_id}`} className="ui-link">
-              {order.security_id}
+              {securityQuery.data?.name || securityQuery.data?.isin ||
+                (securityQuery.isFetching ? "Loading security…" : "View security")}
             </Link>
           </DetailItem>
           <DetailItem label="Status">
