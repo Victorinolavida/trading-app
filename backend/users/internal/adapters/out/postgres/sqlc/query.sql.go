@@ -26,7 +26,7 @@ func (q *Queries) ConsumePasswordResetToken(ctx context.Context, tokenHash []byt
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, first_name, last_name, password_hash, created_at, updated_at FROM users
+SELECT id, email, first_name, last_name, password_hash, created_at, updated_at, session_version FROM users
 WHERE email = $1
 `
 
@@ -41,12 +41,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SessionVersion,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, first_name, last_name, password_hash, created_at, updated_at FROM users
+SELECT id, email, first_name, last_name, password_hash, created_at, updated_at, session_version FROM users
 WHERE id = $1
 `
 
@@ -61,6 +62,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SessionVersion,
 	)
 	return i, err
 }
@@ -138,7 +140,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 }
 
 const updateUserPassword = `-- name: UpdateUserPassword :exec
-UPDATE users SET password_hash = $1, updated_at = now()
+UPDATE users SET password_hash = $1, updated_at = now(), session_version = session_version + 1
 WHERE id = $2
 `
 

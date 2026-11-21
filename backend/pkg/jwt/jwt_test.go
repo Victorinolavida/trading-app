@@ -84,7 +84,7 @@ func TestNewService(t *testing.T) {
 
 func TestIssueAndVerify_HappyPath(t *testing.T) {
 	serv := newTestService(t)
-	want := Claims{UserID: "user-123"}
+	want := Claims{UserID: "user-123", SessionVersion: 3}
 
 	raw, err := serv.Issue(context.Background(), want)
 	assert.NoError(t, err)

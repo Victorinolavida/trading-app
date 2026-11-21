@@ -50,6 +50,7 @@ func Test_WhoamiUserNotFound(t *testing.T) {
 		[]byte("hardcoredpassword"),
 		time.Now(),
 		time.Now(),
+		0,
 	)
 
 	assert.NoError(t, err)
@@ -81,6 +82,7 @@ func Test_WhoamiHappyPath(t *testing.T) {
 		[]byte("hardcoredpassword"),
 		time.Now(),
 		time.Now(),
+		0,
 	)
 
 	assert.NoError(t, err)

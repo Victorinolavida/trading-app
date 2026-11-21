@@ -31,6 +31,6 @@ WHERE token_hash = $1 AND expires_at > now()
 RETURNING user_id;
 
 -- name: UpdateUserPassword :exec
-UPDATE users SET password_hash = $1, updated_at = now()
+UPDATE users SET password_hash = $1, updated_at = now(), session_version = session_version + 1
 WHERE id = $2;
 

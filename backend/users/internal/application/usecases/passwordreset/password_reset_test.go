@@ -39,7 +39,7 @@ func (r *resetRepo) Redeem(_ context.Context, digest, hash []byte) error {
 func TestRequestAndConfirm(t *testing.T) {
 	ctx := context.Background()
 	users := &mocks.UserRepoMock{}
-	user, err := domain.Reconstruct(uuid.New(), "user@example.com", "First", "Last", nil, time.Now(), time.Now())
+	user, err := domain.Reconstruct(uuid.New(), "user@example.com", "First", "Last", nil, time.Now(), time.Now(), 0)
 	require.NoError(t, err)
 	address, err := domain.NewEmail("user@example.com")
 	require.NoError(t, err)
