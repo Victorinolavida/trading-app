@@ -25,6 +25,7 @@ import (
 	"github.com/victorinolavida/pkg/broker/rabbitmq"
 	conf "github.com/victorinolavida/pkg/config"
 	"github.com/victorinolavida/pkg/database"
+	grpcclient "github.com/victorinolavida/pkg/grpc_client"
 	grpcserver "github.com/victorinolavida/pkg/grpc_server"
 	"github.com/victorinolavida/pkg/logger"
 	"github.com/victorinolavida/pkg/redis"
@@ -78,16 +79,16 @@ func main() {
 	orderRepo := postgres.NewOrderRepository(pool)
 	tradeRepo := postgres.NewTradeRepository(pool)
 	txManager := postgres.NewTxManager(pool)
-	usersConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Users.Host, cfg.Services.Users.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	usersConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Users.Host, cfg.Services.Users.Port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(grpcclient.RequestMetaInterceptor))
 	if err != nil {
 		logger.Fatal("error connecting to users service", slog.Any("error", err))
 	}
-	securitiesConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Securities.Host, cfg.Services.Securities.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	securitiesConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Securities.Host, cfg.Services.Securities.Port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(grpcclient.RequestMetaInterceptor))
 	if err != nil {
 		logger.Fatal("error connecting to securities service", slog.Any("error", err))
 	}
 
-	calculatorConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Calculator.Host, cfg.Services.Calculator.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	calculatorConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", cfg.Services.Calculator.Host, cfg.Services.Calculator.Port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(grpcclient.RequestMetaInterceptor))
 	if err != nil {
 		logger.Fatal("error connecting to calculator service", slog.Any("error", err))
 	}

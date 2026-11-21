@@ -27,9 +27,10 @@ type WhoamiUserRequest struct {
 }
 
 type WhoamiUserResponse struct {
-	UserID    string
-	FirstName string
-	LastName  string
-	Token     string
-	Email     string
+	UserID         string
+	FirstName      string
+	LastName       string
+	Token          string
+	Email          string
+	SessionVersion int64
 }

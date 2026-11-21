@@ -86,6 +86,7 @@ func TestLoginUser_PasswordNotMatch(t *testing.T) {
 		pass.Hash(),
 		time.Now(),
 		time.Now(),
+		0,
 	)
 	assert.NoError(t, err, "invalid reconstructur a user")
 
@@ -127,6 +128,7 @@ func TestLoginUser_HappyPath(t *testing.T) {
 		pass.Hash(),
 		time.Now(),
 		time.Now(),
+		0,
 	)
 	assert.NoError(t, err, "failed to reconstruct a user")
 

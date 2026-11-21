@@ -7,21 +7,27 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router";
 import { useRedirectTo } from "../hooks/useRedirectTo";
 
-const registerSchema = z.object({
-  email: z.email("Invalid email"),
-  password: z
-    .string()
-    .min(8, "At least 8 characters")
-    .max(23, "Password cannot exceed 23 characters."),
-  firstName: z
-    .string()
-    .min(3, "First name must be at least 3 characters long.")
-    .max(50, "First name cannot exceed 50 characters."),
-  lastName: z
-    .string()
-    .min(3, "First name must be at least 3 characters long.")
-    .max(50, "First name cannot exceed 50 characters."),
-});
+const registerSchema = z
+  .object({
+    email: z.email("Invalid email"),
+    password: z
+      .string()
+      .min(8, "At least 8 characters")
+      .max(23, "Password cannot exceed 23 characters."),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    firstName: z
+      .string()
+      .min(3, "First name must be at least 3 characters long.")
+      .max(50, "First name cannot exceed 50 characters."),
+    lastName: z
+      .string()
+      .min(3, "First name must be at least 3 characters long.")
+      .max(50, "First name cannot exceed 50 characters."),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
 
 type RegisterValues = z.infer<typeof registerSchema>;
 
@@ -32,7 +38,13 @@ export function RegisterPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterValues>({
-    defaultValues: { email: "", firstName: "", lastName: "", password: "" },
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      password: "",
+      confirmPassword: "",
+    },
     resolver: zodResolver(registerSchema),
   });
 
@@ -102,6 +114,20 @@ export function RegisterPage() {
         />
         {errors.password && (
           <p className="mt-1 text-sm text-danger">{errors.password.message}</p>
+        )}
+
+        <label className="mt-2 text-sm text-fg-muted" htmlFor="confirmPassword">
+          Confirm password
+        </label>
+        <PasswordInput
+          id="confirmPassword"
+          autoComplete="new-password"
+          registration={register("confirmPassword")}
+        />
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-danger">
+            {errors.confirmPassword.message}
+          </p>
         )}
 
         <Button

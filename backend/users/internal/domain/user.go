@@ -8,23 +8,25 @@ import (
 )
 
 type User struct {
-	id        uuid.UUID
-	email     Email
-	firstName Name
-	lastName  Name
-	createdAt time.Time
-	updatedAt time.Time
-	password  Password
+	id             uuid.UUID
+	email          Email
+	firstName      Name
+	lastName       Name
+	createdAt      time.Time
+	updatedAt      time.Time
+	password       Password
+	sessionVersion int64
 }
 
-func (u User) ID() uuid.UUID        { return u.id }
-func (u User) Email() Email         { return u.email }
-func (u User) FirstName() Name      { return u.firstName }
-func (u User) LastName() Name       { return u.lastName }
-func (u User) CreatedAt() time.Time { return u.createdAt }
-func (u User) UpdatedAt() time.Time { return u.updatedAt }
-func (u User) Hash() []byte         { return u.password.Hash() }
-func (u *User) touch()              { u.updatedAt = time.Now() }
+func (u User) ID() uuid.UUID         { return u.id }
+func (u User) Email() Email          { return u.email }
+func (u User) FirstName() Name       { return u.firstName }
+func (u User) LastName() Name        { return u.lastName }
+func (u User) CreatedAt() time.Time  { return u.createdAt }
+func (u User) UpdatedAt() time.Time  { return u.updatedAt }
+func (u User) Hash() []byte          { return u.password.Hash() }
+func (u User) SessionVersion() int64 { return u.sessionVersion }
+func (u *User) touch()               { u.updatedAt = time.Now() }
 
 func NewUser(email, firstName, lastName, plainPassword string) (User, error) {
 	var user User
@@ -80,7 +82,7 @@ func (u *User) UpdateName(firstName, lastName string) error {
 	return nil
 }
 
-func Reconstruct(id uuid.UUID, email, firstName, lastName string, passwordHash []byte, createdAt, updatedAt time.Time) (User, error) {
+func Reconstruct(id uuid.UUID, email, firstName, lastName string, passwordHash []byte, createdAt, updatedAt time.Time, sessionVersion int64) (User, error) {
 	firstNameVo, err := NewName(firstName)
 	if err != nil {
 		return User{}, fmt.Errorf("parsing data from db: %w", err)
@@ -97,12 +99,13 @@ func Reconstruct(id uuid.UUID, email, firstName, lastName string, passwordHash [
 	}
 
 	return User{
-		id:        id,
-		email:     emailVo,
-		firstName: firstNameVo,
-		lastName:  lastNameVo,
-		password:  ReconstructPassword(passwordHash),
-		createdAt: createdAt,
-		updatedAt: updatedAt,
+		id:             id,
+		email:          emailVo,
+		firstName:      firstNameVo,
+		lastName:       lastNameVo,
+		password:       ReconstructPassword(passwordHash),
+		sessionVersion: sessionVersion,
+		createdAt:      createdAt,
+		updatedAt:      updatedAt,
 	}, nil
 }

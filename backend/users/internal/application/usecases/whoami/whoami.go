@@ -31,9 +31,10 @@ func (u *Usecase) Execute(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	return Result{
-		Email:     user.Email().String(),
-		FirstName: user.FirstName().String(),
-		LastName:  user.LastName().String(),
-		UserID:    user.ID().String(),
+		Email:          user.Email().String(),
+		FirstName:      user.FirstName().String(),
+		LastName:       user.LastName().String(),
+		UserID:         user.ID().String(),
+		SessionVersion: user.SessionVersion(),
 	}, nil
 }

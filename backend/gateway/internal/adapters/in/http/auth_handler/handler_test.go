@@ -25,6 +25,9 @@ type stubAuthService struct {
 	registerErr    error
 	whoamiResult   dtos.WhoamiUserResponse
 	whoamiErr      error
+	resetEmail     string
+	resetToken     string
+	resetPassword  string
 }
 
 func (s *stubAuthService) Login(context.Context, dtos.LoginRequest) (dtos.AuthUserResponse, error) {
@@ -37,6 +40,35 @@ func (s *stubAuthService) Register(context.Context, dtos.RegisterRequest) (dtos.
 
 func (s *stubAuthService) Whoami(context.Context, dtos.WhoamiUserRequest) (dtos.WhoamiUserResponse, error) {
 	return s.whoamiResult, s.whoamiErr
+}
+
+func (s *stubAuthService) RequestPasswordReset(_ context.Context, email string) error {
+	s.resetEmail = email
+	return nil
+}
+func (s *stubAuthService) ConfirmPasswordReset(_ context.Context, token, password string) error {
+	s.resetToken = token
+	s.resetPassword = password
+	return nil
+}
+
+func TestPasswordResetEndpoints(t *testing.T) {
+	service := &stubAuthService{}
+	handler, err := NewAuthHandler(validTestConfig(), service, response.NewValidator())
+	require.NoError(t, err)
+	request := httptest.NewRequest(http.MethodPost, "/password-reset/request", strings.NewReader(`{"email":"user@example.com"}`))
+	request.RemoteAddr = "192.0.2.1:1000"
+	recorder := httptest.NewRecorder()
+	handler.Routes().ServeHTTP(recorder, request)
+	require.Equal(t, http.StatusNoContent, recorder.Code)
+	require.Equal(t, "user@example.com", service.resetEmail)
+	request = httptest.NewRequest(http.MethodPost, "/password-reset/confirm", strings.NewReader(`{"token":"token","new_password":"new-password"}`))
+	request.RemoteAddr = "192.0.2.2:1000"
+	recorder = httptest.NewRecorder()
+	handler.Routes().ServeHTTP(recorder, request)
+	require.Equal(t, http.StatusNoContent, recorder.Code)
+	require.Equal(t, "token", service.resetToken)
+	require.Equal(t, "new-password", service.resetPassword)
 }
 
 func validTestConfig() *config.Config {

@@ -2,6 +2,7 @@ import { ApiClient } from "../../lib/http";
 import { AuthUser, User } from "./types";
 
 const api = new ApiClient();
+const resetApi = new ApiClient({ retryServerErrors: false });
 
 export const authApi = {
   whoami: () => api.get<User>("/v0/auth/whoami"),
@@ -20,4 +21,11 @@ export const authApi = {
       password,
     }),
   logout: () => api.post<void>("/v0/auth/logout"),
+  requestPasswordReset: (email: string) =>
+    resetApi.post<void>("/v0/auth/password-reset/request", { email }),
+  confirmPasswordReset: (token: string, newPassword: string) =>
+    resetApi.post<void>("/v0/auth/password-reset/confirm", {
+      token,
+      new_password: newPassword,
+    }),
 };

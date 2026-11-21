@@ -20,7 +20,8 @@ var ErrUnauthenticated = errors.New("unauthenticated")
 
 // Claims is the identity carried by the token.
 type Claims struct {
-	UserID string
+	UserID         string
+	SessionVersion int64
 }
 
 type TokenService struct {
@@ -33,6 +34,7 @@ type TokenService struct {
 
 type tokenClaims struct {
 	jwt.RegisteredClaims
+	SessionVersion int64 `json:"session_version"`
 }
 
 func NewService(cfg config.TokenConfig) (*TokenService, error) {
@@ -59,6 +61,7 @@ func (serv *TokenService) Issue(_ context.Context, p Claims) (string, error) {
 	exp := now.Add(serv.ttl)
 
 	c := tokenClaims{
+		SessionVersion: p.SessionVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        jti.String(),
 			Subject:   p.UserID,
@@ -93,5 +96,5 @@ func (serv *TokenService) Verify(_ context.Context, raw string) (Claims, error) 
 		return Claims{}, ErrUnauthenticated
 	}
 
-	return Claims{UserID: c.Subject}, nil
+	return Claims{UserID: c.Subject, SessionVersion: c.SessionVersion}, nil
 }

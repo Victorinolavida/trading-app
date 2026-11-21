@@ -12,8 +12,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const consumePasswordResetToken = `-- name: ConsumePasswordResetToken :one
+DELETE FROM password_reset_tokens
+WHERE token_hash = $1 AND expires_at > now()
+RETURNING user_id
+`
+
+func (q *Queries) ConsumePasswordResetToken(ctx context.Context, tokenHash []byte) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, consumePasswordResetToken, tokenHash)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, first_name, last_name, password_hash, created_at, updated_at FROM users
+SELECT id, email, first_name, last_name, password_hash, created_at, updated_at, session_version FROM users
 WHERE email = $1
 `
 
@@ -28,12 +41,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SessionVersion,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, first_name, last_name, password_hash, created_at, updated_at FROM users
+SELECT id, email, first_name, last_name, password_hash, created_at, updated_at, session_version FROM users
 WHERE id = $1
 `
 
@@ -48,6 +62,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SessionVersion,
 	)
 	return i, err
 }
@@ -81,6 +96,24 @@ func (q *Queries) SaveUser(ctx context.Context, arg SaveUserParams) error {
 	return err
 }
 
+const storePasswordResetToken = `-- name: StorePasswordResetToken :exec
+INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+VALUES ($1, $2, $3)
+ON CONFLICT (user_id) DO UPDATE
+SET token_hash = EXCLUDED.token_hash, expires_at = EXCLUDED.expires_at
+`
+
+type StorePasswordResetTokenParams struct {
+	UserID    uuid.UUID
+	TokenHash []byte
+	ExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) StorePasswordResetToken(ctx context.Context, arg StorePasswordResetTokenParams) error {
+	_, err := q.db.Exec(ctx, storePasswordResetToken, arg.UserID, arg.TokenHash, arg.ExpiresAt)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :exec
 UPDATE users
     set first_name = $1,
@@ -103,5 +136,20 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.UpdatedAt,
 		arg.ID,
 	)
+	return err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users SET password_hash = $1, updated_at = now(), session_version = session_version + 1
+WHERE id = $2
+`
+
+type UpdateUserPasswordParams struct {
+	PasswordHash string
+	ID           uuid.UUID
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserPassword, arg.PasswordHash, arg.ID)
 	return err
 }

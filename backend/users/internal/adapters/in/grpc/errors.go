@@ -3,13 +3,19 @@ package grpc
 import (
 	"errors"
 
+	"github.com/victorinolavida/auth/internal/application/ports"
 	"github.com/victorinolavida/auth/internal/domainerrors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func mapError(err error) error {
+	if _, ok := status.FromError(err); ok {
+		return err
+	}
 	switch {
+	case errors.Is(err, ports.ErrInvalidResetToken):
+		return status.Error(codes.InvalidArgument, "invalid or expired password reset token")
 	case errors.Is(err, domainerrors.ErrInvalidEmail),
 		errors.Is(err, domainerrors.ErrNameTooShort),
 		errors.Is(err, domainerrors.ErrNameTooLong),

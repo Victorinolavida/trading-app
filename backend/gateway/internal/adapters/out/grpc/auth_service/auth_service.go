@@ -42,6 +42,16 @@ func (serv *AuthService) Close() error {
 	return serv.conn.Close()
 }
 
+func (serv *AuthService) RequestPasswordReset(ctx context.Context, email string) error {
+	_, err := serv.client.RequestPasswordReset(ctx, &authpb.RequestPasswordResetRequest{Email: email})
+	return err
+}
+
+func (serv *AuthService) ConfirmPasswordReset(ctx context.Context, token, password string) error {
+	_, err := serv.client.ConfirmPasswordReset(ctx, &authpb.ConfirmPasswordResetRequest{Token: token, NewPassword: password})
+	return err
+}
+
 func (serv *AuthService) Login(ctx context.Context, request dtos.LoginRequest) (dtos.AuthUserResponse, error) {
 	result, err := serv.client.LoginUser(ctx, &authpb.LoginRequest{
 		Email:    request.Email,
@@ -84,9 +94,10 @@ func (serv *AuthService) Whoami(ctx context.Context, request dtos.WhoamiUserRequ
 		return dtos.WhoamiUserResponse{}, err
 	}
 	return dtos.WhoamiUserResponse{
-		UserID:    result.Id,
-		FirstName: result.FirstName,
-		LastName:  result.LastName,
-		Email:     result.Email,
+		UserID:         result.Id,
+		FirstName:      result.FirstName,
+		LastName:       result.LastName,
+		Email:          result.Email,
+		SessionVersion: result.SessionVersion,
 	}, nil
 }

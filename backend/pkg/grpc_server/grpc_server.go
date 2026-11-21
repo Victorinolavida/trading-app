@@ -1,7 +1,6 @@
 package grpcserver
 
 import (
-	"context"
 	"log/slog"
 	"net"
 	"strconv"
@@ -35,12 +34,7 @@ func NewGRPCServer(conf config.GRPCServer, interceptors ...grpc.UnaryServerInter
 	// Create health service
 	healthService := health.NewServer()
 
-	base := []grpc.UnaryServerInterceptor{
-		func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-			// you can keep your existing base logic here
-			return handler(ctx, req)
-		},
-	}
+	base := []grpc.UnaryServerInterceptor{requestErrorInterceptor}
 
 	all := append(base, interceptors...)
 	all = append(all, recoveryInterceptor())

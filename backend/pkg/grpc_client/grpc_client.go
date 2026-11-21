@@ -23,7 +23,7 @@ type GRPCClient struct {
 func NewGRPCClient(conf config.GRPCClient) (*GRPCClient, error) {
 	grpcClient, err := grpc.NewClient(formatGRPCAddress(conf.Host, conf.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(requestMetaInterceptor),
+		grpc.WithUnaryInterceptor(RequestMetaInterceptor),
 	)
 	if err != nil {
 		return nil, err
@@ -31,9 +31,21 @@ func NewGRPCClient(conf config.GRPCClient) (*GRPCClient, error) {
 	return &GRPCClient{Client: grpcClient}, nil
 }
 
-func requestMetaInterceptor(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	if reqID := middleware.GetReqID(ctx); reqID != "" {
-		ctx = metadata.AppendToOutgoingContext(ctx, "x-request-id", reqID)
+// RequestMetaInterceptor forwards the request ID and gateway request metadata.
+func RequestMetaInterceptor(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	reqID := middleware.GetReqID(ctx)
+	if reqID == "" {
+		if md, ok := metadata.FromIncomingContext(ctx); ok {
+			if ids := md.Get("x-request-id"); len(ids) > 0 {
+				reqID = ids[0]
+			}
+		}
+	}
+	if reqID != "" {
+		md, _ := metadata.FromOutgoingContext(ctx)
+		md = md.Copy()
+		md.Set("x-request-id", reqID)
+		ctx = metadata.NewOutgoingContext(ctx, md)
 	}
 	if ip, ok := ctx.Value(clientIPKey).(string); ok && ip != "" {
 		ctx = metadata.AppendToOutgoingContext(ctx, "x-client-ip", ip)
@@ -75,7 +87,6 @@ func WithUserID(ctx context.Context, id string) context.Context {
 	}
 	return context.WithValue(ctx, userIDKey, id)
 }
-
 
 func formatGRPCAddress(host string, port int) string {
 	if host == "" {

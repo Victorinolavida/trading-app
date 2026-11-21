@@ -36,7 +36,7 @@ func TestSSEPrivateDelivery(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	connect := func(user string) <-chan string {
-		token, err := h.token.Issue(ctx, jwt.Claims{UserID: user})
+		token, err := h.token.(*jwt.TokenService).Issue(ctx, jwt.Claims{UserID: user})
 		if err != nil {
 			t.Fatal(err)
 		}

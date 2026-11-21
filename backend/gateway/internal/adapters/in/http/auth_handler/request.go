@@ -16,3 +16,12 @@ type RegisterRequest struct {
 	LastName  string `json:"last_name" validate:"required"`
 	Password  string `json:"password" validate:"required"`
 }
+
+type PasswordResetRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type PasswordResetConfirmation struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+}

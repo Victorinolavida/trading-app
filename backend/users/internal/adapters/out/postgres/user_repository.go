@@ -87,6 +87,7 @@ func toDomain(u sqlc.User) (domain.User, error) {
 		[]byte(u.PasswordHash),
 		createdAt,
 		updatedAt,
+		u.SessionVersion,
 	)
 }
 

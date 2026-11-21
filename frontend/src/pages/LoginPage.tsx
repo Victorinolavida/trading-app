@@ -64,6 +64,10 @@ export function LoginPage() {
           <p className="mt-1 text-sm text-danger">{errors.password.message}</p>
         )}
 
+        <Link className="ui-link mt-2 self-end text-sm" to="/forgot-password">
+          Reset password
+        </Link>
+
         <Button
           variant="primary"
           className="mt-4"

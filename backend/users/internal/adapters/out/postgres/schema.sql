@@ -34,8 +34,18 @@ CREATE TABLE public.users (
     password_hash text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    session_version bigint DEFAULT 0 NOT NULL,
     CONSTRAINT users_first_name_len CHECK (((char_length(first_name) >= 3) AND (char_length(first_name) <= 49))),
     CONSTRAINT users_last_name_len CHECK (((char_length(last_name) >= 3) AND (char_length(last_name) <= 49)))
+);
+
+CREATE TABLE public.password_reset_tokens (
+    user_id uuid NOT NULL,
+    token_hash bytea NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (user_id),
+    CONSTRAINT password_reset_tokens_token_hash_key UNIQUE (token_hash),
+    CONSTRAINT password_reset_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
 
