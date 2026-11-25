@@ -7,6 +7,7 @@ type Email struct {
 	To      string
 	Subject string
 	Text    string
+	HTML    string
 }
 
 // EmailSender delivers email independently of the provider implementation.

@@ -51,9 +51,19 @@ func TestRequestAndConfirm(t *testing.T) {
 	require.NoError(t, usecase.Request(ctx, address.String()))
 	messages := inbox.Messages()
 	require.Len(t, messages, 1)
-	link, err := url.Parse(strings.TrimPrefix(messages[0].Text, "Use this link to reset your password: "))
+	lines := strings.Split(messages[0].Text, "\n")
+	var resetLink string
+	for _, line := range lines {
+		if strings.HasPrefix(line, "https://example.com/reset-password?") {
+			resetLink = line
+		}
+	}
+	link, err := url.Parse(resetLink)
 	require.NoError(t, err)
 	token := link.Query().Get("token")
+	require.NotEmpty(t, token)
+	require.Contains(t, messages[0].HTML, "Reset password")
+	require.Contains(t, messages[0].Text, "expires in 1h0m0s")
 	digest := sha256.Sum256([]byte(token))
 	require.Equal(t, digest[:], resets.digest)
 	require.NoError(t, usecase.Confirm(ctx, token, "new-password"))

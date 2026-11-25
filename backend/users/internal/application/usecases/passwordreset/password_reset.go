@@ -1,12 +1,14 @@
 package passwordreset
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/url"
 	"time"
 
@@ -22,6 +24,17 @@ type Usecase struct {
 	url    *url.URL
 	ttl    time.Duration
 }
+
+var resetEmailHTML = template.Must(template.New("reset").Parse(`<!doctype html>
+<html><body style="margin:0;background:#f3f5f8;font-family:Arial,sans-serif;color:#172033">
+<div style="max-width:560px;margin:32px auto;padding:32px;background:#fff;border-radius:12px">
+<p style="font-size:13px;font-weight:bold;letter-spacing:1px;color:#52637b">TRADING APP</p>
+<h1 style="font-size:24px;margin:24px 0 16px">Reset your password</h1>
+<p>Hi {{.Name}},</p><p>We received a request to reset your password. Select the button below to choose a new one.</p>
+<p style="margin:28px 0"><a href="{{.Link}}" style="background:#244f9e;color:#fff;text-decoration:none;padding:14px 22px;border-radius:6px;display:inline-block;font-weight:bold">Reset password</a></p>
+<p>This link expires in {{.TTL}} and can be used once. If you didn't request this, you can safely ignore this email.</p>
+<p style="font-size:13px;color:#52637b;overflow-wrap:anywhere">If the button doesn't work, copy this link into your browser:<br>{{.Link}}</p>
+</div></body></html>`))
 
 // New requires a configured public reset-page URL, never a URL from a request.
 func New(users ports.UserRepository, resets ports.PasswordResetRepository, email ports.EmailSender, resetURL string, ttl time.Duration) (*Usecase, error) {
@@ -60,9 +73,15 @@ func (u *Usecase) Request(ctx context.Context, address string) error {
 	query := link.Query()
 	query.Set("token", token)
 	link.RawQuery = query.Encode()
+	var html bytes.Buffer
+	data := struct{ Name, Link, TTL string }{user.FirstName().String(), link.String(), u.ttl.String()}
+	if err := resetEmailHTML.Execute(&html, data); err != nil {
+		return err
+	}
 	return u.email.Send(ctx, ports.Email{
 		To: address, Subject: "Reset your password",
-		Text: fmt.Sprintf("Use this link to reset your password: %s", link.String()),
+		Text: fmt.Sprintf("Hi %s,\n\nWe received a request to reset your password. Use the link below to choose a new one:\n\n%s\n\nThis link expires in %s and can be used once. If you didn't request this, you can safely ignore this email.\n\nTrading App", data.Name, data.Link, data.TTL),
+		HTML: html.String(),
 	})
 }
 

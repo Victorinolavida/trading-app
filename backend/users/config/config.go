@@ -18,4 +18,20 @@ type PasswordReset struct {
 	Provider string        `koanf:"provider"`
 	URL      string        `koanf:"url"`
 	TTL      time.Duration `koanf:"ttl"`
+	Mailpit  Mailpit       `koanf:"mailpit"`
+	SMTP     SMTP          `koanf:"smtp"`
+}
+
+type SMTP struct {
+	Host     string `koanf:"host"`
+	Port     int    `koanf:"port"`
+	From     string `koanf:"from"`
+	Username string `koanf:"username"`
+	Password string `koanf:"password"`
+}
+
+type Mailpit struct {
+	Host string `koanf:"host"`
+	Port int    `koanf:"port"`
+	From string `koanf:"from"`
 }
