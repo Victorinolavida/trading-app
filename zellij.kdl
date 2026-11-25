@@ -10,50 +10,50 @@ layout {
     }
 
     tab name="Frontend" {
-        pane command="just" {
-            args "web"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "web"
             close_on_exit false
         }
     }
     tab name="Gateway" {
-        pane command="just" {
-            args "backend" "run" "gateway"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "backend" "run" "gateway"
             close_on_exit false
         }
     }
     tab name="Users" {
-        pane command="just" {
-            args "backend" "run" "users"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "backend" "run" "users"
             close_on_exit false
         }
     }
     tab name="Securities" {
-        pane command="just" {
-            args "backend" "run" "securities"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "backend" "run" "securities"
             close_on_exit false
         }
     }
     tab name="Calculator" {
-        pane command="just" {
-            args "backend" "run" "calculator"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "backend" "run" "calculator"
             close_on_exit false
         }
     }
     tab name="Orders" {
         pane split_direction="vertical" {
-            pane name="service" command="just" {
-                args "backend" "run" "orders"
+            pane name="service" command="python3" {
+                args "scripts/zellij-supervise.py" "just" "backend" "run" "orders"
                 close_on_exit false
             }
-            pane name="worker" command="just" {
-                args "backend" "orders" "run-worker"
+            pane name="worker" command="python3" {
+                args "scripts/zellij-supervise.py" "just" "backend" "orders" "run-worker"
                 close_on_exit false
             }
         }
     }
     tab name="Notifications" {
-        pane command="just" {
-            args "backend" "run" "notifications"
+        pane command="python3" {
+            args "scripts/zellij-supervise.py" "just" "backend" "run" "notifications"
             close_on_exit false
         }
     }

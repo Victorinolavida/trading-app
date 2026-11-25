@@ -33,7 +33,7 @@ just backend securities seed     # load UDI quotes and securities
 
 The Compose Redis instance has no password. Set `redis.password` to an empty string in `backend/orders/config/config.yaml` for this local setup. Check the other local configuration values as needed; the gateway and users token secrets must match. Local `config.yaml` and `.env` files are ignored by Git.
 
-With [Zellij](https://zellij.dev/) installed, start the frontend and backend services in separate tabs with `just zellij`. Run the setup and infrastructure commands above first. The layout also starts the notifications service, and exited commands remain visible in their tabs. Use `Alt` + the left or right arrow key to move between tabs. Run `just zellij-stop` from another terminal to close the session and stop its processes; stop the infrastructure separately with `docker compose down`.
+With [Zellij](https://zellij.dev/) and Python 3 installed, start the frontend and backend services in separate tabs with `just zellij`. Run the setup and infrastructure commands above first. The layout also starts the notifications service, and exited commands remain visible in their tabs. Use `Alt` + the left or right arrow key to move between tabs. Run `just zellij-stop` from another terminal to close the session and stop its processes; detaching leaves them running. Stop the infrastructure separately with `docker compose down`.
 
 Alternatively, run each service in a separate terminal:
 
