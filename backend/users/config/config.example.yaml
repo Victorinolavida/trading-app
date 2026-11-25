@@ -4,14 +4,25 @@
 
 env: development
 
-# Reset is disabled until delivery is configured. The mock is local-only and
-# stores messages in memory and logs their contents in the users service.
-# It does not deliver email outside the process.
+# Reset is disabled by default. Both providers are development-only.
+# mock logs messages; mailpit sends them to the local Mailpit SMTP server.
 password_reset:
   enabled: false
   provider: mock
   url: http://localhost:8000/reset-password
   ttl: 30m
+  mailpit:
+    host: localhost
+    port: 1025
+    from: noreply@example.com
+  # Production SMTP requires STARTTLS and authentication. Supply credentials
+  # through your deployment's secret management, not a committed file.
+  smtp:
+    host: smtp.example.com
+    port: 587
+    from: noreply@example.com
+    username: ""
+    password: ""
 
 database:
   user: postgres

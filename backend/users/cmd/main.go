@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -12,6 +13,7 @@ import (
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/metadata"
 	"github.com/victorinolavida/auth/internal/adapters/in/grpc/requestid"
 	emailmock "github.com/victorinolavida/auth/internal/adapters/out/email/mock"
+	emailsmtp "github.com/victorinolavida/auth/internal/adapters/out/email/smtp"
 	"github.com/victorinolavida/auth/internal/adapters/out/postgres"
 	"github.com/victorinolavida/auth/internal/application/ports"
 	"github.com/victorinolavida/auth/internal/application/usecases/login"
@@ -54,13 +56,42 @@ func main() {
 	whoamiHandler := whoami.New(userRepo)
 	var authHandler *grpcAdapter.AuthGRPCHandler
 	if cfg.PasswordReset.Enabled {
-		if cfg.PasswordReset.Provider != "mock" || !strings.EqualFold(cfg.Env, "development") {
-			logger.Fatal("unsupported password reset email provider or environment")
+		var sender ports.EmailSender
+		switch cfg.PasswordReset.Provider {
+		case "mock":
+			if !strings.EqualFold(cfg.Env, "development") {
+				logger.Fatal("mock email provider is development-only")
+			}
+			sender = emailmock.NewSender(func(message ports.Email) {
+				logs.Info("development email captured", slog.String("to", message.To), slog.String("subject", message.Subject), slog.String("body", message.Text))
+			})
+		case "mailpit":
+			if !strings.EqualFold(cfg.Env, "development") {
+				logger.Fatal("mailpit email provider is development-only")
+			}
+			sender, err = emailsmtp.NewSender(cfg.PasswordReset.Mailpit.Host, cfg.PasswordReset.Mailpit.Port, cfg.PasswordReset.Mailpit.From)
+			if err != nil {
+				logger.Fatal("invalid mailpit configuration", slog.Any("error", err))
+			}
+		case "smtp":
+			if !strings.HasPrefix(strings.ToLower(cfg.PasswordReset.URL), "https://") {
+				logger.Fatal("SMTP password reset requires an HTTPS reset URL")
+			}
+			c := cfg.PasswordReset.SMTP
+			if v := os.Getenv("RESET_SMTP_USERNAME"); v != "" {
+				c.Username = v
+			}
+			if v := os.Getenv("RESET_SMTP_PASSWORD"); v != "" {
+				c.Password = v
+			}
+			sender, err = emailsmtp.NewAuthenticatedSender(c.Host, c.Port, c.From, c.Username, c.Password)
+			if err != nil {
+				logger.Fatal("invalid SMTP configuration", slog.Any("error", err))
+			}
+		default:
+			logger.Fatal("unsupported password reset email provider")
 		}
-		inbox := emailmock.NewSender(func(message ports.Email) {
-			logs.Info("development email captured", slog.String("to", message.To), slog.String("subject", message.Subject), slog.String("body", message.Text))
-		})
-		resetHandler, err := passwordreset.New(userRepo, postgres.NewPasswordResetRepository(pool), inbox, cfg.PasswordReset.URL, cfg.PasswordReset.TTL)
+		resetHandler, err := passwordreset.New(userRepo, postgres.NewPasswordResetRepository(pool), sender, cfg.PasswordReset.URL, cfg.PasswordReset.TTL)
 		if err != nil {
 			logger.Fatal("invalid password reset configuration", slog.Any("error", err))
 		}
